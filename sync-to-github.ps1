@@ -1,35 +1,26 @@
-# Auto Sync Script: Antigravity -> GitHub -> Google AI Studio
-$ErrorActionPreference = "Continue"
+# Antigravity to GitHub Auto Sync Script
 $env:PATH = "C:\Program Files\Git\cmd;" + $env:PATH
 
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "  🔄 Antigravity & AI Studio Auto Sync  " -ForegroundColor Cyan
+Write-Host "   Antigravity & AI Studio Auto Sync     " -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
-
-$remotes = git remote
-if (-not $remotes) {
-    Write-Host "`n⚠️  কোনো GitHub Remote URL যুক্ত করা নেই!" -ForegroundColor Red
-    Write-Host "প্রথমে আপনার GitHub রিপোজিটরি লিংকটি যুক্ত করতে হবে।" -ForegroundColor Yellow
-    Write-Host "উদাহরণ: git remote add origin https://github.com/USERNAME/REPO_NAME.git`n" -ForegroundColor Gray
-    exit 1
-}
 
 $status = git status --porcelain
 if ($status) {
-    Write-Host "`n📦 নতুন পরিবর্তন পাওয়া গেছে। স্টেজিং ও কমিট করা হচ্ছে..." -ForegroundColor Yellow
+    Write-Host "[1/2] Changes detected. Committing..." -ForegroundColor Yellow
     git add .
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     git commit -m "Auto sync from Antigravity: $timestamp"
-    Write-Host "✓ লোকাল কমিট সম্পন্ন হয়েছে।" -ForegroundColor Green
+    Write-Host "Local commit created successfully." -ForegroundColor Green
 } else {
-    Write-Host "`n✓ লোকাল ফাইলে কোনো নতুন আনকমিটেড পরিবর্তন নেই।" -ForegroundColor Green
+    Write-Host "[1/2] Working tree is clean. No new local changes to commit." -ForegroundColor Green
 }
 
-Write-Host "`n🚀 GitHub-এ পুশ করা হচ্ছে..." -ForegroundColor Cyan
+Write-Host "[2/2] Pushing to GitHub (origin main)..." -ForegroundColor Cyan
 git push origin main
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n✅ সফলভাবে GitHub ও Google AI Studio-র সাথে সিঙ্ক হয়েছে!" -ForegroundColor Green
+    Write-Host "SUCCESS: Project is fully synced with GitHub & Google AI Studio!" -ForegroundColor Green
 } else {
-    Write-Host "`n❌ পুশ করার সময় ত্রুটি হয়েছে। অনুগ্রহ করে ইন্টারনেট ও গিট পারমিশন চেক করুন।" -ForegroundColor Red
+    Write-Host "ERROR: Push failed. Check internet connection or Git permissions." -ForegroundColor Red
 }
