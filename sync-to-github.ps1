@@ -28,6 +28,7 @@ Write-Host "`n[3/3] Building and deploying live website..." -ForegroundColor Cya
 bun run build
 
 if (Test-Path "$projectDir\dist") {
+    Copy-Item "$projectDir\dist\index.html" "$projectDir\dist\404.html" -Force
     Set-Location "$projectDir\dist"
     git init -b gh-pages | Out-Null
     git config user.name "MSI ANIK"
