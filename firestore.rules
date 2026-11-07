@@ -1,0 +1,294 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'msianik.bd@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation Blueprint: DiaryPost
+    function isValidDiaryPost(data) {
+      return data.keys().hasAll([
+        'titleBn',
+        'descriptionBn',
+        'className',
+        'activityType',
+        'mood',
+        'teacherNameBn',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'titleBn',
+        'descriptionBn',
+        'className',
+        'activityType',
+        'mood',
+        'teacherNameBn',
+        'photoUrl',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 200 &&
+      data.descriptionBn is string && data.descriptionBn.size() >= 1 && data.descriptionBn.size() <= 2000 &&
+      data.className is string && data.className.size() <= 32 &&
+      data.className in ['HateKhori', 'Play', 'Nursery', 'KG', 'Class-1', 'Class-2', 'Playgroup', 'KG-1', 'KG-2'] &&
+      data.activityType is string && data.activityType.size() <= 32 &&
+      data.activityType in ['rhyme', 'art_craft', 'block_play', 'snack_time', 'outdoor', 'circle_time'] &&
+      data.mood is string && data.mood.size() <= 32 &&
+      data.mood in ['joyful', 'curious', 'peaceful', 'creative', 'playful'] &&
+      data.teacherNameBn is string && data.teacherNameBn.size() >= 1 && data.teacherNameBn.size() <= 120 &&
+      (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+      data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 &&
+      data.authorUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.authorUid == request.auth.uid &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: GalleryItem
+    function isValidGalleryItem(data) {
+      return data.keys().hasAll([
+        'titleBn',
+        'captionBn',
+        'imageUrl',
+        'category',
+        'dateBn',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'titleBn',
+        'captionBn',
+        'imageUrl',
+        'category',
+        'dateBn',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 200 &&
+      data.captionBn is string && data.captionBn.size() >= 1 && data.captionBn.size() <= 500 &&
+      data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 500 &&
+      data.category is string && data.category.size() <= 32 &&
+      data.category in ['classroom', 'craft', 'outdoor', 'event', 'branding'] &&
+      data.dateBn is string && data.dateBn.size() >= 1 && data.dateBn.size() <= 64 &&
+      data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 &&
+      data.authorUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.authorUid == request.auth.uid &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: PickupLog
+    function isValidPickupLog(data) {
+      return data.keys().hasAll([
+        'studentId',
+        'studentNameBn',
+        'className',
+        'pickupPersonNameBn',
+        'relationBn',
+        'gateCode',
+        'status',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'studentId',
+        'studentNameBn',
+        'className',
+        'pickupPersonNameBn',
+        'relationBn',
+        'gateCode',
+        'status',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.studentId is string && data.studentId.size() >= 1 && data.studentId.size() <= 128 &&
+      data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.studentNameBn is string && data.studentNameBn.size() >= 1 && data.studentNameBn.size() <= 120 &&
+      data.className is string && data.className.size() <= 32 &&
+      data.className in ['HateKhori', 'Play', 'Nursery', 'KG', 'Class-1', 'Class-2', 'Playgroup', 'KG-1', 'KG-2'] &&
+      data.pickupPersonNameBn is string && data.pickupPersonNameBn.size() >= 1 && data.pickupPersonNameBn.size() <= 120 &&
+      data.relationBn is string && data.relationBn.size() >= 1 && data.relationBn.size() <= 64 &&
+      data.gateCode is string && data.gateCode.size() >= 1 && data.gateCode.size() <= 64 &&
+      data.status is string && data.status.size() <= 32 &&
+      data.status in ['completed', 'cancelled'] &&
+      data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 &&
+      data.authorUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.authorUid == request.auth.uid &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: FcmNotification
+    function isValidFcmNotification(data) {
+      return data.keys().hasAll([
+        'type',
+        'priority',
+        'titleBn',
+        'bodyBn',
+        'studentOrApplicantNameBn',
+        'className',
+        'guardianNameBn',
+        'read',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'type',
+        'priority',
+        'titleBn',
+        'bodyBn',
+        'studentOrApplicantNameBn',
+        'className',
+        'guardianNameBn',
+        'read',
+        'authorUid',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.type is string && data.type.size() <= 32 &&
+      data.type in ['admission_application', 'urgent_pickup', 'gate_pass_completed'] &&
+      data.priority is string && data.priority.size() <= 16 &&
+      data.priority in ['urgent', 'high', 'normal'] &&
+      data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 200 &&
+      data.bodyBn is string && data.bodyBn.size() >= 1 && data.bodyBn.size() <= 1000 &&
+      data.studentOrApplicantNameBn is string && data.studentOrApplicantNameBn.size() >= 1 && data.studentOrApplicantNameBn.size() <= 120 &&
+      data.className is string && data.className.size() <= 32 &&
+      data.className in ['HateKhori', 'Play', 'Nursery', 'KG', 'Class-1', 'Class-2', 'Playgroup', 'KG-1', 'KG-2'] &&
+      data.guardianNameBn is string && data.guardianNameBn.size() >= 1 && data.guardianNameBn.size() <= 120 &&
+      data.read is bool &&
+      data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 &&
+      data.authorUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.authorUid == request.auth.uid &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Collection: /diary_posts/{postId}
+    match /diary_posts/{postId} {
+      allow get: if isSignedIn() && isValidId(postId) && (existing().authorUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().authorUid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(postId) &&
+        isValidDiaryPost(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(postId) &&
+        isValidDiaryPost(incoming()) &&
+        incoming().authorUid == existing().authorUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().authorUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['titleBn', 'descriptionBn', 'mood', 'photoUrl', 'updatedAt'])
+          )
+        );
+      allow delete: if isVerifiedUser() && isValidId(postId) && (existing().authorUid == request.auth.uid || isAdmin());
+    }
+
+    // Collection: /gallery_items/{itemId}
+    match /gallery_items/{itemId} {
+      allow get: if isSignedIn() && isValidId(itemId) && (existing().authorUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().authorUid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(itemId) &&
+        isValidGalleryItem(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(itemId) &&
+        isValidGalleryItem(incoming()) &&
+        incoming().authorUid == existing().authorUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().authorUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['titleBn', 'captionBn', 'category', 'updatedAt'])
+          )
+        );
+      allow delete: if isVerifiedUser() && isValidId(itemId) && (existing().authorUid == request.auth.uid || isAdmin());
+    }
+
+    // Collection: /pickup_logs/{logId}
+    match /pickup_logs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && (existing().authorUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().authorUid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidPickupLog(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidPickupLog(incoming()) &&
+        incoming().authorUid == existing().authorUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(logId) && isAdmin();
+    }
+
+    // Collection: /notifications/{notificationId}
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && isValidId(notificationId) && (existing().authorUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().authorUid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        isValidFcmNotification(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        isValidFcmNotification(incoming()) &&
+        incoming().authorUid == existing().authorUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().authorUid == request.auth.uid || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['read', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(notificationId) && (existing().authorUid == request.auth.uid || isAdmin());
+    }
+  }
+}
+

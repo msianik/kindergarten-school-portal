@@ -1,0 +1,320 @@
+{
+  "entities": {
+    "DiaryPost": {
+      "title": "DiaryPost",
+      "description": "Daily classroom activity post created by teachers for parents in Ananda Pathshala.",
+      "type": "object",
+      "properties": {
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Bengali title of the classroom activity post."
+        },
+        "descriptionBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Detailed Bengali description of the classroom activity."
+        },
+        "className": {
+          "type": "string",
+          "enum": ["HateKhori", "Play", "Nursery", "KG", "Class-1", "Class-2", "Playgroup", "KG-1", "KG-2"],
+          "maxLength": 32,
+          "description": "Class level for the activity."
+        },
+        "activityType": {
+          "type": "string",
+          "enum": ["rhyme", "art_craft", "block_play", "snack_time", "outdoor", "circle_time"],
+          "maxLength": 32,
+          "description": "Category of the kindergarten activity."
+        },
+        "mood": {
+          "type": "string",
+          "enum": ["joyful", "curious", "peaceful", "creative", "playful"],
+          "maxLength": 32,
+          "description": "Observed mood of the children."
+        },
+        "teacherNameBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Bengali name of the posting teacher."
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Optional classroom photo URL."
+        },
+        "authorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the creator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "titleBn",
+        "descriptionBn",
+        "className",
+        "activityType",
+        "mood",
+        "teacherNameBn",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Synced Facebook or campus gallery photo item for Ananda Pathshala Kushtia.",
+      "type": "object",
+      "properties": {
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Bengali title of the photo."
+        },
+        "captionBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Bengali caption of the photo."
+        },
+        "imageUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "URL or path to the gallery image."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["classroom", "craft", "outdoor", "event", "branding"],
+          "maxLength": 32,
+          "description": "Gallery category."
+        },
+        "dateBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Display date in Bengali."
+        },
+        "authorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the uploader."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "titleBn",
+        "captionBn",
+        "imageUrl",
+        "category",
+        "dateBn",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PickupLog": {
+      "title": "PickupLog",
+      "description": "Verified gate-pass pickup security log record.",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "ID of the student picked up."
+        },
+        "studentNameBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Bengali name of the student."
+        },
+        "className": {
+          "type": "string",
+          "enum": ["HateKhori", "Play", "Nursery", "KG", "Class-1", "Class-2", "Playgroup", "KG-1", "KG-2"],
+          "maxLength": 32,
+          "description": "Class of the student."
+        },
+        "pickupPersonNameBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Authorized guardian who picked up the child."
+        },
+        "relationBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Relationship to the student in Bengali."
+        },
+        "gateCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Generated gate pass verification code."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "cancelled"],
+          "maxLength": 32,
+          "description": "Terminal status of the gate pass release."
+        },
+        "authorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the gate officer or admin."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "studentId",
+        "studentNameBn",
+        "className",
+        "pickupPersonNameBn",
+        "relationBn",
+        "gateCode",
+        "status",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FcmNotification": {
+      "title": "FcmNotification",
+      "description": "Real-time FCM teacher notification for new admission applications or urgent pickup requests.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["admission_application", "urgent_pickup", "gate_pass_completed"],
+          "maxLength": 32,
+          "description": "Notification category."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["urgent", "high", "normal"],
+          "maxLength": 16,
+          "description": "Alert priority level."
+        },
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Bengali headline of the push alert."
+        },
+        "bodyBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Detailed Bengali body of the push alert."
+        },
+        "studentOrApplicantNameBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Name of student or admission applicant in Bengali."
+        },
+        "className": {
+          "type": "string",
+          "enum": ["HateKhori", "Play", "Nursery", "KG", "Class-1", "Class-2", "Playgroup", "KG-1", "KG-2"],
+          "maxLength": 32,
+          "description": "Target class."
+        },
+        "guardianNameBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Name of guardian in Bengali."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the teacher has marked this notification as read."
+        },
+        "authorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the creator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "type",
+        "priority",
+        "titleBn",
+        "bodyBn",
+        "studentOrApplicantNameBn",
+        "className",
+        "guardianNameBn",
+        "read",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/diary_posts/{postId}": {
+      "schema": { "$ref": "#/entities/DiaryPost" },
+      "description": "Classroom digital diary posts created by verified teachers/admins."
+    },
+    "/gallery_items/{itemId}": {
+      "schema": { "$ref": "#/entities/GalleryItem" },
+      "description": "School photo gallery items synced with Ananda Pathshala Kushtia."
+    },
+    "/pickup_logs/{logId}": {
+      "schema": { "$ref": "#/entities/PickupLog" },
+      "description": "Gate-pass child release logs recorded by verified staff."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/FcmNotification" },
+      "description": "Real-time FCM alerts for teachers on new admissions and urgent pickup requests."
+    }
+  }
+}
+

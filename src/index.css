@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+:root {
+  --theme-50: #ecfdf5;
+  --theme-100: #d1fae5;
+  --theme-200: #a7f3d0;
+  --theme-300: #6ee7b7;
+  --theme-400: #34d399;
+  --theme-500: #10b981;
+  --theme-600: #059669;
+  --theme-700: #047857;
+  --theme-800: #065f46;
+  --theme-900: #064e3b;
+  --theme-950: #022c22;
+
+  --theme-color: #065f46;
+  --theme-color-hover: #047857;
+  --theme-color-light: #ecfdf5;
+  --theme-color-border: #a7f3d0;
+  --theme-color-rgb: 6, 95, 70;
+  --color-primary: var(--theme-color);
+  --primary-theme: var(--theme-color);
+}
+
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif;
+  --color-theme: var(--theme-color);
+  --color-theme-hover: var(--theme-color-hover);
+  --color-theme-light: var(--theme-color-light);
+  --color-theme-border: var(--theme-color-border);
+
+  /* Dynamically map Tailwind emerald classes to active school theme palette */
+  --color-emerald-50: var(--theme-50);
+  --color-emerald-100: var(--theme-100);
+  --color-emerald-200: var(--theme-200);
+  --color-emerald-300: var(--theme-300);
+  --color-emerald-400: var(--theme-400);
+  --color-emerald-500: var(--theme-500);
+  --color-emerald-600: var(--theme-600);
+  --color-emerald-700: var(--theme-700);
+  --color-emerald-800: var(--theme-800);
+  --color-emerald-900: var(--theme-900);
+  --color-emerald-950: var(--theme-950);
+}
+
+/* Dynamic School Theme Color Utilities */
+.bg-theme-main {
+  background-color: var(--theme-color) !important;
+}
+
+.text-theme-main {
+  color: var(--theme-color) !important;
+}
+
+.border-theme-main {
+  border-color: var(--theme-color) !important;
+}
+
+.bg-theme-soft {
+  background-color: var(--theme-color-light) !important;
+}
+
+.border-theme-soft {
+  border-color: var(--theme-color-border) !important;
+}
+
+.hover\:bg-theme-hover:hover {
+  background-color: var(--theme-color-hover) !important;
+}
+
+/* Smooth continuous marquee scroll for Notice Board ticker */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-scroll {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 42s linear infinite;
+}
+
+.animate-marquee-scroll:hover,
+.marquee-paused {
+  animation-play-state: paused !important;
+}
+
+/* Notice Ticker Header responsive layout */
+.notice-ticker-header {
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .notice-ticker-header .notice-ticker-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.05;
+    font-size: 8px;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (max-width: 380px) {
+  /* On very small mobile screens below 380px, hide text to give 100% full fluid space to the scrolling marquee */
+  .notice-ticker-header .notice-ticker-label {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 12mm 12mm;
+  }
+
+  /* Universal reset for high-fidelity printing */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print,
+  .print-hidden,
+  nav,
+  header,
+  aside,
+  footer,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Prevent page-break issues inside cards and table rows */
+  .print-avoid-break,
+  tr,
+  td,
+  th,
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove box shadows and rounded corners on print */
+  .shadow-xs,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xs {
+    box-shadow: none !important;
+  }
+
+  /* Digital Student ID Card & Progress Card Print Optimization */
+  .student-id-card-front,
+  .student-id-card-back,
+  #student-progress-card-canvas,
+  .student-progress-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+

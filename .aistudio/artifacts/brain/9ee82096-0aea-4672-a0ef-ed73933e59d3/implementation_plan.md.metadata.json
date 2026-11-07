@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan update: Removed global page-load fee reminder popup notification. The fee payment due notification popup now triggers ONLY inside the student parent's account after login if their child has unpaid/due fees.",
+  "updatedAt": "2026-11-05T17:09:30.969934906Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

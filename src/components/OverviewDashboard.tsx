@@ -1,0 +1,1898 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Student,
+  ActivityPost,
+  PickupEvent,
+  FeeInvoice,
+  AttendanceRecord,
+  UserRole,
+  FacebookGalleryItem,
+  FcmNotification,
+  AcademicCalendarEvent,
+  AcademicEventCategory,
+  Achievement,
+  TeacherMember,
+  CommitteeDirector,
+  SchoolProfile,
+  LeadershipProfiles,
+  SchoolNotice,
+  PortalAccount,
+  PortalAccountRole,
+  DirectorAccessPermission,
+} from '../types/school';
+import {
+  calculateFeeSummary,
+  calculateAttendanceStats,
+  getDirectorPermissions,
+  saveDirectorPermissions,
+  INITIAL_DIRECTOR_PERMISSIONS,
+  ALL_PORTAL_MODULE_IDS,
+  upsertPortalAccount,
+  removePortalAccountByEntityId,
+  getPortalRoleLabelBn,
+  getPortalNameForRoleBn,
+  normalizeIdentifier,
+} from '../utils/schoolLogic';
+import {
+  SCHOOL_PROFILE,
+  PRINCIPAL_AND_DIRECTOR_PROFILES,
+  SCHOOL_TEACHERS,
+  MANAGEMENT_COMMITTEE,
+  INITIAL_ACHIEVEMENTS,
+  INITIAL_SCHOOL_NOTICES,
+} from '../data/mockData';
+import {
+  ShieldCheck,
+  BookOpen,
+  Award,
+  CreditCard,
+  Users,
+  CalendarCheck,
+  Clock,
+  ArrowRight,
+  Sparkles,
+  Smile,
+  Camera,
+  ExternalLink,
+  Plus,
+  MapPin,
+  Phone,
+  CheckCircle2,
+  BellRing,
+  ShieldAlert,
+  GraduationCap,
+  Package,
+  IdCard,
+  Edit3,
+  Palette,
+  Megaphone,
+} from 'lucide-react';
+import {
+  getStoredAcademicEvents,
+  saveAcademicEvents,
+  ACADEMIC_EVENTS_UPDATED_EVENT,
+  ACADEMIC_EVENTS_STORAGE_KEY,
+} from '../utils/calendarStorage';
+import { EditSchoolProfileModal } from './EditSchoolProfileModal';
+import { GlobalDashboardSearch } from './GlobalDashboardSearch';
+import { NoticeBoard } from './NoticeBoard';
+import { ClassRoutineModule } from './ClassRoutineModule';
+
+// Modular Dashboard Subcomponents & Modals
+import { SuperAdminAccessPanel } from './dashboard/SuperAdminAccessPanel';
+import { MediaManagerDrawer } from './dashboard/MediaManagerDrawer';
+import { PhotoLightboxModal } from './dashboard/PhotoLightboxModal';
+import { PrintableAcademicCalendarDocument } from './dashboard/PrintableAcademicCalendarDocument';
+import { AcademicCalendarPrintModal } from './dashboard/AcademicCalendarPrintModal';
+import { AddAcademicEventModal } from './dashboard/AddAcademicEventModal';
+import { AcademicEventDetailModal } from './dashboard/AcademicEventDetailModal';
+import { AddAchievementModal } from './dashboard/AddAchievementModal';
+import { AchievementDetailModal } from './dashboard/AchievementDetailModal';
+import { BroadcastFcmModal } from './dashboard/BroadcastFcmModal';
+import { EditLeaderProfileModal } from './dashboard/EditLeaderProfileModal';
+import { EditTeacherModal } from './dashboard/EditTeacherModal';
+import { EditDirectorModal } from './dashboard/EditDirectorModal';
+import { StudentInspectModal } from './dashboard/StudentInspectModal';
+import { AddEditNoticeModal } from './dashboard/AddEditNoticeModal';
+import { BoardOfDirectorsSection } from './dashboard/BoardOfDirectorsSection';
+import { AcademicCalendarSection } from './dashboard/AcademicCalendarSection';
+import { AchievementsSection } from './dashboard/AchievementsSection';
+import { TeachersDirectorySection } from './dashboard/TeachersDirectorySection';
+import { FacebookGallerySection } from './dashboard/FacebookGallerySection';
+
+interface OverviewDashboardProps {
+  students: Student[];
+  activityPosts: ActivityPost[];
+  pickupLogs: PickupEvent[];
+  invoices: FeeInvoice[];
+  attendanceRecords: AttendanceRecord[];
+  fcmNotifications: FcmNotification[];
+  onOpenNotifications: () => void;
+  onNavigateTab: (tab: string) => void;
+  currentRole: UserRole;
+  loggedInAccount?: PortalAccount | null;
+  onSelectRole: (role: UserRole) => void;
+  logoUrl: string;
+  onUpdateLogo: (newUrl: string) => void;
+  fbGallery: FacebookGalleryItem[];
+  onAddGalleryPhoto: (item: FacebookGalleryItem) => void;
+  onSendBroadcastNotification?: (notif: FcmNotification) => void;
+  schoolProfile?: SchoolProfile;
+  onUpdateSchoolProfile?: (profile: SchoolProfile) => void;
+  leadershipProfiles?: LeadershipProfiles;
+  onUpdateLeadershipProfiles?: (profiles: LeadershipProfiles) => void;
+}
+
+export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
+  students,
+  activityPosts,
+  pickupLogs,
+  invoices,
+  attendanceRecords,
+  fcmNotifications,
+  onOpenNotifications,
+  onNavigateTab,
+  currentRole,
+  loggedInAccount,
+  onSelectRole,
+  logoUrl,
+  onUpdateLogo,
+  fbGallery,
+  onAddGalleryPhoto,
+  onSendBroadcastNotification,
+  schoolProfile: propSchoolProfile,
+  onUpdateSchoolProfile,
+  leadershipProfiles: propLeadershipProfiles,
+  onUpdateLeadershipProfiles,
+}) => {
+  const feeSummary = calculateFeeSummary(invoices);
+  const attendanceStats = calculateAttendanceStats(attendanceRecords);
+  const pickedUpCount = students.filter((s) => s.currentStatus === 'picked_up').length;
+  const inClassCount = students.filter((s) => s.currentStatus === 'in_class').length;
+
+  // Media Manager & Lightbox State
+  const [showMediaManager, setShowMediaManager] = useState(false);
+  const [activeLightboxPhoto, setActiveLightboxPhoto] = useState<FacebookGalleryItem | null>(null);
+  const [inspectedStudent, setInspectedStudent] = useState<Student | null>(null);
+
+  // Helper date function for Bengali UI
+  const getBengaliCurrentDate = () => {
+    const bnMonths = [
+      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',
+    ];
+    const toBn = (n: number | string) =>
+      n.toString().replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[parseInt(d, 10)]);
+    const now = new Date();
+    const day = toBn(now.getDate());
+    const month = bnMonths[now.getMonth()];
+    const year = toBn(now.getFullYear());
+    return `${day} ${month} ${year}`;
+  };
+
+  // Academic Calendar States
+  const [academicEvents, setAcademicEvents] = useState<AcademicCalendarEvent[]>(() =>
+    getStoredAcademicEvents()
+  );
+
+  useEffect(() => {
+    const handleEventsSync = (e: any) => {
+      const updated = e.detail?.events || getStoredAcademicEvents();
+      setAcademicEvents(updated);
+    };
+    window.addEventListener(ACADEMIC_EVENTS_UPDATED_EVENT, handleEventsSync);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ACADEMIC_EVENTS_STORAGE_KEY && e.newValue) {
+        try {
+          setAcademicEvents(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener(ACADEMIC_EVENTS_UPDATED_EVENT, handleEventsSync);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const [remindedEventIds, setRemindedEventIds] = useState<Record<string, boolean>>({});
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [selectedDetailEvent, setSelectedDetailEvent] = useState<AcademicCalendarEvent | null>(null);
+  const [reminderToastMessage, setReminderToastMessage] = useState<string | null>(null);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [printScope, setPrintScope] = useState<'all' | 'filtered'>('all');
+
+  const handlePrintCalendar = (scope: 'all' | 'filtered' = 'all') => {
+    setPrintScope(scope);
+    setTimeout(() => {
+      window.print();
+    }, 120);
+  };
+
+  const handleDownloadPdf = (scope: 'all' | 'filtered' = 'all') => {
+    setPrintScope(scope);
+    const originalTitle = document.title;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    document.title = `Ananda-Pathshala-Academic-Calendar-2026-2027-${dateStr}`;
+
+    setReminderToastMessage(
+      "ব্রাউজার প্রিন্ট ডায়ালগ চালু হচ্ছে... 'Destination' অপশন থেকে 'Save as PDF' নির্বাচন করে সেভ করুন।"
+    );
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1500);
+    }, 150);
+  };
+
+  const toggleEventReminder = (event: AcademicCalendarEvent) => {
+    const isAlreadyReminded = !!remindedEventIds[event.id];
+    setRemindedEventIds((prev) => ({
+      ...prev,
+      [event.id]: !isAlreadyReminded,
+    }));
+    const message = !isAlreadyReminded
+      ? `"${event.titleBn}" এর জন্য রিমাইন্ডার সক্রিয় করা হয়েছে। আপনাকে সময়মতো অবহিত করা হবে।`
+      : `"${event.titleBn}" এর রিমাইন্ডার বন্ধ করা হয়েছে।`;
+    setReminderToastMessage(message);
+    setTimeout(() => {
+      setReminderToastMessage(null);
+    }, 4500);
+  };
+
+  const handleAddEventSubmit = (newEvent: AcademicCalendarEvent) => {
+    const updated = [newEvent, ...academicEvents];
+    saveAcademicEvents(updated);
+    setAcademicEvents(updated);
+    setShowAddEventModal(false);
+    setReminderToastMessage(`"${newEvent.titleBn}" একাডেমিক ক্যালেন্ডারে যুক্ত করা হয়েছে!`);
+    setTimeout(() => setReminderToastMessage(null), 4500);
+  };
+
+  const createGoogleCalendarLink = (event: AcademicCalendarEvent) => {
+    const title = encodeURIComponent(`${event.titleBn} - আনন্দ পাঠশালা`);
+    const details = encodeURIComponent(
+      `${event.descriptionBn}\n\nধরন: ${
+        event.category === 'holiday'
+          ? 'স্কুল ছুটি'
+          : event.category === 'exam'
+          ? 'পরীক্ষা ও মূল্যায়ন'
+          : 'অভিভাবক সমাবেশ'
+      }\nপ্রযোজ্য শ্রেণি: ${event.targetClassesBn}\nসময়: ${event.timeBn || 'নির্ধারিত সময়ে'}\nস্থান: ${
+        event.venueBn
+      }`
+    );
+    const location = encodeURIComponent(event.venueBn || 'আনন্দ পাঠশালা, কোর্টপাড়া, কুষ্টিয়া');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
+  };
+
+  const holidayCount = academicEvents.filter((e) => e.category === 'holiday').length;
+  const examCount = academicEvents.filter((e) => e.category === 'exam').length;
+  const meetingCount = academicEvents.filter((e) => e.category === 'meeting').length;
+
+  // Super Admin & Director Access Permissions State
+  const [directorPermissions, setDirectorPermissions] = useState<DirectorAccessPermission[]>(() =>
+    getDirectorPermissions()
+  );
+  const [showAccessControlPanel, setShowAccessControlPanel] = useState<boolean>(true);
+
+  useEffect(() => {
+    const handleSyncPerms = () => {
+      setDirectorPermissions(getDirectorPermissions());
+    };
+    window.addEventListener('ananda-director-permissions-updated', handleSyncPerms);
+    return () => window.removeEventListener('ananda-director-permissions-updated', handleSyncPerms);
+  }, []);
+
+  const isSuperAdmin = currentRole === 'super_admin';
+  const isDirector = currentRole === 'director';
+
+  const activeDirectorPerm = isDirector
+    ? directorPermissions.find((p) => p.directorId === loggedInAccount?.directorId) ||
+      directorPermissions.find((p) => !p.isSuperAdmin) ||
+      null
+    : null;
+
+  const hasDirectorEditAccess = Boolean(
+    activeDirectorPerm &&
+      (activeDirectorPerm.canEditSchoolAndBoard ||
+        activeDirectorPerm.canManageNoticesAndEvents ||
+        activeDirectorPerm.canManageStudentsAndAdmissions)
+  );
+
+  const isPrincipal =
+    currentRole === 'super_admin' ||
+    currentRole === 'principal' ||
+    (currentRole === 'director' && hasDirectorEditAccess);
+
+  const [achievementToast, setAchievementToast] = useState<string | null>(null);
+
+  const handleToggleDirectorPermission = (
+    directorId: string,
+    field:
+      | 'viewAllModules'
+      | 'canEditSchoolAndBoard'
+      | 'canManageNoticesAndEvents'
+      | 'canManageStudentsAndAdmissions'
+      | 'canManageFeesAndAccounts'
+      | 'canApproveGatePassAndDiary'
+  ) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      const nextVal = !perm[field];
+      return {
+        ...perm,
+        [field]: nextVal,
+        allowedModules:
+          field === 'viewAllModules' && nextVal ? [...ALL_PORTAL_MODULE_IDS] : perm.allowedModules,
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন · সদস্য সচিব)',
+        lastUpdatedAtBn: `আপডেট: ${getBengaliCurrentDate()}`,
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    const targetDir = updated.find((d) => d.directorId === directorId);
+    if (targetDir) {
+      setAchievementToast(
+        `🛡️ পরিচালক "${targetDir.nameBn}"-এর অ্যাক্সেস পারমিশন সুপার অ্যাডমিন কর্তৃক আপডেট করা হয়েছে!`
+      );
+      setTimeout(() => setAchievementToast(null), 3500);
+    }
+  };
+
+  const handleSetDirectorAccessPreset = (directorId: string, mode: 'view_only' | 'full_edit') => {
+    const isFull = mode === 'full_edit';
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      return {
+        ...perm,
+        viewAllModules: true,
+        canEditSchoolAndBoard: isFull,
+        canManageNoticesAndEvents: isFull,
+        canManageStudentsAndAdmissions: isFull,
+        canManageFeesAndAccounts: isFull,
+        canApproveGatePassAndDiary: isFull,
+        allowedModules: [...ALL_PORTAL_MODULE_IDS],
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন · সদস্য সচিব)',
+        lastUpdatedAtBn: isFull ? 'পূর্ণ এডিট অ্যাক্সেস প্রদানকৃত' : 'সবকিছু ভিউ অ্যাক্সেস সক্রিয়',
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    const targetDir = updated.find((d) => d.directorId === directorId);
+    if (targetDir) {
+      setAchievementToast(
+        isFull
+          ? `✅ পরিচালক "${targetDir.nameBn}"-কে পূর্ণ এডিট ও ম্যানেজমেন্ট অ্যাক্সেস দেওয়া হয়েছে!`
+          : `👁️ পরিচালক "${targetDir.nameBn}"-কে শুধুমাত্র ভিউ (সবকিছু দেখার অপশন) মোডে রাখা হয়েছে।`
+      );
+      setTimeout(() => setAchievementToast(null), 3500);
+    }
+  };
+
+  const handleToggleDirectorModule = (directorId: string, moduleId: string) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      const baseModules = perm.viewAllModules ? [...ALL_PORTAL_MODULE_IDS] : perm.allowedModules;
+      const exists = baseModules.includes(moduleId);
+      const nextModules = exists
+        ? baseModules.filter((m) => m !== moduleId)
+        : Array.from(new Set([...baseModules, moduleId]));
+      const allSelected = ALL_PORTAL_MODULE_IDS.every((id) => nextModules.includes(id));
+      return {
+        ...perm,
+        viewAllModules: allSelected,
+        allowedModules: nextModules,
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন · সদস্য সচিব)',
+        lastUpdatedAtBn: `মডিউল সুইচ আপডেটকৃত`,
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+  };
+
+  const handleResetDirectorPermissions = () => {
+    setDirectorPermissions(INITIAL_DIRECTOR_PERMISSIONS);
+    saveDirectorPermissions(INITIAL_DIRECTOR_PERMISSIONS);
+    setAchievementToast(
+      '🔄 সকল পরিচালকের অ্যাক্সেস ডিফল্ট "সবকিছু ভিউ" মোডে রিসেট করা হয়েছে!'
+    );
+    setTimeout(() => setAchievementToast(null), 3500);
+  };
+
+  // Broadcast FCM Notification State
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+
+  // School Profile & Leadership Profiles State
+  const [leadershipProfiles, setLeadershipProfiles] = useState<LeadershipProfiles>(() => {
+    if (propLeadershipProfiles) return propLeadershipProfiles;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ananda_leadership_profiles_v1');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return PRINCIPAL_AND_DIRECTOR_PROFILES;
+  });
+
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(() => {
+    if (propSchoolProfile) return propSchoolProfile;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ananda_school_profile_v1');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return SCHOOL_PROFILE;
+  });
+
+  useEffect(() => {
+    if (propLeadershipProfiles) setLeadershipProfiles(propLeadershipProfiles);
+  }, [propLeadershipProfiles]);
+
+  useEffect(() => {
+    if (propSchoolProfile) setSchoolProfile(propSchoolProfile);
+  }, [propSchoolProfile]);
+
+  useEffect(() => {
+    const handleSync = (e: Event) => {
+      const customEv = e as CustomEvent<{
+        schoolProfile?: SchoolProfile;
+        leadershipProfiles?: LeadershipProfiles;
+      }>;
+      if (customEv.detail?.schoolProfile) {
+        setSchoolProfile(customEv.detail.schoolProfile);
+      }
+      if (customEv.detail?.leadershipProfiles) {
+        setLeadershipProfiles(customEv.detail.leadershipProfiles);
+      }
+    };
+    window.addEventListener('school-profile-updated', handleSync);
+    return () => window.removeEventListener('school-profile-updated', handleSync);
+  }, []);
+
+  const [showEditSchoolProfileModal, setShowEditSchoolProfileModal] = useState(false);
+  const [profileModalInitialTab, setProfileModalInitialTab] = useState<
+    'principal' | 'headTeacher' | 'contact' | 'theme'
+  >('principal');
+
+  const openEditProfileModal = (
+    tab: 'principal' | 'headTeacher' | 'contact' | 'theme' = 'principal'
+  ) => {
+    setProfileModalInitialTab(tab);
+    setShowEditSchoolProfileModal(true);
+  };
+
+  useEffect(() => {
+    const handleOpenThemeSettings = () => {
+      openEditProfileModal('theme');
+    };
+    window.addEventListener('open-school-theme-settings', handleOpenThemeSettings);
+    return () => window.removeEventListener('open-school-theme-settings', handleOpenThemeSettings);
+  }, []);
+
+  const [teachersList, setTeachersList] = useState<TeacherMember[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ananda_teachers_list_v1');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return SCHOOL_TEACHERS;
+  });
+
+  const persistLeadershipProfiles = (updated: LeadershipProfiles) => {
+    setLeadershipProfiles(updated);
+    if (onUpdateLeadershipProfiles) onUpdateLeadershipProfiles(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_leadership_profiles_v1', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  const persistSchoolProfile = (updated: SchoolProfile) => {
+    setSchoolProfile(updated);
+    if (onUpdateSchoolProfile) onUpdateSchoolProfile(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_school_profile_v1', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  const persistTeachersList = (updated: TeacherMember[]) => {
+    setTeachersList(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_teachers_list_v1', JSON.stringify(updated));
+        window.dispatchEvent(
+          new CustomEvent('ananda-teachers-updated', { detail: { teachers: updated } })
+        );
+      } catch {}
+    }
+  };
+
+  // Directors Management State
+  const [directorsList, setDirectorsList] = useState<CommitteeDirector[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ananda_management_directors_v3');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return MANAGEMENT_COMMITTEE;
+  });
+
+  const persistDirectorsList = (updated: CommitteeDirector[]) => {
+    setDirectorsList(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_management_directors_v3', JSON.stringify(updated));
+        window.dispatchEvent(
+          new CustomEvent('ananda-directors-updated', { detail: { directors: updated } })
+        );
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    const handleSyncDirectors = (e: Event) => {
+      const customEv = e as CustomEvent<{ directors?: CommitteeDirector[] }>;
+      if (customEv.detail?.directors) {
+        setDirectorsList(customEv.detail.directors);
+      }
+    };
+    window.addEventListener('ananda-directors-updated', handleSyncDirectors);
+    return () => window.removeEventListener('ananda-directors-updated', handleSyncDirectors);
+  }, []);
+
+  const [showDirectorModal, setShowDirectorModal] = useState(false);
+  const [editingDirector, setEditingDirector] = useState<CommitteeDirector | null>(null);
+  const [isAddingNewDirector, setIsAddingNewDirector] = useState(false);
+
+  const openAddNewDirectorModal = () => {
+    setEditingDirector(null);
+    setIsAddingNewDirector(true);
+    setShowDirectorModal(true);
+  };
+
+  const openEditDirectorModal = (dir: CommitteeDirector) => {
+    setEditingDirector(dir);
+    setIsAddingNewDirector(false);
+    setShowDirectorModal(true);
+  };
+
+  const handleSaveDirector = (
+    directorData: Omit<CommitteeDirector, 'id'> & { id?: string },
+    isNew: boolean
+  ) => {
+    const cleanUsername = directorData.username || `dir_${Date.now().toString().slice(-4)}`;
+    const cleanPassword = directorData.password || '123456';
+    const assignedRole: PortalAccountRole = directorData.portalRole || 'director';
+
+    if (!isNew && editingDirector) {
+      let updated = directorsList.map((d) => {
+        if (d.id === editingDirector.id) {
+          return {
+            ...d,
+            ...directorData,
+            id: editingDirector.id,
+          };
+        }
+        return directorData.isChairman ? { ...d, isChairman: false } : d;
+      });
+      if (directorData.isChairman) {
+        const chairmanItem = updated.find((d) => d.id === editingDirector.id);
+        const others = updated.filter((d) => d.id !== editingDirector.id);
+        if (chairmanItem) updated = [chairmanItem, ...others];
+      }
+      persistDirectorsList(updated);
+
+      upsertPortalAccount({
+        id: editingDirector.id === 'dir-3' ? 'acc-super-admin' : `acc-dir-${editingDirector.id}`,
+        nameBn: directorData.nameBn,
+        nameEn: directorData.nameEn || directorData.nameBn,
+        role: assignedRole,
+        roleTitleBn: `${directorData.roleBn} (${getPortalRoleLabelBn(assignedRole)})`,
+        portalNameBn: getPortalNameForRoleBn(assignedRole),
+        email: directorData.email || `${cleanUsername}@anandapathshala.edu.bd`,
+        phone: normalizeIdentifier(directorData.phone || '01914057511'),
+        username: cleanUsername,
+        passwordHint: cleanPassword,
+        avatarUrl: directorData.photoUrl || '/assets/fb/photo-6.jpg',
+        directorId: editingDirector.id,
+      });
+
+      const currentPerms = getDirectorPermissions();
+      const existsInPerms = currentPerms.some((p) => p.directorId === editingDirector.id);
+      const nextPerms = existsInPerms
+        ? currentPerms.map((p) =>
+            p.directorId === editingDirector.id
+              ? {
+                  ...p,
+                  nameBn: directorData.nameBn,
+                  nameEn: directorData.nameEn || directorData.nameBn,
+                  roleTitleBn: directorData.roleBn,
+                  photoUrl: directorData.photoUrl || p.photoUrl,
+                  email: directorData.email || p.email,
+                  phone: normalizeIdentifier(directorData.phone || p.phone),
+                  username: cleanUsername,
+                  isSuperAdmin: assignedRole === 'super_admin',
+                }
+              : p
+          )
+        : [
+            ...currentPerms,
+            {
+              directorId: editingDirector.id,
+              nameBn: directorData.nameBn,
+              nameEn: directorData.nameEn || directorData.nameBn,
+              roleTitleBn: directorData.roleBn,
+              photoUrl: directorData.photoUrl || '/assets/fb/photo-6.jpg',
+              email: directorData.email || `${cleanUsername}@anandapathshala.edu.bd`,
+              phone: normalizeIdentifier(directorData.phone || '01914057511'),
+              username: cleanUsername,
+              isSuperAdmin: assignedRole === 'super_admin',
+              viewAllModules: true,
+              canEditSchoolAndBoard: assignedRole === 'super_admin',
+              canManageNoticesAndEvents: assignedRole === 'super_admin',
+              canManageStudentsAndAdmissions: assignedRole === 'super_admin',
+              canManageFeesAndAccounts: assignedRole === 'super_admin',
+              canApproveGatePassAndDiary: assignedRole === 'super_admin',
+              allowedModules: [...ALL_PORTAL_MODULE_IDS],
+              lastUpdatedByBn: 'প্রোফাইল এডিট সিঙ্ক',
+              lastUpdatedAtBn: 'সকল মডিউল ভিউ অ্যাক্সেস সক্রিয়',
+            },
+          ];
+      setDirectorPermissions(nextPerms);
+      saveDirectorPermissions(nextPerms);
+
+      setAchievementToast(
+        `✅ পরিচালক "${directorData.nameBn}"-এর প্রোফাইল ও লগইন আইডি সংরক্ষিত হয়েছে!`
+      );
+    } else {
+      const newDirId = `dir-${Date.now()}`;
+      const newDir: CommitteeDirector = {
+        ...directorData,
+        id: newDirId,
+        order: directorsList.length + 1,
+      };
+      const baseList = directorData.isChairman
+        ? directorsList.map((d) => ({ ...d, isChairman: false }))
+        : directorsList;
+      persistDirectorsList(directorData.isChairman ? [newDir, ...baseList] : [...baseList, newDir]);
+
+      upsertPortalAccount({
+        id: `acc-dir-${newDirId}`,
+        nameBn: newDir.nameBn,
+        nameEn: newDir.nameEn,
+        role: assignedRole,
+        roleTitleBn: `${newDir.roleBn} (${getPortalRoleLabelBn(assignedRole)})`,
+        portalNameBn: getPortalNameForRoleBn(assignedRole),
+        email: newDir.email || `${cleanUsername}@anandapathshala.edu.bd`,
+        phone: normalizeIdentifier(newDir.phone || '01914057511'),
+        username: cleanUsername,
+        passwordHint: cleanPassword,
+        avatarUrl: newDir.photoUrl || '/assets/fb/photo-6.jpg',
+        directorId: newDirId,
+      });
+
+      const currentPerms = getDirectorPermissions();
+      const nextPerms: DirectorAccessPermission[] = [
+        ...currentPerms,
+        {
+          directorId: newDirId,
+          nameBn: newDir.nameBn,
+          nameEn: newDir.nameEn,
+          roleTitleBn: newDir.roleBn,
+          photoUrl: newDir.photoUrl || '/assets/fb/photo-6.jpg',
+          email: newDir.email || `${cleanUsername}@anandapathshala.edu.bd`,
+          phone: normalizeIdentifier(newDir.phone || '01914057511'),
+          username: cleanUsername,
+          isSuperAdmin: assignedRole === 'super_admin',
+          viewAllModules: true,
+          canEditSchoolAndBoard: assignedRole === 'super_admin',
+          canManageNoticesAndEvents: assignedRole === 'super_admin',
+          canManageStudentsAndAdmissions: assignedRole === 'super_admin',
+          canManageFeesAndAccounts: assignedRole === 'super_admin',
+          canApproveGatePassAndDiary: assignedRole === 'super_admin',
+          allowedModules: [...ALL_PORTAL_MODULE_IDS],
+          lastUpdatedByBn: 'নতুন প্রোফাইল তৈরি',
+          lastUpdatedAtBn: 'সকল মডিউল ভিউ অ্যাক্সেস সক্রিয়',
+        },
+      ];
+      setDirectorPermissions(nextPerms);
+      saveDirectorPermissions(nextPerms);
+
+      setAchievementToast(
+        `🎉 নতুন পরিচালক "${newDir.nameBn}" যুক্ত হয়েছেন! লগইন আইডি: ${cleanUsername}`
+      );
+    }
+    setShowDirectorModal(false);
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  const handleDeleteDirector = (id: string, name: string) => {
+    const updated = directorsList.filter((d) => d.id !== id);
+    persistDirectorsList(updated);
+    removePortalAccountByEntityId(id);
+    setAchievementToast(`🗑️ পরিচালক "${name}" কে তালিকা থেকে সরানো হয়েছে।`);
+    setTimeout(() => setAchievementToast(null), 3000);
+  };
+
+  const handleResetDirectorsToDefault = () => {
+    if (
+      window.confirm(
+        'আপনি কি পরিচালনা পর্ষদের সকল ডাটা রিসেট করে প্রাতিষ্ঠানিক ডিফল্ট ৫ সদস্যের পর্ষদে ফিরতে চান?'
+      )
+    ) {
+      persistDirectorsList(MANAGEMENT_COMMITTEE);
+      setAchievementToast('🔄 পরিচালনা পর্ষদের ডাটা ডিফল্টে রিসেট করা হয়েছে!');
+      setTimeout(() => setAchievementToast(null), 3000);
+    }
+  };
+
+  // Notices Management State
+  const [notices, setNotices] = useState<SchoolNotice[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ananda_school_notices_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return INITIAL_SCHOOL_NOTICES;
+  });
+
+  const persistNotices = (updated: SchoolNotice[]) => {
+    setNotices(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_school_notices_v1', JSON.stringify(updated));
+        window.dispatchEvent(
+          new CustomEvent('ananda-notices-updated', { detail: { notices: updated } })
+        );
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    const handleNoticeSync = (e: Event) => {
+      const customEv = e as CustomEvent<{ notices?: SchoolNotice[] }>;
+      if (customEv.detail?.notices) {
+        setNotices(customEv.detail.notices);
+      }
+    };
+    window.addEventListener('ananda-notices-updated', handleNoticeSync);
+    return () => window.removeEventListener('ananda-notices-updated', handleNoticeSync);
+  }, []);
+
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
+  const [editingNotice, setEditingNotice] = useState<SchoolNotice | null>(null);
+
+  const openAddNoticeModal = () => {
+    setEditingNotice(null);
+    setShowNoticeModal(true);
+  };
+
+  const openEditNoticeModal = (notice: SchoolNotice) => {
+    setEditingNotice(notice);
+    setShowNoticeModal(true);
+  };
+
+  const handleSaveNotice = (noticeData: Partial<SchoolNotice>, isEditing: boolean) => {
+    if (isEditing && editingNotice) {
+      const updated = notices.map((n) =>
+        n.id === editingNotice.id
+          ? ({ ...n, ...noticeData } as SchoolNotice)
+          : n
+      );
+      persistNotices(updated);
+      setAchievementToast(`✅ নোটিশ "${noticeData.titleBn}" সফলভাবে আপডেট করা হয়েছে!`);
+    } else {
+      const newNotice: SchoolNotice = {
+        id: `notice-custom-${Date.now()}`,
+        titleBn: noticeData.titleBn || '',
+        titleEn: noticeData.titleEn,
+        category: noticeData.category || 'admission',
+        priority: noticeData.priority || 'high',
+        badgeBn: noticeData.badgeBn || 'সাধারণ নোটিশ',
+        targetAudienceBn: noticeData.targetAudienceBn || 'সকল শিক্ষার্থী ও অভিভাবক',
+        dateBn: noticeData.dateBn || getBengaliCurrentDate(),
+        validUntilBn: noticeData.validUntilBn,
+        descriptionBn: noticeData.descriptionBn || '',
+        actionLink: noticeData.actionLink,
+        actionTextBn: noticeData.actionTextBn,
+        attachmentName: noticeData.attachmentName,
+        isPinned: noticeData.isPinned,
+        facebookPostUrl: noticeData.facebookPostUrl,
+        createdAt: new Date().toISOString(),
+      };
+      persistNotices([newNotice, ...notices]);
+      setAchievementToast(`🎉 নতুন নোটিশ "${newNotice.titleBn}" পাবলিক নোটিশবোর্ডে প্রকাশিত হয়েছে!`);
+    }
+    setShowNoticeModal(false);
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  const handleDeleteNotice = (noticeId: string) => {
+    const target = notices.find((n) => n.id === noticeId);
+    const title = target?.titleBn || 'এই নোটিশটি';
+    if (!window.confirm(`আপনি কি নিশ্চিত যে "${title}" নোটিশবোর্ড থেকে স্থায়ীভাবে মুছে ফেলতে চান?`)) {
+      return;
+    }
+    const updated = notices.filter((n) => n.id !== noticeId);
+    persistNotices(updated);
+    setAchievementToast(`🗑️ নোটিশটি সফলভাবে মুছে ফেলা হয়েছে।`);
+    setTimeout(() => setAchievementToast(null), 3000);
+  };
+
+  const handleResetNoticesToDefault = () => {
+    if (
+      window.confirm('আপনি কি নোটিশবোর্ডের সকল ডাটা রিসেট করে প্রাথমিক ডিফল্ট নোটিশে ফিরে যেতে চান?')
+    ) {
+      persistNotices(INITIAL_SCHOOL_NOTICES);
+      setAchievementToast('🔄 নোটিশবোর্ডের ডাটা রিসেট করা হয়েছে!');
+      setTimeout(() => setAchievementToast(null), 3000);
+    }
+  };
+
+  // Leadership Profile Edit State
+  const [editingLeaderKey, setEditingLeaderKey] = useState<'principal' | 'headTeacher' | null>(null);
+
+  const handleSaveLeaderProfile = (
+    updated: LeadershipProfiles,
+    leaderKey: 'principal' | 'headTeacher'
+  ) => {
+    persistLeadershipProfiles(updated);
+    setEditingLeaderKey(null);
+    setAchievementToast(
+      `✅ ${leaderKey === 'principal' ? 'প্রিন্সিপাল' : 'প্রধান শিক্ষক'} এর বাণী ও প্রোফাইল আপডেট করা হয়েছে!`
+    );
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  // Teacher Edit State
+  const [editingTeacher, setEditingTeacher] = useState<TeacherMember | null>(null);
+  const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false);
+  const [teacherModalCategory, setTeacherModalCategory] = useState<'teacher' | 'support_staff'>('teacher');
+
+  const openAddNewTeacherModal = () => {
+    setEditingTeacher(null);
+    setIsAddingNewTeacher(true);
+    setTeacherModalCategory('teacher');
+  };
+
+  const openAddNewSupportStaffModal = () => {
+    setEditingTeacher(null);
+    setIsAddingNewTeacher(true);
+    setTeacherModalCategory('support_staff');
+  };
+
+  const openEditTeacherModal = (teacher: TeacherMember) => {
+    setEditingTeacher(teacher);
+    setIsAddingNewTeacher(false);
+    setTeacherModalCategory(
+      teacher.staffCategory === 'support_staff' ? 'support_staff' : 'teacher'
+    );
+  };
+
+  const handleSaveTeacher = (
+    teacherData: Omit<TeacherMember, 'id'> & { id?: string },
+    isNew: boolean
+  ) => {
+    const cleanUsername = teacherData.username || `staff_${Date.now().toString().slice(-4)}`;
+    const cleanPassword = teacherData.password || '123456';
+    const assignedRole: PortalAccountRole = teacherData.portalRole || 'teacher';
+
+    if (isNew) {
+      const newTchId = `tch-${Date.now()}`;
+      const newTch: TeacherMember = {
+        ...teacherData,
+        id: newTchId,
+      };
+      const updated = [...teachersList, newTch];
+      persistTeachersList(updated);
+
+      upsertPortalAccount({
+        id: `acc-tch-${newTchId}`,
+        nameBn: newTch.nameBn,
+        nameEn: newTch.nameEn,
+        role: assignedRole,
+        roleTitleBn: `${newTch.designationBn} (${getPortalRoleLabelBn(assignedRole)})`,
+        portalNameBn: getPortalNameForRoleBn(assignedRole),
+        email: newTch.email || `${cleanUsername}@anandapathshala.edu.bd`,
+        phone: normalizeIdentifier(newTch.phone || '01914057511'),
+        username: cleanUsername,
+        passwordHint: cleanPassword,
+        avatarUrl: newTch.photoUrl,
+        assignedClass: newTch.assignedClass,
+      });
+
+      setIsAddingNewTeacher(false);
+      setAchievementToast(
+        `✅ "${newTch.nameBn}" যুক্ত হয়েছেন! লগইন আইডি: ${cleanUsername} · রোল: ${getPortalRoleLabelBn(assignedRole)}`
+      );
+    } else if (editingTeacher) {
+      const updated = teachersList.map((t) =>
+        t.id === editingTeacher.id
+          ? ({ ...t, ...teacherData, id: editingTeacher.id } as TeacherMember)
+          : t
+      );
+      persistTeachersList(updated);
+
+      upsertPortalAccount({
+        id:
+          cleanUsername === 'principal'
+            ? 'acc-principal'
+            : cleanUsername === 'teacher'
+            ? 'acc-teacher'
+            : cleanUsername === 'gate'
+            ? 'acc-gate'
+            : `acc-tch-${editingTeacher.id}`,
+        nameBn: teacherData.nameBn,
+        nameEn: teacherData.nameEn || teacherData.nameBn,
+        role: assignedRole,
+        roleTitleBn: `${teacherData.designationBn} (${getPortalRoleLabelBn(assignedRole)})`,
+        portalNameBn: getPortalNameForRoleBn(assignedRole),
+        email: teacherData.email || `${cleanUsername}@anandapathshala.edu.bd`,
+        phone: normalizeIdentifier(teacherData.phone || '01914057511'),
+        username: cleanUsername,
+        passwordHint: cleanPassword,
+        avatarUrl: teacherData.photoUrl || editingTeacher.photoUrl,
+        assignedClass: teacherData.assignedClass,
+      });
+
+      setEditingTeacher(null);
+      setAchievementToast(`✅ "${teacherData.nameBn}"-এর প্রোফাইল ও লগইন অ্যাকাউন্ট আপডেট হয়েছে!`);
+    }
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  const handleDeleteTeacher = (teacherId: string, name: string) => {
+    if (!isPrincipal) return;
+    const updated = teachersList.filter((t) => t.id !== teacherId);
+    persistTeachersList(updated);
+    removePortalAccountByEntityId(teacherId);
+    setEditingTeacher(null);
+    setAchievementToast(`🗑️ "${name}" তালিকা ও লগইন অ্যাকাউন্ট থেকে অপসারিত হয়েছেন।`);
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  // Achievements State
+  const [achievements, setAchievements] = useState<Achievement[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('ananda_pathshala_achievements_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return INITIAL_ACHIEVEMENTS;
+  });
+
+  const [showAddAchievementModal, setShowAddAchievementModal] = useState<boolean>(false);
+  const [selectedAchievementForModal, setSelectedAchievementForModal] =
+    useState<Achievement | null>(null);
+
+  const persistAchievements = (updated: Achievement[]) => {
+    setAchievements(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ananda_pathshala_achievements_v1', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  const handleCreateAchievement = (newRecord: Achievement) => {
+    const updated = [newRecord, ...achievements];
+    persistAchievements(updated);
+    setShowAddAchievementModal(false);
+    setAchievementToast(`🎉 "${newRecord.titleBn}" সফলভাবে অর্জন ও মাইলফলক তালিকায় যোগ করা হয়েছে!`);
+    setTimeout(() => setAchievementToast(null), 4500);
+  };
+
+  const handleDeleteAchievement = (achId: string, title: string) => {
+    if (!isPrincipal) return;
+    const confirmDelete = window.confirm(
+      `আপনি কি নিশ্চিত যে "${title}" অর্জনটি তালিকা থেকে মুছে ফেলতে চান?`
+    );
+    if (!confirmDelete) return;
+
+    const updated = achievements.filter((a) => a.id !== achId);
+    persistAchievements(updated);
+    setAchievementToast(`🗑️ "${title}" তালিকা থেকে অপসারিত হয়েছে।`);
+    setTimeout(() => setAchievementToast(null), 4000);
+  };
+
+  const handleToggleFeaturedAchievement = (achId: string) => {
+    if (!isPrincipal) return;
+    const updated = achievements.map((a) =>
+      a.id === achId ? { ...a, featured: !a.featured } : a
+    );
+    persistAchievements(updated);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome Banner with Cover & Logo */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-sm print:hidden">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <img
+            src={schoolProfile.coverUrl}
+            alt="আনন্দ পাঠশালা কুষ্টিয়া কভার ফটো"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <div className="relative z-10 p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5 max-w-2xl">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white p-1.5 shadow-lg shrink-0 border-2 border-amber-300">
+              <img
+                src={logoUrl}
+                alt="আনন্দ পাঠশালা কুষ্টিয়া অফিশিয়াল লোগো"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover rounded-2xl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-semibold">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+                  <span>{schoolProfile.taglineBn}</span>
+                </div>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+                {schoolProfile.nameBn} — স্মার্ট পোর্টাল
+              </h2>
+
+              <p className="text-amber-200 font-semibold text-xs sm:text-sm">
+                “{schoolProfile.sloganBn}” · শ্রেণি: {schoolProfile.classesBn}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs text-white/90 pt-0.5">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  {schoolProfile.addressBn}
+                </span>
+                <span className="flex items-center gap-1 font-mono">
+                  <Phone className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  {schoolProfile.phoneBn}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Account Info & Settings */}
+          <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-xs shrink-0 space-y-3">
+            <div className="flex items-center justify-between gap-2.5">
+              <span className="font-bold text-white/90">
+                {isSuperAdmin ? 'সিস্টেম রোল ভিউয়ার:' : 'লগইনকৃত অ্যাকাউন্ট:'}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {isPrincipal && (
+                  <button
+                    type="button"
+                    onClick={() => openEditProfileModal('contact')}
+                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg flex items-center gap-1 transition-colors border border-white/30 cursor-pointer shadow-2xs"
+                    title="প্রিন্সিপালের বাণী, প্রধান শিক্ষকের পরিচিতি ও স্কুলের যোগাযোগের তথ্য এডিট করুন"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-amber-300" />
+                    <span>প্রোফাইল এডিট</span>
+                  </button>
+                )}
+                {isPrincipal && (
+                  <button
+                    type="button"
+                    onClick={() => openEditProfileModal('theme')}
+                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg flex items-center gap-1 transition-colors border border-white/30 cursor-pointer shadow-2xs"
+                    title="স্কুলের ব্র্যান্ড ও থিম কালার সেটিংস"
+                  >
+                    <Palette className="w-3.5 h-3.5 text-pink-300" />
+                    <span>স্কুল থিম</span>
+                  </button>
+                )}
+                {isPrincipal && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMediaManager(!showMediaManager)}
+                    className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>লোগো ও ছবি</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            {isSuperAdmin ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                <button
+                  onClick={() => onSelectRole('super_admin')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-bold transition-all cursor-pointer bg-amber-400 text-slate-950 shadow-xs"
+                >
+                  👑 সুপার অ্যাডমিন
+                </button>
+                <button
+                  onClick={() => onSelectRole('director')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+                >
+                  🏛️ পরিচালক ভিউ
+                </button>
+                <button
+                  onClick={() => onSelectRole('principal')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+                >
+                  🎓 প্রিন্সিপাল ভিউ
+                </button>
+                <button
+                  onClick={() => onSelectRole('teacher')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+                >
+                  👩‍🏫 শিক্ষক ভিউ
+                </button>
+                <button
+                  onClick={() => onSelectRole('parent')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+                >
+                  👨‍👧 অভিভাবক ভিউ
+                </button>
+                <button
+                  onClick={() => onSelectRole('gate_security')}
+                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+                >
+                  🛡️ গেট সিকিউরিটি
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-2.5 border border-white/15">
+                {loggedInAccount?.avatarUrl && (
+                  <img
+                    src={loggedInAccount.avatarUrl}
+                    alt={loggedInAccount.nameBn}
+                    referrerPolicy="no-referrer"
+                    className="w-10 h-10 rounded-xl object-cover border border-amber-300 shrink-0 bg-white"
+                  />
+                )}
+                <div className="min-w-0">
+                  <div className="font-black text-white text-xs sm:text-sm truncate">
+                    {loggedInAccount?.nameBn || 'সম্মানিত ব্যবহারকারী'}
+                  </div>
+                  <div className="text-[11px] text-amber-200 font-semibold truncate">
+                    {loggedInAccount?.roleTitleBn || 'আনন্দ পাঠশালা পোর্টাল'}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Super Admin Access Control Panel */}
+      <SuperAdminAccessPanel
+        isSuperAdmin={isSuperAdmin}
+        directorPermissions={directorPermissions}
+        showAccessControlPanel={showAccessControlPanel}
+        setShowAccessControlPanel={setShowAccessControlPanel}
+        onResetPermissions={handleResetDirectorPermissions}
+        onSetPreset={handleSetDirectorAccessPreset}
+        onTogglePermission={handleToggleDirectorPermission}
+        onToggleModule={handleToggleDirectorModule}
+        logoUrl={logoUrl}
+      />
+
+      {/* Media Manager Drawer */}
+      <MediaManagerDrawer
+        isOpen={showMediaManager}
+        onClose={() => setShowMediaManager(false)}
+        logoUrl={logoUrl}
+        onUpdateLogo={onUpdateLogo}
+        onAddGalleryPhoto={onAddGalleryPhoto}
+      />
+
+      {/* Global Interactive Search Bar */}
+      <GlobalDashboardSearch
+        students={students}
+        attendanceRecords={attendanceRecords}
+        activityPosts={activityPosts}
+        pickupLogs={pickupLogs}
+        onNavigateTab={onNavigateTab}
+        currentRole={currentRole}
+        onSelectStudent={(s) => setInspectedStudent(s)}
+      />
+
+      {/* KPI Stats Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:hidden">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-xs font-medium">নিবন্ধিত শিক্ষার্থী</span>
+            <Users className="w-4 h-4 text-amber-500" />
+          </div>
+          <span className="text-2xl font-bold text-slate-900 font-mono">{students.length} জন</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            {SCHOOL_PROFILE.classesBn}
+          </span>
+        </div>
+
+        <div
+          onClick={() => onNavigateTab('attendance')}
+          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs hover:border-teal-400 hover:shadow-xs transition-all cursor-pointer group"
+          title="হাজিরা মডিউল খুলুন ও মাসিক CSV রিপোর্ট এক্সপোর্ট করুন"
+        >
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-xs font-medium group-hover:text-teal-700 transition-colors">
+              আজকের ক্লাসরুম হাজিরা
+            </span>
+            <CalendarCheck className="w-4 h-4 text-teal-600 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold text-teal-700 font-mono">
+              {attendanceStats.presentRate}%
+            </span>
+            <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+              মাসিক CSV 📊
+            </span>
+          </div>
+          <span className="text-[10px] text-emerald-600 block mt-0.5">
+            সবাই আজ উপস্থিত · রিপোর্ট দেখুন
+          </span>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-xs font-medium">নিরাপদ গেট প্রস্থান</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-2xl font-bold text-emerald-700 font-mono">{pickedUpCount} জন</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            শ্রেণিকক্ষে আছে: {inClassCount} জন
+          </span>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-xs font-medium">বিকাশ ফি কালেকশন</span>
+            <CreditCard className="w-4 h-4 text-rose-500" />
+          </div>
+          <span className="text-2xl font-bold text-slate-900 font-mono">
+            ৳ {feeSummary.totalCollected}
+          </span>
+          <span className="text-[10px] text-rose-500 block mt-0.5">
+            বকেয়া: ৳ {feeSummary.totalOutstanding}
+          </span>
+        </div>
+      </div>
+
+      {/* Real-Time FCM Teacher Notification Strip */}
+      <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-3xl p-5 text-white border border-amber-400/40 shadow-sm space-y-4 print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0">
+              <BellRing className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  তাৎক্ষণিক শিক্ষক নোটিফিকেশন (Firebase Cloud Messaging - FCM)
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
+                  {fcmNotifications.filter((n) => !n.read).length} অপঠিত
+                </span>
+              </div>
+              <p className="text-xs text-emerald-200/90">
+                নতুন ভর্তি আবেদন এবং গেট থেকে জরুরি পিক-আপ রিকোয়েস্টের রিয়েল-টাইম পুশ অ্যালার্ট
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {isPrincipal && (
+              <button
+                type="button"
+                onClick={() => setShowBroadcastModal(true)}
+                className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Megaphone className="w-3.5 h-3.5 text-slate-950" />
+                <span>সবাইকে নতুন নোটিফিকেশন পাঠান</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <BellRing className="w-3.5 h-3.5" />
+              <span>নোটিফিকেশন সেন্টার ও টেস্ট ট্রিগার খুলুন</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {fcmNotifications.slice(0, 2).map((notif) => {
+            const isUrgent = notif.type === 'urgent_pickup';
+            return (
+              <div
+                key={notif.id}
+                onClick={onOpenNotifications}
+                className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-3 ${
+                  isUrgent
+                    ? 'bg-rose-950/50 border-rose-500/50 hover:border-rose-400'
+                    : 'bg-emerald-950/50 border-emerald-500/50 hover:border-emerald-400'
+                }`}
+              >
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                      isUrgent
+                        ? 'bg-rose-500/20 text-rose-300'
+                        : 'bg-emerald-500/20 text-emerald-300'
+                    }`}
+                  >
+                    {isUrgent ? (
+                      <ShieldAlert className="w-4 h-4" />
+                    ) : (
+                      <GraduationCap className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white truncate">
+                        {notif.titleBn}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">
+                      {notif.bodyBn}
+                    </p>
+                    <span className="text-[10px] text-amber-300 font-mono block">
+                      {notif.timestamp} · অভিভাবক: {notif.guardianNameBn}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Official Principal, Head Teacher & Teacher Directory */}
+      <TeachersDirectorySection
+        teachersList={teachersList}
+        leadershipProfiles={leadershipProfiles}
+        schoolProfile={schoolProfile}
+        isPrincipal={isPrincipal}
+        onOpenEditProfileModal={openEditProfileModal}
+        onOpenAddNewTeacher={openAddNewTeacherModal}
+        onOpenAddNewSupportStaff={openAddNewSupportStaffModal}
+        onOpenEditTeacher={openEditTeacherModal}
+      />
+
+      {/* Class-wise Routine & Timetable Manager Section */}
+      <div id="class-routine-section">
+        <ClassRoutineModule
+          currentRole={currentRole}
+        />
+      </div>
+
+      {/* Dedicated Institution Governing Body & Board of Directors */}
+      <BoardOfDirectorsSection
+        directorsList={directorsList}
+        isPrincipal={isPrincipal}
+        logoUrl={logoUrl}
+        onAddNewDirector={openAddNewDirectorModal}
+        onEditDirector={openEditDirectorModal}
+        onDeleteDirector={handleDeleteDirector}
+        onResetDirectorsToDefault={handleResetDirectorsToDefault}
+        onNavigateTab={onNavigateTab}
+      />
+
+      {/* Connected Facebook Page & Live Campus Photo Gallery */}
+      <FacebookGallerySection
+        fbGallery={fbGallery}
+        logoUrl={logoUrl}
+        onOpenMediaManager={() => setShowMediaManager(true)}
+        onNavigateTab={onNavigateTab}
+        onSelectPhoto={(photo) => setActiveLightboxPhoto(photo)}
+      />
+
+      {/* Toast Notification Alert for Reminders / Status Updates */}
+      {(reminderToastMessage || achievementToast) && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-500/40 animate-fade-in text-xs max-w-md print:hidden">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <p className="flex-1">{reminderToastMessage || achievementToast}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setReminderToastMessage(null);
+              setAchievementToast(null);
+            }}
+            className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* School Notice Board & Announcements */}
+      <section className="space-y-4 print:hidden">
+        <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white border border-emerald-500/30 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>ডিজিটাল নোটিশবোর্ড ম্যানেজমেন্ট</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white">
+              পাবলিক নোটিশবোর্ড ও লাইভ স্ক্রলিং অ্যানাউন্সমেন্ট
+            </h3>
+            <p className="text-xs sm:text-sm text-emerald-200/80 max-w-2xl">
+              ওয়েবসাইটের শীর্ষে চলমান স্ক্রলিং টিকার এবং মূল নোটিশ বোর্ডের বিজ্ঞপ্তি, অভ্যন্তরীণ ভর্তি মেলা, ফ্রি ক্লাস, পরীক্ষার রুটিন ও ছুটির নোটিশ পরিচালনা করুন।
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+            {isPrincipal && (
+              <button
+                type="button"
+                onClick={openAddNoticeModal}
+                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-2 transition shadow-md cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-slate-950" />
+                <span>+ নতুন নোটিশ প্রকাশ করুন</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('public')}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition border border-white/20 cursor-pointer"
+            >
+              <ExternalLink className="w-4 h-4 text-emerald-300" />
+              <span>পাবলিক ওয়েবসাইটে প্রিভিউ</span>
+            </button>
+
+            {isPrincipal && (
+              <button
+                type="button"
+                onClick={handleResetNoticesToDefault}
+                className="px-3 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition border border-rose-500/30 cursor-pointer"
+                title="সকল নোটিশ প্রাতিষ্ঠানিক ডিফল্ট তালিকায় ফিরিয়ে নিন"
+              >
+                <span>রিসেট ডিফল্ট</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <NoticeBoard
+          notices={notices}
+          isAdmin={isPrincipal}
+          onAddNotice={openAddNoticeModal}
+          onEditNotice={openEditNoticeModal}
+          onDeleteNotice={handleDeleteNotice}
+          onNavigateApply={() => onNavigateTab('public')}
+        />
+      </section>
+
+      {/* Academic Calendar Section */}
+      <AcademicCalendarSection
+        academicEvents={academicEvents}
+        currentRole={currentRole}
+        onNavigateTab={onNavigateTab}
+        onOpenAddEvent={() => setShowAddEventModal(true)}
+        onOpenPrintPreview={() => setShowPrintPreview(true)}
+        onSelectEventDetail={(e) => setSelectedDetailEvent(e)}
+        onPrint={handlePrintCalendar}
+        onDownloadPdf={handleDownloadPdf}
+        createGoogleCalendarLink={createGoogleCalendarLink}
+        logoUrl={logoUrl}
+        currentDateBn={getBengaliCurrentDate()}
+        printScope={printScope}
+        onToastMessage={(msg) => setReminderToastMessage(msg)}
+      />
+
+      {/* Achievements & Milestones Showcase Section */}
+      <AchievementsSection
+        achievements={achievements}
+        isPrincipal={isPrincipal}
+        onOpenAddAchievement={() => setShowAddAchievementModal(true)}
+        onSelectAchievementDetail={(a) => setSelectedAchievementForModal(a)}
+        onToggleFeatured={handleToggleFeaturedAchievement}
+        onDeleteAchievement={handleDeleteAchievement}
+      />
+
+      {/* 4 Special Modules Hero Grid (The highlight of Ananda Pathshala) */}
+      <div className="space-y-3 print:hidden">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-slate-900">
+            কেজি ও প্লে স্কুলের বিশেষ ৪টি স্মার্ট মডিউল (Core Modules)
+          </h3>
+          <span className="text-xs text-amber-800 font-medium">আনন্দ পাঠশালার মূল ভিত্তি</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Module 1 */}
+          <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full uppercase">
+                মডিউল ১ · চাইল্ড সেফটি
+              </span>
+              <h4 className="text-base font-bold text-slate-900">
+                পিক-আপ সিকিউরিটি ও গেট-পাস
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                ছুটির সময় বাচ্চাকে কে নিতে এসেছেন (মা, বাবা নাকি ভেরিফাইড অভিভাবক) তা ছবি ও আইডি কার্ডসহ যাচাই।
+                গেটে কিউআর কোড স্ক্যান করে অভিভাবকদের তাৎক্ষণিক কনফার্মেশন এসএমএস পাঠানো।
+              </p>
+            </div>
+
+            <button
+              onClick={() => onNavigateTab('pickup')}
+              className="w-full py-2.5 px-4 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>গেট-পাস কনসোলে যান</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Module 2 */}
+          <div className="bg-white rounded-2xl border border-indigo-200 p-6 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full uppercase">
+                মডিউল ২ · ক্লাসরুম ডায়রি
+              </span>
+              <h4 className="text-base font-bold text-slate-900">
+                ডিজিটাল ডায়রি ও অ্যাক্টিভিটি ফিড
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                ছোট বাচ্চাদের ক্লাসের ড্রয়িং, সংখ্যা মেলানো ওয়ার্কশিট, কাগজের ঘর বানানো, পুষ্টিকর নাশতা খাওয়ার পরিমাপ এবং
+                শিক্ষক-অভিভাবকের সরাসরি মমতাময়ী ফিডব্যাক।
+              </p>
+            </div>
+
+            <button
+              onClick={() => onNavigateTab('diary')}
+              className="w-full py-2.5 px-4 text-xs font-bold text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>লাইভ ডায়েরি দেখুন</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Module 3 */}
+          <div className="bg-white rounded-2xl border border-amber-200 p-6 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                <Award className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full uppercase">
+                মডিউল ৩ · হোলিস্টিক গ্রোথ
+              </span>
+              <h4 className="text-base font-bold text-slate-900">
+                ৩-স্তরের শিশুর বিকাশ ট্র্যাকার
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                শুধু মুখস্থ পড়া নয়; সহমর্মিতা, শেয়ারিং, পরিষ্কার-পরিচ্ছন্নতা, আর্ট ক্রাফট ও শারীরিক বিকাশের সূচক
+                দিয়ে তৈরি অভিভাবক-বান্ধব রিপোর্ট কার্ড।
+              </p>
+            </div>
+
+            <button
+              onClick={() => onNavigateTab('assessment')}
+              className="w-full py-2.5 px-4 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>বিকাশ মেট্রিক্সে যান</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Module 4: Digital ID Card */}
+          <div className="bg-white rounded-2xl border border-purple-200 p-6 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                <IdCard className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full uppercase">
+                মডিউল ৪ · আইডেন্টিটি
+              </span>
+              <h4 className="text-base font-bold text-slate-900">
+                ডিজিটাল আইডি কার্ড ও প্রিন্ট
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                শিক্ষার্থী ও পিক-আপ অভিভাবকের কিউআর কোডসহ মানসম্মত দ্বিমুখী স্মার্ট আইডি কার্ড স্বয়ংক্রিয়ভাবে তৈরি
+                এবং এক ক্লিকে অফিশিয়াল প্রিন্ট বা লেমিনেটিং সুবিধা।
+              </p>
+            </div>
+
+            <button
+              onClick={() => onNavigateTab('id_cards')}
+              className="w-full py-2.5 px-4 text-xs font-bold text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>আইডি কার্ড জেনারেটর</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* School Assets & Inventory Tracker Shortcut Banner */}
+      <div className="bg-gradient-to-r from-amber-900 via-amber-800 to-amber-950 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-amber-500/40 shadow-sm print:hidden">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shrink-0 shadow-md">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm sm:text-base font-bold text-white">
+                বিদ্যালয়ের স্থায়ী সম্পদ ও সরঞ্জাম ট্র্যাকার (Asset & Inventory Ledger)
+              </h4>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950">
+                নতুন মডিউল
+              </span>
+            </div>
+            <p className="text-xs text-amber-200/90 mt-0.5">
+              আনন্দ পাঠশালার অফিস সরঞ্জাম, শ্রেণিকক্ষের ডিজিটাল ডিভাইস, খেলনা ও ফার্নিচারের বারকোড ট্র্যাকিং এবং অডিট হিস্ট্রি
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => onNavigateTab('inventory')}
+          className="w-full sm:w-auto px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+        >
+          <Package className="w-4 h-4" />
+          <span>ইনভেন্টরি মডিউলে যান</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 2-Column Split: Recent Gate Passes & Latest Diary Posts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
+        {/* Recent Gate Pass Log */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-slate-500" />
+              সাম্প্রতিক গেট প্রস্থান লগ (Gate Activity)
+            </h4>
+            <button
+              onClick={() => onNavigateTab('pickup')}
+              className="text-xs text-emerald-700 font-semibold hover:underline"
+            >
+              সবগুলো দেখুন
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {pickupLogs.slice(0, 3).map((log) => (
+              <div key={log.id} className="py-2.5 flex items-start justify-between text-xs">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900">{log.studentNameBn}</span>
+                    <span className="text-[10px] text-slate-400">({log.className})</span>
+                  </div>
+                  <span className="text-slate-600 text-[11px] block mt-0.5">
+                    গ্রহীতা: {log.pickupPersonNameBn} ({log.relationBn})
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-500">{log.timestamp}</span>
+                  <span className="text-[10px] font-mono text-emerald-600 block">
+                    SMS প্রেরিত ✓
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Latest Classroom Activity with Real Photo Preview */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Smile className="w-4 h-4 text-amber-500" />
+              আজকের ডায়রি স্ন্যাপশট (Classroom Diary)
+            </h4>
+            <button
+              onClick={() => onNavigateTab('diary')}
+              className="text-xs text-indigo-700 font-semibold hover:underline"
+            >
+              ফিডে যান
+            </button>
+          </div>
+
+          {activityPosts[0] && (
+            <div className="flex flex-col sm:flex-row gap-4 text-xs">
+              {activityPosts[0].photoUrl && (
+                <img
+                  src={activityPosts[0].photoUrl}
+                  alt={activityPosts[0].titleBn}
+                  referrerPolicy="no-referrer"
+                  className="w-full sm:w-28 h-24 rounded-xl object-cover shrink-0 border border-slate-200"
+                />
+              )}
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 text-sm">
+                    {activityPosts[0].titleBn}
+                  </span>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded">
+                    {activityPosts[0].className}
+                  </span>
+                </div>
+                <p className="text-slate-600 leading-relaxed line-clamp-2">
+                  {activityPosts[0].descriptionBn}
+                </p>
+                {activityPosts[0].snackDetail && (
+                  <div className="text-[11px] text-emerald-800 bg-emerald-50/80 p-1.5 rounded-lg">
+                    টিফিন: {activityPosts[0].snackDetail.itemBn}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hidden print page layout for window.print() */}
+      <div className="hidden print:block w-full">
+        <PrintableAcademicCalendarDocument
+          eventsToRender={academicEvents}
+          logoUrl={logoUrl}
+          isPreview={false}
+          holidayCount={holidayCount}
+          examCount={examCount}
+          meetingCount={meetingCount}
+          currentDateBn={getBengaliCurrentDate()}
+        />
+      </div>
+
+      {/* ========================================================================= */}
+      {/* ALL MODALS (ISOLATED AND DECOUPLED)                                      */}
+      {/* ========================================================================= */}
+
+      {/* Photo Lightbox Modal */}
+      <PhotoLightboxModal
+        photo={activeLightboxPhoto}
+        onClose={() => setActiveLightboxPhoto(null)}
+      />
+
+      {/* Academic Calendar Print Preview Modal */}
+      <AcademicCalendarPrintModal
+        isOpen={showPrintPreview}
+        onClose={() => setShowPrintPreview(false)}
+        academicEvents={academicEvents}
+        filteredAcademicEvents={academicEvents}
+        printScope={printScope}
+        setPrintScope={setPrintScope}
+        onDownloadPdf={handleDownloadPdf}
+        onPrint={handlePrintCalendar}
+        logoUrl={logoUrl}
+        holidayCount={holidayCount}
+        examCount={examCount}
+        meetingCount={meetingCount}
+        currentDateBn={getBengaliCurrentDate()}
+      />
+
+      {/* Add Academic Calendar Event Modal */}
+      <AddAcademicEventModal
+        isOpen={showAddEventModal}
+        onClose={() => setShowAddEventModal(false)}
+        onAddEvent={handleAddEventSubmit}
+      />
+
+      {/* Academic Event Detail Modal */}
+      <AcademicEventDetailModal
+        event={selectedDetailEvent}
+        onClose={() => setSelectedDetailEvent(null)}
+        isReminded={selectedDetailEvent ? !!remindedEventIds[selectedDetailEvent.id] : false}
+        onToggleReminder={toggleEventReminder}
+        googleCalendarLink={selectedDetailEvent ? createGoogleCalendarLink(selectedDetailEvent) : ''}
+      />
+
+      {/* Add Achievement Modal */}
+      <AddAchievementModal
+        isOpen={showAddAchievementModal}
+        onClose={() => setShowAddAchievementModal(false)}
+        students={students}
+        onAddAchievement={handleCreateAchievement}
+      />
+
+      {/* Achievement Detail Certificate Modal */}
+      <AchievementDetailModal
+        achievement={selectedAchievementForModal}
+        onClose={() => setSelectedAchievementForModal(null)}
+        logoUrl={logoUrl}
+      />
+
+      {/* Broadcast FCM Modal */}
+      <BroadcastFcmModal
+        isOpen={showBroadcastModal}
+        onClose={() => setShowBroadcastModal(false)}
+        onSendNotification={(notif) => {
+          if (onSendBroadcastNotification) {
+            onSendBroadcastNotification(notif);
+          }
+          setAchievementToast('📢 সবাইকে নতুন পুশ নোটিফিকেশন সফলভাবে পাঠানো হয়েছে!');
+          setTimeout(() => setAchievementToast(null), 4000);
+        }}
+      />
+
+      {/* Edit Leader Profile Modal */}
+      <EditLeaderProfileModal
+        leaderKey={editingLeaderKey}
+        leadershipProfiles={leadershipProfiles}
+        onClose={() => setEditingLeaderKey(null)}
+        onSave={handleSaveLeaderProfile}
+      />
+
+      {/* Edit Teacher Modal */}
+      <EditTeacherModal
+        isOpen={Boolean(editingTeacher || isAddingNewTeacher)}
+        isAddingNew={isAddingNewTeacher}
+        initialStaffCategory={teacherModalCategory}
+        teacher={editingTeacher}
+        teachersCount={teachersList.length}
+        onClose={() => {
+          setEditingTeacher(null);
+          setIsAddingNewTeacher(false);
+        }}
+        onSave={handleSaveTeacher}
+        onDelete={handleDeleteTeacher}
+      />
+
+      {/* Edit Director Modal */}
+      <EditDirectorModal
+        isOpen={showDirectorModal}
+        isAddingNew={isAddingNewDirector}
+        director={editingDirector}
+        directorsCount={directorsList.length}
+        onClose={() => setShowDirectorModal(false)}
+        onSave={handleSaveDirector}
+        onDelete={handleDeleteDirector}
+      />
+
+      {/* Edit School Profile Modal */}
+      <EditSchoolProfileModal
+        isOpen={showEditSchoolProfileModal}
+        schoolProfile={schoolProfile}
+        leadershipProfiles={leadershipProfiles}
+        onSaveSchoolProfile={persistSchoolProfile}
+        onSaveLeadershipProfiles={persistLeadershipProfiles}
+        initialTab={profileModalInitialTab}
+        onClose={() => setShowEditSchoolProfileModal(false)}
+      />
+
+      {/* Inspected Student Detail Modal */}
+      <StudentInspectModal
+        student={inspectedStudent}
+        onClose={() => setInspectedStudent(null)}
+        onNavigateTab={onNavigateTab}
+      />
+
+      {/* Add / Edit School Notice Modal */}
+      <AddEditNoticeModal
+        isOpen={showNoticeModal}
+        editingNotice={editingNotice}
+        onClose={() => setShowNoticeModal(false)}
+        onSave={handleSaveNotice}
+        onDelete={handleDeleteNotice}
+        currentDateBn={getBengaliCurrentDate()}
+      />
+    </div>
+  );
+};

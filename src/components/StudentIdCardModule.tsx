@@ -1,0 +1,960 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import QRCode from 'qrcode';
+import {
+  Student,
+  SchoolClass,
+  UserRole,
+  PortalAccount,
+} from '../types/school';
+import {
+  getSchoolClassNameBn,
+  toBengaliNumber,
+} from '../utils/schoolLogic';
+import {
+  Printer,
+  QrCode,
+  IdCard,
+  Search,
+  Users,
+  Layers,
+  Download,
+  Copy,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  AlertCircle,
+  Phone,
+  Sparkles,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  SlidersHorizontal,
+  Eye,
+  Scissors,
+  FileText,
+} from 'lucide-react';
+
+export interface StudentIdCardModuleProps {
+  students: Student[];
+  currentRole?: UserRole;
+  loggedInAccount?: PortalAccount | null;
+  onNavigateTab?: (tab: string) => void;
+  initialStudentId?: string;
+  initialClass?: SchoolClass | 'all';
+}
+
+export const StudentIdCardModule: React.FC<StudentIdCardModuleProps> = ({
+  students,
+  currentRole = 'principal',
+  onNavigateTab,
+  initialStudentId,
+  initialClass = 'all',
+}) => {
+  // Navigation & Filtering State
+  const [selectedClassFilter, setSelectedClassFilter] = useState<SchoolClass | 'all'>(initialClass);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(
+    initialStudentId || students[0]?.id || ''
+  );
+
+  // View Options
+  const [viewMode, setViewMode] = useState<'single' | 'batch'>('single');
+  const [cardSideView, setCardSideView] = useState<'both' | 'front' | 'back'>('both');
+  const [qrFormatMode, setQrFormatMode] = useState<'standard' | 'simple'>('standard');
+  const [copiedQrText, setCopiedQrText] = useState(false);
+  const [isSimulatingScan, setIsSimulatingScan] = useState(false);
+
+  // QR Code Storage
+  const [singleQrDataUrl, setSingleQrDataUrl] = useState<string>('');
+  const [batchQrMap, setBatchQrMap] = useState<Record<string, string>>({});
+  const [isGeneratingBatchQr, setIsGeneratingBatchQr] = useState<boolean>(false);
+
+  // Filter students based on Class and Search Query
+  const filteredStudents = useMemo(() => {
+    return students.filter((s) => {
+      const matchClass = selectedClassFilter === 'all' || s.className === selectedClassFilter;
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return matchClass;
+
+      const matchNameBn = s.nameBn.toLowerCase().includes(q);
+      const matchNameEn = s.nameEn.toLowerCase().includes(q);
+      const matchRoll = s.rollNo.toString().includes(q) || toBengaliNumber(s.rollNo).includes(q);
+      const matchId = s.id.toLowerCase().includes(q);
+      const matchPhone = s.emergencyPhone?.includes(q) || false;
+
+      return matchClass && (matchNameBn || matchNameEn || matchRoll || matchId || matchPhone);
+    });
+  }, [students, selectedClassFilter, searchQuery]);
+
+  // Current selected student for single view
+  const currentStudent = useMemo(() => {
+    const found = filteredStudents.find((s) => s.id === selectedStudentId);
+    if (found) return found;
+    return filteredStudents[0] || students[0];
+  }, [filteredStudents, selectedStudentId, students]);
+
+  // Sync selectedStudentId if filter leaves it out
+  useEffect(() => {
+    if (currentStudent && currentStudent.id !== selectedStudentId) {
+      setSelectedStudentId(currentStudent.id);
+    }
+  }, [currentStudent, selectedStudentId]);
+
+  // Generate dynamic QR Code Payload containing Student ID
+  const getStudentQrPayload = (std: Student) => {
+    if (qrFormatMode === 'simple') {
+      return JSON.stringify({
+        studentId: std.id, // e.g. "std-1"
+        name: std.nameBn,
+        class: std.className,
+        roll: std.rollNo,
+        verifyUrl: `https://anandapathshala.edu.bd/verify?studentId=${std.id}`,
+      });
+    }
+
+    const primaryPickup = std.authorizedPickups?.find((p) => p.isPrimary) || std.authorizedPickups?.[0];
+    const guardianName = primaryPickup?.nameBn || std.fatherNameBn || std.motherNameBn || 'অভিভাবক';
+
+    return JSON.stringify({
+      app: 'AnandaPathshala',
+      type: 'STUDENT_DIGITAL_ID',
+      studentId: std.id, // e.g. "std-1"
+      rollNo: std.rollNo,
+      nameBn: std.nameBn,
+      nameEn: std.nameEn,
+      className: std.className,
+      classNameBn: getSchoolClassNameBn(std.className),
+      section: std.section,
+      guardianName: guardianName,
+      guardianPhone: std.emergencyPhone,
+      bloodGroup: std.bloodGroup || 'N/A',
+      gatePassCode: `AP-ID-${std.className.toUpperCase()}-${std.rollNo}`,
+      academicYear: '2026',
+      verifiedSchool: 'Ananda Pathshala Kindergarten, Kushtia',
+      verificationHash: `AP-${std.id}-${std.rollNo}-2026`,
+    });
+  };
+
+  // Generate QR Code for Single Student
+  useEffect(() => {
+    if (!currentStudent) return;
+    const payload = getStudentQrPayload(currentStudent);
+    QRCode.toDataURL(payload, {
+      width: 260,
+      margin: 1,
+      color: {
+        dark: '#064e3b', // Deep emerald
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'H',
+    })
+      .then((url) => setSingleQrDataUrl(url))
+      .catch((err) => console.error('Error generating single QR code:', err));
+  }, [currentStudent, qrFormatMode]);
+
+  // Generate QR Codes for Batch Print Grid
+  useEffect(() => {
+    if (viewMode !== 'batch') return;
+
+    let isCancelled = false;
+    setIsGeneratingBatchQr(true);
+
+    const generateAll = async () => {
+      const map: Record<string, string> = {};
+      for (const std of filteredStudents) {
+        if (isCancelled) break;
+        try {
+          const payload = getStudentQrPayload(std);
+          const url = await QRCode.toDataURL(payload, {
+            width: 180,
+            margin: 1,
+            color: {
+              dark: '#064e3b',
+              light: '#ffffff',
+            },
+            errorCorrectionLevel: 'M',
+          });
+          map[std.id] = url;
+        } catch (e) {
+          console.error(`Error generating QR for student ${std.id}:`, e);
+        }
+      }
+      if (!isCancelled) {
+        setBatchQrMap(map);
+        setIsGeneratingBatchQr(false);
+      }
+    };
+
+    generateAll();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [viewMode, filteredStudents, qrFormatMode]);
+
+  // Navigation handlers
+  const currentIndex = filteredStudents.findIndex((s) => s.id === currentStudent?.id);
+  const handlePrevStudent = () => {
+    if (currentIndex > 0) {
+      setSelectedStudentId(filteredStudents[currentIndex - 1].id);
+    }
+  };
+  const handleNextStudent = () => {
+    if (currentIndex < filteredStudents.length - 1) {
+      setSelectedStudentId(filteredStudents[currentIndex + 1].id);
+    }
+  };
+
+  // Action handlers
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleCopyQrData = () => {
+    if (!currentStudent) return;
+    const payload = getStudentQrPayload(currentStudent);
+    navigator.clipboard.writeText(payload);
+    setCopiedQrText(true);
+    setTimeout(() => setCopiedQrText(false), 2500);
+  };
+
+  const handleDownloadQr = () => {
+    if (!singleQrDataUrl || !currentStudent) return;
+    const a = document.createElement('a');
+    a.href = singleQrDataUrl;
+    a.download = `QR_ID_${currentStudent.id}_${currentStudent.nameEn.replace(/\s+/g, '_')}_Roll_${currentStudent.rollNo}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const guardianDisplayName =
+    currentStudent?.authorizedPickups?.find((p) => p.isPrimary)?.nameBn ||
+    currentStudent?.fatherNameBn ||
+    currentStudent?.motherNameBn ||
+    'অভিভাবক';
+
+  const guardianRelation =
+    currentStudent?.authorizedPickups?.find((p) => p.isPrimary)?.relationBn || 'পিতা';
+
+  return (
+    <div className="space-y-6">
+      {/* ========================================================================= */}
+      {/* 1. MODULE BANNER & QUICK STATS (Screen only)                             */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 text-white p-6 sm:p-8 shadow-md relative overflow-hidden print:hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-emerald-400 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
+              <IdCard className="w-8 h-8" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-2 bg-white/15 px-3 py-0.5 rounded-full text-xs font-bold text-amber-300">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>আনন্দ পাঠশালা স্মার্ট ক্যাম্পাস · ডিজিটাল আইডি কার্ড মডিউল</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                শিক্ষার্থী ডিজিটাল আইডি কার্ড ও ডায়নামিক কিউআর প্রিন্ট
+              </h2>
+              <p className="text-xs sm:text-sm text-emerald-100 max-w-2xl leading-relaxed">
+                শিক্ষার্থীর নাম, শ্রেণি এবং ইউনিক স্টুডেন্ট আইডি (Student ID) সম্বলিত হাই-রেজোলিউশন ডাইনামিক QR কোডসহ
+                প্রিন্ট-রেডি কার্ড জেনারেটর। CSS <code>print-avoid-break</code> ইউটিলিটির মাধ্যমে নিখুঁত A4 প্রিন্টিং নিশ্চিত করা হয়েছে।
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Print & Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="px-5 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+            >
+              <Printer className="w-4 h-4 text-slate-950" />
+              <span>কার্ড সরাসরি প্রিন্ট করুন (Print)</span>
+            </button>
+
+            {onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab('students')}
+                className="px-4 py-3 bg-white/15 hover:bg-white/25 text-white rounded-2xl font-bold text-xs flex items-center gap-2 transition cursor-pointer border border-white/20"
+              >
+                <Users className="w-4 h-4" />
+                <span>শিক্ষার্থী ডিরেক্টরি</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Feature Badges & Specs Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/15 text-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-emerald-100">স্ট্যান্ডার্ড CR-80 আইডি ফরম্যাট</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-emerald-100">ইউনিক স্টুডেন্ট আইডি এনকোডেড QR</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-emerald-100 font-bold text-amber-300">print-avoid-break পেজব্রেক মুক্ত</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-emerald-100">অভিভাবক পিকআপ ও গেট ভেরিফিকেশন</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. FILTER & TOOLBAR CONTROLS (Screen only)                                */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs space-y-4 print:hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Class Filter & Search */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+              <Users className="w-4 h-4 text-emerald-700" />
+              <span>শ্রেণি ফিল্টার:</span>
+            </div>
+            <select
+              value={selectedClassFilter}
+              onChange={(e) => {
+                const val = e.target.value as SchoolClass | 'all';
+                setSelectedClassFilter(val);
+              }}
+              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-600 cursor-pointer"
+            >
+              <option value="all">সকল শ্রেণি ({students.length} জন)</option>
+              <option value="HateKhori">হাতেখড়ি (Pre-Play)</option>
+              <option value="Play">প্লে (Play)</option>
+              <option value="Nursery">নার্সারি (Nursery)</option>
+              <option value="KG">কেজি (KG)</option>
+              <option value="Class-1">ওয়ান (Class 1)</option>
+              <option value="Class-2">টু (Class 2)</option>
+            </select>
+
+            <div className="relative min-w-[200px] sm:min-w-[240px]">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="নাম, রোল বা আইডি দিয়ে খুঁজুন..."
+                className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:border-emerald-600"
+              />
+            </div>
+
+            <span className="text-xs text-slate-500 font-medium">
+              মোট ম্যাচ: <strong>{toBengaliNumber(filteredStudents.length)}</strong> জন
+            </span>
+          </div>
+
+          {/* View Mode Switcher: Single vs Batch */}
+          <div className="flex items-center gap-2 self-start lg:self-center">
+            <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('single')}
+                className={`px-3.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  viewMode === 'single'
+                    ? 'bg-emerald-700 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>একক কার্ড ভিউ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('batch')}
+                className={`px-3.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  viewMode === 'batch'
+                    ? 'bg-emerald-700 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>শ্রেণি ব্যাচ প্রিন্ট শিট ({toBengaliNumber(filteredStudents.length)})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Controls for Single Card View */}
+        {viewMode === 'single' && currentStudent && (
+          <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+            {/* Student Selector Dropdown with Next / Prev */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-slate-700">নির্বাচিত শিক্ষার্থী:</span>
+              <select
+                value={selectedStudentId}
+                onChange={(e) => setSelectedStudentId(e.target.value)}
+                className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:border-emerald-600 max-w-[240px] truncate cursor-pointer"
+              >
+                {filteredStudents.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    রোল {toBengaliNumber(s.rollNo)}: {s.nameBn} ({getSchoolClassNameBn(s.className)})
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handlePrevStudent}
+                  disabled={currentIndex <= 0}
+                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="পূর্ববর্তী শিক্ষার্থী"
+                >
+                  <ChevronLeft className="w-4 h-4 text-slate-600" />
+                </button>
+                <span className="font-mono text-[11px] text-slate-500 font-bold px-1.5">
+                  {toBengaliNumber(currentIndex + 1)} / {toBengaliNumber(filteredStudents.length)}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleNextStudent}
+                  disabled={currentIndex >= filteredStudents.length - 1}
+                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="পরবর্তী শিক্ষার্থী"
+                >
+                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+            </div>
+
+            {/* Side View & QR Format Selectors */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 font-medium">পিঠ প্রদর্শন:</span>
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setCardSideView('both')}
+                    className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
+                      cardSideView === 'both' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-slate-600'
+                    }`}
+                  >
+                    উভয় পিঠ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCardSideView('front')}
+                    className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
+                      cardSideView === 'front' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-slate-600'
+                    }`}
+                  >
+                    সম্মুখভাগ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCardSideView('back')}
+                    className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
+                      cardSideView === 'back' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-slate-600'
+                    }`}
+                  >
+                    পেছনভাগ (QR)
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 font-medium">কিউআর মোড:</span>
+                <select
+                  value={qrFormatMode}
+                  onChange={(e) => setQrFormatMode(e.target.value as any)}
+                  className="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-[11px] font-bold text-slate-800 outline-none"
+                >
+                  <option value="standard">ভেরিফায়েড গেট-পাস (ID সহ)</option>
+                  <option value="simple">সংক্ষিপ্ত স্টুডেন্ট আইডি URL</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. CARD PRESENTATION CANVAS                                               */}
+      {/* ========================================================================= */}
+      {filteredStudents.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300 text-slate-500 space-y-3">
+          <IdCard className="w-12 h-12 text-slate-400 mx-auto" />
+          <h3 className="text-base font-bold text-slate-800">কোনো শিক্ষার্থী পাওয়া যায়নি</h3>
+          <p className="text-xs text-slate-500">
+            অনুগ্রহ করে অন্য শ্রেণি নির্বাচন করুন অথবা আপনার সার্চ কোয়েরি পরিবর্তন করুন।
+          </p>
+        </div>
+      ) : viewMode === 'single' && currentStudent ? (
+        /* ======================================================================= */
+        /* SINGLE STUDENT ID CARD VIEW                                             */
+        /* ======================================================================= */
+        <div className="space-y-6">
+          {/* Card Presentation Stage */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 py-4 print:py-0 print:gap-6">
+            {/* ---------------- FRONT SIDE ---------------- */}
+            {(cardSideView === 'both' || cardSideView === 'front') && (
+              <div
+                className="student-id-card-front print-avoid-break break-inside-avoid w-[330px] sm:w-[350px] h-[530px] rounded-3xl bg-white shadow-xl border-2 border-emerald-700/30 overflow-hidden flex flex-col justify-between relative print:shadow-none print:border-2 print:border-slate-800"
+              >
+                {/* Lanyard Hole Visual Guide (Hidden on print) */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-2.5 rounded-full bg-slate-200 border border-slate-300 print:hidden z-20"></div>
+
+                {/* Card Top Branding Header */}
+                <div className="bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 text-white p-4 pt-5 text-center relative overflow-hidden shrink-0 border-b-4 border-amber-400">
+                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 pointer-events-none"></div>
+                  <div className="absolute -left-6 -bottom-6 w-20 h-20 rounded-full bg-amber-400/10 pointer-events-none"></div>
+
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-xl bg-white text-emerald-800 flex items-center justify-center font-black shadow-xs">
+                      <Building2 className="w-5 h-5 text-emerald-700" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-black text-sm tracking-tight text-white leading-tight">
+                        আনন্দ পাঠশালা কিন্ডারগার্টেন
+                      </h4>
+                      <span className="text-[9px] text-amber-300 block font-medium">
+                        কোর্টপাড়া, কুষ্টিয়া-৭০০০ · স্থাপিত ২০২৩
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="inline-block bg-amber-400 text-slate-950 text-[10px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider shadow-2xs mt-1">
+                    স্টুডেন্ট আইডি কার্ড · ২০২৬
+                  </div>
+                </div>
+
+                {/* Card Body with Photo & Core Info */}
+                <div className="p-4 flex-1 flex flex-col items-center justify-between text-center">
+                  {/* Avatar / Photo */}
+                  <div className="relative mt-1">
+                    {currentStudent.photoUrl ? (
+                      <img
+                        src={currentStudent.photoUrl}
+                        alt={currentStudent.nameBn}
+                        referrerPolicy="no-referrer"
+                        className="w-24 h-24 rounded-2xl object-cover shadow-md border-3 border-emerald-600"
+                      />
+                    ) : (
+                      <div
+                        className={`w-24 h-24 rounded-2xl flex items-center justify-center font-black text-3xl shadow-md border-3 border-emerald-600 ${currentStudent.avatarColor}`}
+                      >
+                        {toBengaliNumber(currentStudent.rollNo)}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-800 text-white text-[10px] font-black px-2 py-0.5 rounded-lg border border-white shadow-xs">
+                      রোল: {toBengaliNumber(currentStudent.rollNo)}
+                    </div>
+                  </div>
+
+                  {/* Name & Class Badges */}
+                  <div className="space-y-1 mt-2">
+                    <h3 className="text-lg font-black text-slate-900 leading-tight">
+                      {currentStudent.nameBn}
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      {currentStudent.nameEn}
+                    </p>
+
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 px-3 py-1 rounded-xl text-xs font-black">
+                      <span>শ্রেণি: {getSchoolClassNameBn(currentStudent.className)}</span>
+                      <span className="text-emerald-400">|</span>
+                      <span>শাখা: {currentStudent.section}</span>
+                    </div>
+                  </div>
+
+                  {/* Details Table */}
+                  <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-left text-xs space-y-1.5 mt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-semibold">স্টুডেন্ট আইডি:</span>
+                      <span className="font-mono font-black text-emerald-900 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300 text-[11px]">
+                        {currentStudent.id}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-semibold">অভিভাবক:</span>
+                      <span className="font-bold text-slate-800 truncate max-w-[170px]">
+                        {guardianDisplayName} ({guardianRelation})
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                        <Phone className="w-2.5 h-2.5 text-emerald-600" />
+                        যোগাযোগ ফোন:
+                      </span>
+                      <span className="font-mono font-black text-emerald-800">
+                        {currentStudent.emergencyPhone}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-semibold">রক্তের গ্রুপ:</span>
+                      <span className="font-mono font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                        {currentStudent.bloodGroup || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Hologram & Security Mark */}
+                  <div className="w-full flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                    <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>ভেরিফায়েড শিক্ষার্থী</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono font-bold text-slate-600">
+                        ID: {currentStudent.id} · {currentStudent.className.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer Stripe */}
+                <div className="bg-emerald-800 text-white text-[9px] py-1 text-center font-medium">
+                  আনন্দময় শৈশব · আলোকিত ভবিষ্যৎ
+                </div>
+              </div>
+            )}
+
+            {/* ---------------- BACK SIDE (Dynamic QR Code) ---------------- */}
+            {(cardSideView === 'both' || cardSideView === 'back') && (
+              <div
+                className="student-id-card-back print-avoid-break break-inside-avoid w-[330px] sm:w-[350px] h-[530px] rounded-3xl bg-white shadow-xl border-2 border-teal-700/30 overflow-hidden flex flex-col justify-between relative print:shadow-none print:border-2 print:border-slate-800"
+              >
+                {/* Lanyard Hole Visual Guide (Hidden on print) */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-2.5 rounded-full bg-slate-200 border border-slate-300 print:hidden z-20"></div>
+
+                {/* Top Security Banner */}
+                <div className="bg-gradient-to-r from-teal-800 via-emerald-800 to-teal-900 text-white p-3 pt-5 text-center shrink-0 border-b-2 border-amber-400">
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-black">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>ডিজিটাল গেট-পাস ও পিকআপ কিউআর কোড</span>
+                  </div>
+                  <span className="text-[9.5px] text-teal-200 block mt-0.5">
+                    ছুটির সময় গেটে প্রদর্শন করুন · Student ID: {currentStudent.id}
+                  </span>
+                </div>
+
+                {/* Main Back Content */}
+                <div className="p-4 flex-1 flex flex-col items-center justify-between text-center">
+                  {/* Crisp Dynamic QR Code */}
+                  <div className="p-2.5 bg-white rounded-2xl border-2 border-emerald-600 shadow-sm flex flex-col items-center">
+                    {singleQrDataUrl ? (
+                      <img
+                        src={singleQrDataUrl}
+                        alt={`QR Code for ${currentStudent.nameBn}`}
+                        className="w-36 h-36 object-contain"
+                      />
+                    ) : (
+                      <div className="w-36 h-36 flex items-center justify-center bg-slate-100 text-slate-400 text-xs">
+                        কিউআর তৈরি হচ্ছে...
+                      </div>
+                    )}
+                    <span className="font-mono text-[9.5px] font-black text-emerald-900 mt-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      ID: {currentStudent.id} · ROLL: {currentStudent.rollNo}
+                    </span>
+                  </div>
+
+                  {/* Campus Gate Instructions */}
+                  <div className="w-full bg-amber-50/80 border border-amber-200 rounded-xl p-2 text-left text-[10px] text-amber-950 space-y-1">
+                    <div className="flex items-start gap-1 font-bold text-amber-900">
+                      <AlertCircle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
+                      <span>অভিভাবকদের জন্য জরুরি নির্দেশনা:</span>
+                    </div>
+                    <p className="leading-tight text-slate-700">
+                      ১. ছুটির সময় ক্যাম্পাসের গেটে এই কিউআর কোডটি স্ক্যান করে শিক্ষার্থীকে গ্রহণ করুন।
+                    </p>
+                    <p className="leading-tight text-slate-700">
+                      ২. কার্ডটি হারিয়ে গেলে তাৎক্ষণিক প্রধান শিক্ষক/সিকিউরিটি ডেস্কে জানান।
+                    </p>
+                  </div>
+
+                  {/* Authorized Pickup List */}
+                  <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-left text-[10.5px] space-y-1">
+                    <span className="text-[9.5px] font-bold text-slate-400 block">অনুমোদিত পিকআপ পারসন:</span>
+                    <div className="font-bold text-slate-800 flex items-center justify-between">
+                      <span>{guardianDisplayName}</span>
+                      <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                        {guardianRelation} · অনুমোদিত
+                      </span>
+                    </div>
+                    <div className="font-mono text-[10px] text-slate-600">
+                      ফোন: {currentStudent.emergencyPhone}
+                    </div>
+                  </div>
+
+                  {/* Official Signature Seal */}
+                  <div className="w-full flex items-end justify-between pt-2 border-t border-slate-200 text-[9.5px]">
+                    <div className="text-left">
+                      <span className="text-slate-400 block">ঠিকানা:</span>
+                      <span className="text-slate-600 font-medium">কোর্টপাড়া, কুষ্টিয়া</span>
+                      <span className="text-slate-500 font-mono block">০১৯১৪-০৫৭৫১১</span>
+                    </div>
+
+                    <div className="text-center">
+                      <div className="w-20 border-b border-dashed border-slate-400 pb-1 mb-0.5">
+                        <span className="font-serif italic text-emerald-900 font-bold text-xs tracking-tight">
+                          Habibur R.
+                        </span>
+                      </div>
+                      <span className="text-slate-500 font-bold block text-[8.5px]">
+                        অধ্যক্ষ / অনুমোদিত সিল
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Disclaimer */}
+                <div className="bg-slate-800 text-slate-300 text-[8.5px] py-1 text-center font-medium">
+                  এই কার্ডটি আনন্দ পাঠশালার সম্পত্তি · পাওয়া গেলে ফেরত দেওয়ার অনুরোধ
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* QR Code Action Tools & Inspector Box (Screen Only) */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs space-y-4 print:hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-emerald-600" />
+                <h4 className="text-sm font-bold text-slate-900">
+                  ডাইনামিক কিউআর ডাটা ও গেট সিকিউরিটি ইন্সপেক্টর:
+                </h4>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIsSimulatingScan(!isSimulatingScan)}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    isSimulatingScan
+                      ? 'bg-amber-500 text-slate-950 shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{isSimulatingScan ? 'স্ক্যান টেস্ট বন্ধ করুন' : 'গেট স্ক্যান টেস্ট করুন'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyQrData}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer flex items-center gap-1.5"
+                >
+                  {copiedQrText ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">কপি হয়েছে!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>কিউআর টেক্সট কপি</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition cursor-pointer flex items-center gap-1.5 border border-emerald-200"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>কিউআর ইমেজ ডাউনলোড</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Simulated Gate Scan Result Box */}
+            {isSimulatingScan && (
+              <div className="p-4 bg-emerald-50/90 border border-emerald-300 rounded-2xl space-y-3 text-xs animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-black text-emerald-900">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    <span>ক্যাম্পাস গেট সিকিউরিটি স্ক্যানার সিমুলেশন (Decoded QR Payload)</span>
+                  </div>
+                  <span className="bg-emerald-200 text-emerald-900 font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                    STATUS: AUTHORIZED & MATCHED
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs pt-1">
+                  <div className="bg-white p-2.5 rounded-xl border border-emerald-200">
+                    <span className="text-slate-400 block text-[10px]">স্টুডেন্ট আইডি:</span>
+                    <strong className="text-emerald-800 font-mono text-sm">{currentStudent.id}</strong>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border border-emerald-200">
+                    <span className="text-slate-400 block text-[10px]">শিক্ষার্থী ও রোল:</span>
+                    <strong className="text-slate-800">{currentStudent.nameBn}</strong> (রোল {toBengaliNumber(currentStudent.rollNo)})
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border border-emerald-200">
+                    <span className="text-slate-400 block text-[10px]">শ্রেণি ও শাখা:</span>
+                    <strong className="text-slate-800">{getSchoolClassNameBn(currentStudent.className)}</strong> ({currentStudent.section})
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border border-emerald-200">
+                    <span className="text-slate-400 block text-[10px]">অনুমোদিত অভিভাবক ও ফোন:</span>
+                    <strong className="text-emerald-800">{guardianDisplayName}</strong> · {currentStudent.emergencyPhone}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Decoded Raw Payload String */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono text-[11px] text-slate-700 break-all">
+              <span className="font-bold text-slate-400 block text-[10px] mb-1 font-sans">
+                কিউআর কোডে এনকোডকৃত ডাটা পে-লোড (Student ID সহ):
+              </span>
+              {getStudentQrPayload(currentStudent)}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ======================================================================= */
+        /* BATCH PRINT SHEET (Entire Class Cards - A4 Printable Grid)             */
+        /* ======================================================================= */
+        <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
+            <div className="flex items-center gap-2.5">
+              <Printer className="w-5 h-5 text-amber-700 shrink-0" />
+              <div>
+                <p className="font-bold">
+                  {selectedClassFilter === 'all' ? 'সকল শ্রেণির' : getSchoolClassNameBn(selectedClassFilter)} শিক্ষার্থীদের
+                  আইডি কার্ড ব্যাচ প্রিন্ট শিট ({toBengaliNumber(filteredStudents.length)} জন শিক্ষার্থী)
+                </p>
+                <p className="text-[11px] text-amber-800 mt-0.5">
+                  প্রতিটি কার্ডে <code>.print-avoid-break</code> সক্রিয় থাকায় প্রিন্ট করার সময় কোনো কার্ডের অংশ পরবর্তী পৃষ্ঠায় ভাঙবে না।
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-1.5 shrink-0 transition cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              <span>A4 শিট প্রিন্ট করুন</span>
+            </button>
+          </div>
+
+          {isGeneratingBatchQr && (
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 text-center space-y-2 print:hidden">
+              <div className="inline-block animate-spin w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full"></div>
+              <p className="text-xs text-slate-600 font-bold">
+                সকল শিক্ষার্থীর ইউনিক কিউআর কোড প্রস্তুত করা হচ্ছে...
+              </p>
+            </div>
+          )}
+
+          {/* Grid of Student Cards for Print Sheet */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 print:grid-cols-2 print:gap-4 print:w-full">
+            {filteredStudents.map((std) => {
+              const stdQr = batchQrMap[std.id];
+              const stdPickup = std.authorizedPickups?.find((p) => p.isPrimary) || std.authorizedPickups?.[0];
+              const stdGuardianName = stdPickup?.nameBn || std.fatherNameBn || std.motherNameBn || 'অভিভাবক';
+
+              return (
+                <div
+                  key={std.id}
+                  className="student-id-card-front print-avoid-break break-inside-avoid bg-white rounded-3xl border-2 border-slate-300 p-4 space-y-3 shadow-md print:shadow-none print:border-2 print:border-slate-800 flex flex-col justify-between relative overflow-hidden"
+                  style={{ minHeight: '430px' }}
+                >
+                  {/* Cutting Guide Line Corner Indicator */}
+                  <div className="absolute top-1 right-2 text-[9px] text-slate-300 flex items-center gap-0.5 select-none print:text-slate-400">
+                    <Scissors className="w-2.5 h-2.5" />
+                    <span>কাটুন</span>
+                  </div>
+
+                  {/* Header */}
+                  <div className="bg-emerald-800 text-white p-2.5 rounded-2xl text-center border-b-2 border-amber-400">
+                    <h4 className="font-black text-xs">আনন্দ পাঠশালা কিন্ডারগার্টেন</h4>
+                    <span className="text-[9px] text-amber-300 font-medium block">
+                      স্টুডেন্ট আইডি ও পিকআপ গেট-পাস · ২০২৬
+                    </span>
+                  </div>
+
+                  {/* Content Row: Photo & Details */}
+                  <div className="flex items-start gap-3 pt-1">
+                    {std.photoUrl ? (
+                      <img
+                        src={std.photoUrl}
+                        alt={std.nameBn}
+                        referrerPolicy="no-referrer"
+                        className="w-16 h-16 rounded-xl object-cover shrink-0 border-2 border-emerald-600"
+                      />
+                    ) : (
+                      <div
+                        className={`w-16 h-16 rounded-xl flex items-center justify-center font-black text-xl shrink-0 border-2 border-emerald-600 ${std.avatarColor}`}
+                      >
+                        {toBengaliNumber(std.rollNo)}
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-black text-sm text-slate-900 leading-tight truncate">
+                        {std.nameBn}
+                      </h4>
+                      <span className="text-[10px] text-slate-500 font-semibold block truncate">
+                        {std.nameEn}
+                      </span>
+                      <div className="inline-block mt-1 bg-emerald-50 text-emerald-900 font-bold text-[10px] px-2 py-0.5 rounded border border-emerald-300">
+                        {getSchoolClassNameBn(std.className)} · শাখা {std.section}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Middle Row: Dynamic QR Code & Guardian info */}
+                  <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                    <div className="shrink-0 bg-white p-1 rounded-xl border border-emerald-500">
+                      {stdQr ? (
+                        <img src={stdQr} alt={`QR ${std.id}`} className="w-20 h-20 object-contain" />
+                      ) : (
+                        <div className="w-20 h-20 flex items-center justify-center bg-slate-100 text-[9px] text-slate-400">
+                          QR...
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-[10.5px] space-y-1 min-w-0 flex-1">
+                      <div>
+                        <span className="text-slate-400 block text-[9px]">স্টুডেন্ট আইডি / রোল:</span>
+                        <span className="font-bold text-slate-900 font-mono text-xs">
+                          {std.id} · রোল {toBengaliNumber(std.rollNo)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px]">অভিভাবকের ফোন:</span>
+                        <span className="font-bold font-mono text-emerald-800 truncate block">
+                          {std.emergencyPhone}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px]">পিতা / অভিভাবক:</span>
+                        <span className="font-semibold text-slate-700 truncate block">
+                          {stdGuardianName}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-500">
+                    <span>কোর্টপাড়া, কুষ্টিয়া</span>
+                    <span className="font-mono font-bold text-emerald-800">
+                      ID: {std.id}
+                    </span>
+                    <span>অধ্যক্ষ স্বাক্ষর</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

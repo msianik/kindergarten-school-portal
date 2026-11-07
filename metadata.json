@@ -1,0 +1,8 @@
+{
+  "name": "আনন্দ পাঠশালা - Kindergarten & School Portal",
+  "description": "আনন্দ পাঠশালা (Anando Pathshala) কেজি ও প্লে স্কুল ম্যানেজমেন্ট প্ল্যাটফর্ম: ডিজিটাল ডায়েরি, পিক-আপ সিকিউরিটি গেট-পাস, স্কিল ও বিহেভিওরাল প্রগ্রেস কার্ড এবং অনলাইন ফি।",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
