@@ -226,7 +226,7 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
             className="px-4 py-2.5 bg-teal-400 hover:bg-teal-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
           >
             <MessageSquare className="w-4 h-4" />
-            <span>প্যারেন্ট চ্যাট ও মেসেজ</span>
+            <span>চ্যাট ও মেসেজ</span>
           </button>
           <button
             onClick={() => onNavigateTab('messages')}

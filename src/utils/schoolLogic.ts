@@ -1288,9 +1288,9 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
     },
     {
       id: 'messages',
-      labelBn: 'প্যারেন্ট চ্যাট',
+      labelBn: 'চ্যাট',
       shortLabelBn: 'চ্যাট',
-      descriptionBn: 'অভিভাবক ও শ্রেণি শিক্ষকের সরাসরি মেসেজিং ও ফিডব্যাক নোট',
+      descriptionBn: 'অভিভাবক, শিক্ষক ও স্টাফদের সরাসরি মেসেজিং হাব',
     },
     {
       id: 'skills',
@@ -1383,7 +1383,7 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       },
       {
         id: 'messages',
-        labelBn: 'প্যারেন্ট চ্যাট',
+        labelBn: 'চ্যাট',
         shortLabelBn: 'চ্যাট',
         descriptionBn: 'অভিভাবকদের সাথে সরাসরি ক্লাসরুম মেসেজিং ও পরামর্শ',
       },
@@ -1442,7 +1442,7 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       },
       {
         id: 'messages',
-        labelBn: 'শিক্ষক চ্যাট',
+        labelBn: 'চ্যাট',
         shortLabelBn: 'চ্যাট',
         descriptionBn: 'সন্তানের শ্রেণি শিক্ষক ও অধ্যক্ষের সাথে সরাসরি নিরাপদ বার্তা',
       },

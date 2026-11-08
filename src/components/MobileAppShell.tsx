@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types/school';
 import { usePWAInstall, useOnlineStatus } from '../hooks/usePWAInstall';
+import {
+  getStoredDirectChatMessages,
+  getUnreadMessagesCount,
+  DIRECT_CHAT_STORAGE_EVENT,
+} from '../utils/directChatLogic';
 import {
   Smartphone,
   Download,
@@ -125,6 +130,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const isTeacher = currentRole === 'teacher';
   const isParent = currentRole === 'parent';
 
+  const [directChatUnreadCount, setDirectChatUnreadCount] = useState<number>(() => {
+    return getUnreadMessagesCount(getStoredDirectChatMessages(), currentRole);
+  });
+
+  useEffect(() => {
+    const handleChatSync = () => {
+      setDirectChatUnreadCount(getUnreadMessagesCount(getStoredDirectChatMessages(), currentRole));
+    };
+    window.addEventListener(DIRECT_CHAT_STORAGE_EVENT, handleChatSync);
+    return () => window.removeEventListener(DIRECT_CHAT_STORAGE_EVENT, handleChatSync);
+  }, [currentRole]);
+
   const scrollToSection = (id: string) => {
     setActivePublicAnchor(id);
     if (id === 'top') {
@@ -198,6 +215,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     ? [
         { id: 'overview', labelBn: 'হোম', icon: UserCheck },
         { id: 'students', labelBn: 'শিক্ষার্থী', icon: Users },
+        { id: 'messages', labelBn: 'চ্যাট', icon: MessageSquare },
         { id: 'pickup', labelBn: 'গেট-পাস', icon: ShieldCheck },
         { id: 'diary', labelBn: 'ডায়েরি', icon: BookOpen },
         { id: 'attendance', labelBn: 'হাজিরা', icon: CalendarCheck },
@@ -228,7 +246,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       aria-label="পোর্টাল মোবাইল বটম নেভিগেশন"
       className={`${
         forceVisible ? 'flex' : 'flex lg:hidden'
-      } fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200/90 shadow-lg px-1.5 py-1 items-center justify-around print:hidden no-print`}
+      } fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200/90 shadow-lg px-1 py-1 items-center justify-around print:hidden no-print`}
     >
       {portalTabs.map((item) => {
         const Icon = item.icon;
@@ -238,13 +256,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             key={item.id}
             type="button"
             onClick={() => onSelectTab(item.id)}
-            className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10.5px] font-bold transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1 px-1 sm:px-2 rounded-xl text-[10px] sm:text-[10.5px] font-bold transition-all cursor-pointer relative ${
               active
                 ? 'text-emerald-800 bg-emerald-100/90 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Icon className={`w-4 h-4 mb-0.5 ${active ? 'text-emerald-700' : 'text-slate-500'}`} />
+            <div className="relative">
+              <Icon className={`w-4 h-4 mb-0.5 ${active ? 'text-emerald-700' : 'text-slate-500'}`} />
+              {item.id === 'messages' && directChatUnreadCount > 0 && (
+                <span className="min-w-[12px] h-[12px] px-0.5 rounded-full bg-rose-600 text-white text-[8px] font-black absolute -top-1 -right-2 flex items-center justify-center animate-pulse">
+                  {directChatUnreadCount}
+                </span>
+              )}
+            </div>
             <span>{item.labelBn}</span>
           </button>
         );
