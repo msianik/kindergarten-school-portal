@@ -31,8 +31,10 @@ export const ALL_PORTAL_MODULE_IDS = [
   'idcards',
   'routine',
   'calendar',
+  'results',
   'pickup',
   'diary',
+  'messages',
   'skills',
   'attendance',
   'fees',
@@ -1275,6 +1277,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       descriptionBn: 'স্কুল ইভেন্ট, পরীক্ষা, ছুটি ও নোটিশ দিনপঞ্জি',
     },
     {
+      id: 'results',
+      labelBn: 'ফলাফল ও মার্কশিট',
+      shortLabelBn: 'ফলাফল',
+      descriptionBn: 'টার্ম পরীক্ষা, নম্বর এন্ট্রি ও প্রিন্ট-রেডি কালারফুল রিপোর্ট কার্ড',
+    },
+    {
       id: 'pickup',
       labelBn: 'গেট-পাস',
       shortLabelBn: 'গেট-পাস',
@@ -1358,6 +1366,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         descriptionBn: 'স্কুল ইভেন্ট, পরীক্ষা ও ছুটির তালিকা',
       },
       {
+        id: 'results',
+        labelBn: 'ফলাফল ও মার্কশিট',
+        shortLabelBn: 'ফলাফল',
+        descriptionBn: 'ক্লাসের বিষয়ভিত্তিক নম্বর এন্ট্রি ও রিপোর্ট কার্ড',
+      },
+      {
         id: 'students',
         labelBn: 'শিক্ষার্থী',
         shortLabelBn: 'শিক্ষার্থী',
@@ -1433,6 +1447,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         labelBn: 'একাডেমিক ক্যালেন্ডার',
         shortLabelBn: 'ক্যালেন্ডার',
         descriptionBn: 'ছুটি, পরীক্ষা ও স্কুলের বিশেষ অনুষ্ঠানের দিনপঞ্জি',
+      },
+      {
+        id: 'results',
+        labelBn: 'পরীক্ষার ফলাফল',
+        shortLabelBn: 'ফলাফল',
+        descriptionBn: 'সন্তানের একাডেমিক মার্কশিট ও কালারফুল প্রগ্রেস রিপোর্ট কার্ড',
       },
       {
         id: 'diary',

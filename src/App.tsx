@@ -54,6 +54,7 @@ import { StudentDirectoryModule } from './components/StudentDirectoryModule';
 import { StudentIdCardModule } from './components/StudentIdCardModule';
 import { ClassRoutineModule } from './components/ClassRoutineModule';
 import { AcademicCalendarModule } from './components/AcademicCalendarModule';
+import { ExamResultsModule } from './components/ExamResultsModule';
 import { FcmNotificationCenter } from './components/FcmNotificationCenter';
 import { LoginModal } from './components/LoginModal';
 import {
@@ -883,6 +884,20 @@ export default function App() {
                         };
                         dispatchRealTimeFcmNotification(notif);
                       }}
+                    />
+                  )}
+
+                  {currentTab === 'results' && (
+                    <ExamResultsModule
+                      students={students}
+                      currentRole={currentRole}
+                      schoolProfile={schoolProfile}
+                      initialClass={
+                        loggedInAccount?.assignedClass
+                          ? (loggedInAccount.assignedClass as any)
+                          : 'Nursery'
+                      }
+                      loggedInStudentId={loggedInAccount?.studentId}
                     />
                   )}
 

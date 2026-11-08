@@ -846,4 +846,64 @@ export interface ExamScheduleItem {
   updatedAt: string;
 }
 
+export interface ExamTerm {
+  id: string;
+  titleBn: string; // যেমন: "বার্ষিক মূল্যায়ন ২০২৬ (Annual Assessment)", "১ম সাময়িক মূল্যায়ন ২০২৬"
+  academicYear: string; // "২০২৬"
+  termType: 'first_term' | 'second_term' | 'annual' | 'monthly';
+  startDate: string;
+  endDate: string;
+  publishDateBn: string;
+  isPublished: boolean;
+}
+
+export interface SubjectMark {
+  subjectCode: string;
+  subjectNameBn: string;
+  totalMarks: number;
+  passMarks: number;
+  obtainedMarks: number;
+  highestMarksInClass: number;
+  letterGrade: string; // 'A+', 'A', 'A-', 'B', 'C', 'F'
+  gradePoint: number; // 5.0, 4.0, 3.5, 3.0, 2.0, 0.0
+  remarksBn?: string;
+}
+
+export interface StudentExamResult {
+  id: string;
+  studentId: string;
+  studentNameBn: string;
+  studentNameEn?: string;
+  rollNo: string;
+  className: SchoolClass;
+  sectionBn: string;
+  examTermId: string;
+  examTitleBn: string;
+  academicYear: string;
+  publishDateBn: string;
+  subjects: SubjectMark[];
+  totalMarks: number;
+  totalObtained: number;
+  percentage: number;
+  gpa: number;
+  overallGrade: string;
+  meritPosition: number;
+  status: 'passed' | 'needs_improvement';
+  attendanceSummary?: {
+    totalWorkingDays: number;
+    presentDays: number;
+    attendancePercentage: number;
+  };
+  coCurricularSkills?: {
+    disciplineBn: string;
+    cleanlinessBn: string;
+    friendlinessBn: string;
+    creativityBn: string;
+  };
+  classTeacherRemarksBn: string;
+  principalRemarksBn: string;
+  isPublished: boolean;
+  updatedAt: string;
+}
+
 

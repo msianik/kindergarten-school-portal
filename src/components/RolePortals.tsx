@@ -215,6 +215,14 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
         {/* Teacher Quick Classroom Actions */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <button
+            onClick={() => onNavigateTab('results')}
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            title="পরীক্ষার বিষয়ভিত্তিক নম্বর এন্ট্রি ও শিক্ষার্থীদের রঙিন রিপোর্ট কার্ড তৈরি করুন"
+          >
+            <Award className="w-4 h-4 text-amber-300" />
+            <span>ফলাফল ও মার্ক এন্ট্রি</span>
+          </button>
+          <button
             onClick={() => onNavigateTab('attendance')}
             className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
           >
@@ -235,6 +243,14 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
           >
             <Building2 className="w-4 h-4" />
             <span>শিক্ষক কমনরুম ও স্টাফ চ্যাট</span>
+          </button>
+          <button
+            onClick={() => onNavigateTab('results')}
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            title="পরীক্ষার বিষয়ভিত্তিক নম্বর এন্ট্রি ও শিক্ষার্থীদের রঙিন রিপোর্ট কার্ড তৈরি করুন"
+          >
+            <Award className="w-4 h-4 text-amber-300" />
+            <span>ফলাফল ও মার্ক এন্ট্রি</span>
           </button>
           <button
             onClick={() => onNavigateTab('attendance')}
@@ -1807,6 +1823,43 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
           >
             <MessageSquare className="w-4 h-4" />
             <span>চ্যাট খুলুন ও মেসেজ পাঠান</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Child's Academic Exam Result & Colorful Printable Report Card Banner */}
+      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-950 rounded-3xl p-5 sm:p-6 text-white border border-emerald-400/40 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm font-bold">
+            <Award className="w-6 h-6 text-slate-950" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950 tracking-wider">
+                🌟 একাডেমিক রেজাল্ট প্রকাশিত
+              </span>
+              <span className="text-emerald-200 text-xs font-semibold">
+                বার্ষিক মূল্যায়ন ২০২৬ (Annual Assessment)
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black tracking-tight">
+              {myChild.nameBn}-এর পরীক্ষার ফলাফল ও রঙিন অফিসিয়াল মার্কশিট
+            </h3>
+            <p className="text-xs text-emerald-100/90 max-w-xl">
+              বিষয়ভিত্তিক নম্বর, লেটার গ্রেড, জিপিএ, মেধা স্থান ও শিক্ষকের মন্তব্য সংবলিত প্রিন্ট-রেডি কালারফুল কিন্ডারগার্টেন রিপোর্ট কার্ড সরাসরি দেখুন ও সংরক্ষণ করুন।
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-center">
+          <button
+            type="button"
+            onClick={() => onNavigateTab('results')}
+            className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Award className="w-4 h-4" />
+            <span>রিপোর্ট কার্ড দেখুন ও প্রিন্ট করুন</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
