@@ -1,24 +1,236 @@
-import { StaffInternalMessage, StaffRoomType, StaffActionType, StaffSubstituteRequest, SchoolClass, StaffChannelMeta } from '../types/school';
-import { SCHOOL_TEACHERS } from '../data/mockData';
+import {
+  StaffInternalMessage,
+  StaffRoomType,
+  StaffActionType,
+  StaffSubstituteRequest,
+  SchoolClass,
+  StaffChannelMeta,
+  StaffChatMember,
+  UserRole,
+  PortalAccount,
+} from '../types/school';
+import { SCHOOL_TEACHERS, MANAGEMENT_COMMITTEE } from '../data/mockData';
 
-export const STAFF_CHAT_STORAGE_KEY = 'ananda_staff_internal_messages_v1';
+export const STAFF_CHAT_STORAGE_KEY = 'ananda_staff_internal_messages_v2';
 export const STAFF_CHAT_STORAGE_EVENT = 'ananda-staff-chat-updated';
 
-export const STAFF_CHANNELS_STORAGE_KEY = 'ananda_staff_channels_v1';
+export const STAFF_CHANNELS_STORAGE_KEY = 'ananda_staff_channels_v2';
 export const STAFF_CHANNELS_STORAGE_EVENT = 'ananda-staff-channels-updated';
 
-export type { StaffChannelMeta };
+export type { StaffChannelMeta, StaffChatMember };
+
+// ==========================================
+// UNIFIED STAFF & DIRECTORS ROSTER
+// ==========================================
+
+export function getAllStaffChatMembers(): StaffChatMember[] {
+  const members: StaffChatMember[] = [];
+  const seenIds = new Set<string>();
+
+  // 1. Directors & Governing Body
+  for (const dir of MANAGEMENT_COMMITTEE) {
+    const role: UserRole =
+      dir.portalRole === 'super_admin' || dir.id === 'dir-3' || dir.username === 'superadmin'
+        ? 'super_admin'
+        : 'director';
+
+    const memberId = dir.id;
+    if (!seenIds.has(memberId)) {
+      seenIds.add(memberId);
+      members.push({
+        id: memberId,
+        directorId: dir.id,
+        nameBn: dir.nameBn,
+        nameEn: dir.nameEn,
+        role,
+        designationBn: dir.designationBn || dir.roleBn,
+        departmentBn: 'পরিচালনা পর্ষদ ও নীতিনির্ধারণ',
+        photoUrl: dir.photoUrl || '/assets/fb/logo.jpg',
+        phone: dir.phone,
+        email: dir.email,
+        username: dir.username,
+        category: role === 'super_admin' ? 'principal' : 'director',
+      });
+    }
+  }
+
+  // 2. Principal, Teachers & Support Staff
+  for (const tch of SCHOOL_TEACHERS) {
+    const isPrincipal = tch.id === 'tch-1' || tch.designationBn.includes('প্রিন্সিপাল');
+    const isSupport = tch.staffCategory === 'support_staff' || tch.designationBn.includes('হিসাবরক্ষক') || tch.designationBn.includes('নিরাপত্তা');
+    const role: UserRole = isPrincipal
+      ? 'principal'
+      : tch.designationBn.includes('হিসাবরক্ষক')
+      ? 'accountant'
+      : tch.designationBn.includes('নিরাপত্তা')
+      ? 'gate_security'
+      : 'teacher';
+
+    const memberId = tch.id;
+    if (!seenIds.has(memberId)) {
+      seenIds.add(memberId);
+      members.push({
+        id: memberId,
+        teacherId: tch.id,
+        nameBn: tch.nameBn,
+        nameEn: tch.nameEn,
+        role,
+        designationBn: tch.designationBn,
+        departmentBn: tch.departmentBn,
+        photoUrl: tch.photoUrl || '/assets/fb/logo.jpg',
+        phone: tch.phone,
+        email: tch.email,
+        username: tch.username,
+        category: isPrincipal ? 'principal' : isSupport ? 'support_staff' : 'teacher',
+      });
+    }
+  }
+
+  return members;
+}
+
+/**
+ * Accurately resolves the current logged-in user to a StaffChatMember
+ */
+export function getStaffMemberIdentity(
+  currentRole: UserRole,
+  loggedInAccount: PortalAccount | null
+): StaffChatMember {
+  const allMembers = getAllStaffChatMembers();
+
+  if (loggedInAccount) {
+    // 1. Match by directorId
+    if (loggedInAccount.directorId) {
+      const match = allMembers.find((m) => m.directorId === loggedInAccount.directorId || m.id === loggedInAccount.directorId);
+      if (match) return match;
+    }
+
+    // 2. Match by username
+    if (loggedInAccount.username) {
+      const match = allMembers.find((m) => m.username === loggedInAccount.username);
+      if (match) return match;
+    }
+
+    // 3. Match by name
+    if (loggedInAccount.nameBn) {
+      const match = allMembers.find(
+        (m) => m.nameBn.includes(loggedInAccount.nameBn) || loggedInAccount.nameBn.includes(m.nameBn)
+      );
+      if (match) return match;
+    }
+  }
+
+  // Role based intelligent fallbacks
+  if (currentRole === 'super_admin') {
+    return allMembers.find((m) => m.id === 'dir-3') || allMembers[0];
+  }
+  if (currentRole === 'director') {
+    return allMembers.find((m) => m.id === 'dir-4') || allMembers[0];
+  }
+  if (currentRole === 'principal') {
+    return allMembers.find((m) => m.id === 'tch-1') || allMembers[0];
+  }
+  if (currentRole === 'accountant') {
+    return allMembers.find((m) => m.id === 'tch-8') || allMembers[1];
+  }
+  if (currentRole === 'gate_security') {
+    return allMembers.find((m) => m.id === 'tch-9') || allMembers[1];
+  }
+
+  // Teacher fallback
+  return allMembers.find((m) => m.id === 'tch-2') || allMembers[0];
+}
+
+// ==========================================
+// PERMISSION CHECKERS
+// ==========================================
+
+/**
+ * Checks whether user can access a specific group channel.
+ * Restricts rooms like 'directors_board' strictly to Directors, Super Admin, and Principal!
+ */
+export function canUserAccessChannel(
+  channel: StaffChannelMeta,
+  currentRole: UserRole,
+  memberId: string
+): boolean {
+  // Directors Lounge is strictly restricted to Directors, Super Admin, and Principal
+  if (channel.id === 'directors_board') {
+    return (
+      currentRole === 'director' ||
+      currentRole === 'super_admin' ||
+      currentRole === 'principal' ||
+      Boolean(channel.memberIds && channel.memberIds.includes(memberId))
+    );
+  }
+
+  // All Staff lounge is open to all staff and directors
+  if (channel.id === 'all_staff') {
+    return currentRole !== 'parent' && currentRole !== 'public';
+  }
+
+  // Super Admin & Principal have supervisor access across all school channels
+  if (currentRole === 'super_admin' || currentRole === 'principal') {
+    return true;
+  }
+
+  // For other channels, check allowed roles if set
+  if (channel.allowedRoles && channel.allowedRoles.length > 0) {
+    if (!channel.allowedRoles.includes(currentRole)) return false;
+  }
+
+  // Check specific memberIds if specified
+  if (channel.memberIds && Array.isArray(channel.memberIds) && channel.memberIds.length > 0) {
+    return channel.memberIds.includes(memberId);
+  }
+
+  return true;
+}
+
+/**
+ * Editing power is strictly restricted to Principal or Admin!
+ * Satisfies: "এবং এডিট করার ক্ষমতা শুধুমাত্র প্রিন্সিপাল অথবা এডমিনকে দেওয়ার জন্য অনুরোধ করছি।"
+ */
+export function canUserEditChat(
+  currentRole: UserRole,
+  loggedInAccount?: PortalAccount | null
+): boolean {
+  if (currentRole === 'principal' || currentRole === 'super_admin') return true;
+  if (loggedInAccount?.role === 'principal' || loggedInAccount?.role === 'super_admin') return true;
+  return false;
+}
+
+// ==========================================
+// DEFAULT CHANNELS
+// ==========================================
 
 export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
   {
+    id: 'directors_board',
+    titleBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
+    subtitleBn: 'শুধুমাত্র সম্মানিত পরিচালনা পর্ষদ ও প্রিন্সিপালের জন্য সংরক্ষিত উচ্চপর্যায়ের নীতিনির্ধারণী ফোরাম',
+    iconType: 'ShieldAlert',
+    badgeBg: 'bg-amber-100',
+    textColor: 'text-amber-900',
+    allowedRoles: ['director', 'super_admin', 'principal'],
+    memberIds: ['dir-4', 'dir-5', 'dir-3', 'dir-1', 'dir-2', 'tch-1'],
+    memberCount: 6,
+    isDefault: true,
+    isLocked: true,
+  },
+  {
     id: 'all_staff',
-    titleBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
-    subtitleBn: 'স্কুলের সকল শিক্ষক, প্রিন্সিপাল ও স্টাফদের মূল অফিসিয়াল ফোরাম',
+    titleBn: 'সকল শিক্ষক, স্টাফ ও পরিচালনা পরিষদ ফোরাম',
+    subtitleBn: 'পরিচালকবৃন্দ, প্রিন্সিপাল, শিক্ষক ও সকল কর্মকর্তা-কর্মচারীদের সমন্বিত সাধারণ ফোরাম',
     iconType: 'Building2',
     badgeBg: 'bg-emerald-100',
     textColor: 'text-emerald-800',
-    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'tch-6', 'tch-7', 'tch-8', 'tch-9'],
-    memberCount: 9,
+    allowedRoles: ['director', 'super_admin', 'principal', 'teacher', 'accountant', 'gate_security'],
+    memberIds: [
+      'dir-4', 'dir-5', 'dir-3', 'dir-1', 'dir-2',
+      'tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'tch-6', 'tch-7', 'tch-8', 'tch-9'
+    ],
+    memberCount: 14,
     isDefault: true,
   },
   {
@@ -26,10 +238,10 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     titleBn: 'প্রি-স্কুল ও নার্সারি উইং',
     subtitleBn: 'হাতেখড়ি, প্লে ও নার্সারি ক্লাসের শিক্ষিকাদের বিশেষ টিম রুম',
     iconType: 'Smile',
-    badgeBg: 'bg-amber-100',
-    textColor: 'text-amber-800',
-    memberIds: ['tch-2', 'tch-3', 'tch-5', 'tch-6', 'tch-7'],
-    memberCount: 5,
+    badgeBg: 'bg-sky-100',
+    textColor: 'text-sky-800',
+    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'dir-2'],
+    memberCount: 6,
     isDefault: true,
   },
   {
@@ -39,8 +251,8 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     iconType: 'Palette',
     badgeBg: 'bg-purple-100',
     textColor: 'text-purple-800',
-    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-6'],
-    memberCount: 4,
+    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-6', 'dir-5'],
+    memberCount: 5,
     isDefault: true,
   },
 ];
@@ -52,18 +264,95 @@ export function getDirectRoomId(idA: string, idB: string): string {
   return `direct_${sorted[0]}_${sorted[1]}`;
 }
 
+// ==========================================
+// INITIAL SEED MESSAGES
+// ==========================================
+
 export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
-  // Channel: all_staff (General Lounge)
+  // Channel: directors_board (Restricted: Directors & Principal Only)
   {
-    id: 'smsg-1',
-    roomId: 'all_staff',
+    id: 'dir-msg-1',
+    roomId: 'directors_board',
     roomType: 'channel',
-    roomNameBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
+    roomNameBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
+    senderId: 'dir-4',
+    senderNameBn: 'আল নোমান',
+    senderRoleTitleBn: 'সভাপতি ও চেয়ারম্যান, পরিচালনা পর্ষদ',
+    senderAvatarUrl: '/assets/fb/photo-3.jpg',
+    text: 'সম্মানিত পরিচালনা পর্ষদ সদস্যবৃন্দ ও প্রিন্সিপাল মহোদয়, আসসালামু আলাইকুম। আগামী শিক্ষাবর্ষের বার্ষিক উন্নয়ন বাজেট, নতুন মন্টেসরি ক্লাসরুম সম্প্রসারণ ও শিক্ষক প্রশিক্ষণের খসড়া প্রস্তাবনা প্রস্তুত হয়েছে। আগামী শনিবারের বোর্ড সভায় এটি উপস্থাপন করা হবে।',
+    actionType: 'emergency_briefing',
+    actionDetails: {
+      meetingTime: 'শনিবার সকাল ১১:০০',
+      meetingTopic: 'বার্ষিক উন্নয়ন বাজেট ও মন্টেসরি অবকাঠামো আধুনিকায়ন পর্যালোচনা',
+    },
+    timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৯:০০',
+    createdAt: 1794128400000,
+    isPinned: true,
+    reactions: {
+      '👍': ['এম এস আই অনিক', 'শাফী আব্দুল্লাহ', 'মোস্তফা আল মামুন'],
+      '👏': ['সাম্মী আক্তার'],
+    },
+  },
+  {
+    id: 'dir-msg-2',
+    roomId: 'directors_board',
+    roomType: 'channel',
+    roomNameBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
     senderId: 'tch-1',
     senderNameBn: 'শাফী আব্দুল্লাহ',
     senderRoleTitleBn: 'প্রিন্সিপাল (Principal)',
     senderAvatarUrl: '/assets/biddalay/shafee_abdullah.jpg',
-    text: 'সুপ্রিয় সহকর্মীগণ, আসসালামু আলাইকুম। আগামীকালের প্রাতঃকালীন অ্যাসেম্বলিতে শিশুদের বর্ণমালা ছড়া আবৃত্তি প্রতিযোগিতা অনুষ্ঠিত হবে। সংশ্লিষ্ট শ্রেণি শিক্ষিকাগণ শিক্ষার্থীদের প্রাক-প্রস্তুতি তদারকি করবেন।',
+    text: 'চেয়ারম্যান মহোদয়, একাডেমিক কাউন্সিলের পক্ষ থেকে নতুন মন্টেসরি শিক্ষা উপকরণ, মাল্টিমিডিয়া প্রজেক্টর ও আর্ট ল্যাবের চাহিদাপত্র ও অগ্রাধিকার তালিকা চূড়ান্ত করে সংযুক্ত করা হয়েছে। শিশুদের আনন্দের সাথে পাঠদানে এটি অত্যন্ত ফলপ্রসূ হবে।',
+    actionType: 'chat',
+    timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৯:১৫',
+    createdAt: 1794129300000,
+    reactions: {
+      '💡': ['আল নোমান', 'আলী আদনান'],
+    },
+  },
+  {
+    id: 'dir-msg-3',
+    roomId: 'directors_board',
+    roomType: 'channel',
+    roomNameBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
+    senderId: 'dir-5',
+    senderNameBn: 'এম এস আই অনিক',
+    senderRoleTitleBn: 'ব্যবস্থাপনা পরিচালক (Managing Director)',
+    senderAvatarUrl: '/assets/fb/photo-5.jpg',
+    text: 'ধন্যবাদ প্রিন্সিপাল মহোদয়। শিশুদের ক্লাসরুম নিরাপত্তা নিশ্চিতকরণে আধুনিক সিসিটিভি ক্যামেরা বৃদ্ধি, সাউন্ডপ্রুফ সিলিং ও শীতকালীন শিশু উৎসবের ফান্ড বরাদ্দ রাখা হয়েছে। ইনশাআল্লাহ দ্রুত বাস্তবায়ন হবে।',
+    actionType: 'chat',
+    timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৯:২৫',
+    createdAt: 1794129900000,
+    reactions: {
+      '❤️': ['শাফী আব্দুল্লাহ', 'আল নোমান'],
+    },
+  },
+  {
+    id: 'dir-msg-4',
+    roomId: 'directors_board',
+    roomType: 'channel',
+    roomNameBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
+    senderId: 'dir-3',
+    senderNameBn: 'মোস্তফা আল মামুন',
+    senderRoleTitleBn: 'সদস্য সচিব ও সুপার অ্যাডমিন',
+    senderAvatarUrl: '/assets/biddalay/mostofa_mamun.jpg',
+    text: 'পরিচালনা পর্ষদের সকল সদস্যের জন্য পূর্ণাঙ্গ অডিট ও পরিকল্পনা ড্রাফট সিস্টেমে আপলোড করা হয়েছে। শনিবারের সভায় সর্বসম্মত অনুমোদনের ব্যবস্থা নেওয়া হবে।',
+    actionType: 'chat',
+    timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৯:৩৫',
+    createdAt: 1794130500000,
+  },
+
+  // Channel: all_staff (General Lounge for All Staff + Directors)
+  {
+    id: 'smsg-1',
+    roomId: 'all_staff',
+    roomType: 'channel',
+    roomNameBn: 'সকল শিক্ষক, স্টাফ ও পরিচালনা পরিষদ ফোরাম',
+    senderId: 'tch-1',
+    senderNameBn: 'শাফী আব্দুল্লাহ',
+    senderRoleTitleBn: 'প্রিন্সিপাল (Principal)',
+    senderAvatarUrl: '/assets/biddalay/shafee_abdullah.jpg',
+    text: 'সুপ্রিয় সহকর্মী ও সম্মানিত পরিচালকবৃন্দ, আসসালামু আলাইকুম। আগামীকালের প্রাতঃকালীন অ্যাসেম্বলিতে শিশুদের বর্ণমালা ছড়া আবৃত্তি প্রতিযোগিতা অনুষ্ঠিত হবে। সংশ্লিষ্ট শ্রেণি শিক্ষিকাগণ শিক্ষার্থীদের প্রাক-প্রস্তুতি তদারকি করবেন।',
     actionType: 'emergency_briefing',
     actionDetails: {
       meetingTime: 'আগামীকাল সকাল ০৮:৪০',
@@ -72,12 +361,15 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৮:৩০',
     createdAt: 1794126600000,
     isPinned: true,
+    reactions: {
+      '👍': ['ফাতেমা আক্তার', 'মোছাঃ মাহমুদা হক', 'মুক্তা পারভীন'],
+    },
   },
   {
     id: 'smsg-2',
     roomId: 'all_staff',
     roomType: 'channel',
-    roomNameBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
+    roomNameBn: 'সকল শিক্ষক, স্টাফ ও পরিচালনা পরিষদ ফোরাম',
     senderId: 'tch-2',
     senderNameBn: 'ফাতেমা আক্তার',
     senderRoleTitleBn: 'প্রধান শিক্ষক (Head Teacher)',
@@ -91,7 +383,7 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     id: 'smsg-3',
     roomId: 'all_staff',
     roomType: 'channel',
-    roomNameBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
+    roomNameBn: 'সকল শিক্ষক, স্টাফ ও পরিচালনা পরিষদ ফোরাম',
     senderId: 'tch-5',
     senderNameBn: 'মুক্তা পারভীন',
     senderRoleTitleBn: 'সহকারী শিক্ষক (হাতেখড়ি)',
@@ -121,7 +413,7 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     id: 'smsg-4',
     roomId: 'all_staff',
     roomType: 'channel',
-    roomNameBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
+    roomNameBn: 'সকল শিক্ষক, স্টাফ ও পরিচালনা পরিষদ ফোরাম',
     senderId: 'tch-6',
     senderNameBn: 'ঐশী বিনতে মোস্তফা (ঐশী মিস)',
     senderRoleTitleBn: 'সহকারী শিক্ষক (আর্ট ও ক্রাফট)',
@@ -220,15 +512,39 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
   },
 ];
 
+// ==========================================
+// MESSAGE PERSISTENCE & ACTIONS
+// ==========================================
+
 export function getStoredStaffMessages(): StaffInternalMessage[] {
   try {
     const raw = localStorage.getItem(STAFF_CHAT_STORAGE_KEY);
     if (!raw) {
+      // Check legacy v1 key if migrating
+      const legacyRaw = localStorage.getItem('ananda_staff_internal_messages_v1');
+      if (legacyRaw) {
+        const legacyParsed = JSON.parse(legacyRaw);
+        if (Array.isArray(legacyParsed) && legacyParsed.length > 0) {
+          // Merge directors_board seed messages with legacy messages
+          const dirSeedMsgs = INITIAL_STAFF_MESSAGES.filter((m) => m.roomId === 'directors_board');
+          const merged = [...dirSeedMsgs, ...legacyParsed];
+          localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        }
+      }
       localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(INITIAL_STAFF_MESSAGES));
       return INITIAL_STAFF_MESSAGES;
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Check if directors_board messages exist, if not merge them
+      const hasDirBoard = parsed.some((m: StaffInternalMessage) => m.roomId === 'directors_board');
+      if (!hasDirBoard) {
+        const dirSeedMsgs = INITIAL_STAFF_MESSAGES.filter((m) => m.roomId === 'directors_board');
+        const updated = [...dirSeedMsgs, ...parsed];
+        localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      }
       return parsed;
     }
   } catch (err) {
@@ -257,6 +573,149 @@ export function saveStaffInternalMessage(
   }
 
   return newMsg;
+}
+
+/**
+ * Edit a sent message text.
+ * Only Principal or Admin is allowed to perform this action!
+ */
+export function editStaffInternalMessage(
+  messageId: string,
+  newText: string,
+  editorNameBn: string,
+  editorId: string
+): boolean {
+  const currentList = getStoredStaffMessages();
+  let found = false;
+  const now = new Date();
+  const formattedTime = `${now.toLocaleDateString('bn-BD', {
+    day: 'numeric',
+    month: 'long',
+  })}, ${now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}`;
+
+  const updatedList = currentList.map((m) => {
+    if (m.id === messageId) {
+      found = true;
+      return {
+        ...m,
+        text: newText.trim(),
+        isEdited: true,
+        editedAt: formattedTime,
+        editedByBn: editorNameBn,
+        editedById: editorId,
+      };
+    }
+    return m;
+  });
+
+  if (found) {
+    try {
+      localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { messageId, action: 'edited' } }));
+    } catch (err) {
+      console.error('Failed to edit staff message in localStorage:', err);
+    }
+  }
+
+  return found;
+}
+
+/**
+ * Delete a message from the room.
+ * Only Principal or Admin can delete messages.
+ */
+export function deleteStaffInternalMessage(messageId: string): boolean {
+  const currentList = getStoredStaffMessages();
+  const updatedList = currentList.filter((m) => m.id !== messageId);
+  if (updatedList.length === currentList.length) return false;
+
+  try {
+    localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedList));
+    window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { messageId, action: 'deleted' } }));
+  } catch (err) {
+    console.error('Failed to delete staff message from localStorage:', err);
+  }
+
+  return true;
+}
+
+/**
+ * Toggle pin/unpin status of a message.
+ * Only Principal or Admin can pin/unpin messages.
+ */
+export function togglePinStaffMessage(messageId: string): boolean {
+  const currentList = getStoredStaffMessages();
+  let found = false;
+
+  const updatedList = currentList.map((m) => {
+    if (m.id === messageId) {
+      found = true;
+      return {
+        ...m,
+        isPinned: !m.isPinned,
+      };
+    }
+    return m;
+  });
+
+  if (found) {
+    try {
+      localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { messageId, action: 'pinned' } }));
+    } catch (err) {
+      console.error('Failed to toggle pinned status in localStorage:', err);
+    }
+  }
+
+  return found;
+}
+
+/**
+ * Add or remove an emoji reaction to a message.
+ */
+export function toggleStaffMessageReaction(
+  messageId: string,
+  emoji: string,
+  userNameBn: string
+): boolean {
+  const currentList = getStoredStaffMessages();
+  let found = false;
+
+  const updatedList = currentList.map((m) => {
+    if (m.id === messageId) {
+      found = true;
+      const reactions = { ...(m.reactions || {}) };
+      const currentUsers = reactions[emoji] || [];
+
+      if (currentUsers.includes(userNameBn)) {
+        // remove
+        reactions[emoji] = currentUsers.filter((u) => u !== userNameBn);
+        if (reactions[emoji].length === 0) {
+          delete reactions[emoji];
+        }
+      } else {
+        // add
+        reactions[emoji] = [...currentUsers, userNameBn];
+      }
+
+      return {
+        ...m,
+        reactions,
+      };
+    }
+    return m;
+  });
+
+  if (found) {
+    try {
+      localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { messageId, action: 'reaction' } }));
+    } catch (err) {
+      console.error('Failed to toggle reaction in localStorage:', err);
+    }
+  }
+
+  return found;
 }
 
 export function acceptStaffSubstituteRequest(
@@ -308,7 +767,16 @@ export function getStoredStaffChannels(): StaffChannelMeta[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((ch: StaffChannelMeta) => {
+        // Ensure directors_board exists
+        let channelsList: StaffChannelMeta[] = [...parsed];
+        const hasDirectorsBoard = channelsList.some((c) => c.id === 'directors_board');
+        if (!hasDirectorsBoard) {
+          const dirBoardMeta = DEFAULT_STAFF_CHANNELS.find((d) => d.id === 'directors_board')!;
+          channelsList = [dirBoardMeta, ...channelsList];
+          saveStaffChannels(channelsList);
+        }
+
+        return channelsList.map((ch: StaffChannelMeta) => {
           if (!ch.memberIds || !Array.isArray(ch.memberIds) || ch.memberIds.length === 0) {
             const defMatch = DEFAULT_STAFF_CHANNELS.find((d) => d.id === ch.id);
             const memberIds = defMatch?.memberIds || ['tch-1', 'tch-2', 'tch-3', 'tch-4'];
@@ -393,6 +861,10 @@ export function updateStaffChannel(
 
 export function deleteStaffChannel(id: string): boolean {
   const currentList = getStoredStaffChannels();
+  // Prevent deleting default critical channels
+  if (id === 'directors_board' || id === 'all_staff') {
+    return false;
+  }
   const updatedList = currentList.filter((ch) => ch.id !== id);
   if (updatedList.length === currentList.length) return false;
 

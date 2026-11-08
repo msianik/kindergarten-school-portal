@@ -159,17 +159,6 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
               </>
             )}
           </button>
-
-          {onNavigateApply && (
-            <button
-              type="button"
-              onClick={onNavigateApply}
-              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-[11px] transition shadow-xs cursor-pointer"
-            >
-              <span>অনলাইন ভর্তি</span>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          )}
         </div>
       </div>
     </div>
@@ -454,22 +443,21 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold">
               <Bell className="w-3.5 h-3.5 text-emerald-600" />
-              <span>প্রাতিষ্ঠানিক ডিজিটাল নোটিশ বোর্ড</span>
+              <span>অফিসিয়াল সার্কুলার ও আপডেট</span>
             </div>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            বিজ্ঞপ্তি, আপকামিং ইভেন্টস ও সময়সূচি
+            প্রাতিষ্ঠানিক ডিজিটাল নোটিশ বোর্ড
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-            আনন্দ পাঠশালার অভ্যন্তরীণ ভর্তি মেলা, শিশুদের ফ্রি ক্লাস, বার্ষিক শিখন মূল্যায়ন ও ছুটির সর্বশেষ নোটিশসমূহ।
+            আনন্দ পাঠশালার অভ্যন্তরীণ একাডেমিক কার্যক্রম, শিখন মূল্যায়ন, ছুটির তালিকা ও প্রাতিষ্ঠানিক সর্বশেষ নোটিশসমূহ।
           </p>
         </div>
 
-        {/* Right Header Controls */}
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-
-          {isAdmin && onAddNotice && (
+        {/* Right Header Controls (Admin Only - No Redundant Public Apply Buttons) */}
+        {isAdmin && onAddNotice && (
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
             <button
               type="button"
               onClick={onAddNotice}
@@ -478,19 +466,8 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>+ নতুন নোটিশ যুক্ত করুন</span>
             </button>
-          )}
-
-          {onNavigateApply && (
-            <button
-              type="button"
-              onClick={onNavigateApply}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>অনলাইন ভর্তি ফর্ম</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Filter Tabs Bar (Category Pills) */}

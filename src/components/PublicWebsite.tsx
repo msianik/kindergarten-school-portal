@@ -380,10 +380,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <NoticeTicker
         notices={notices}
         onSelectNotice={(notice) => setSelectedNoticeForModal(notice)}
-        onNavigateApply={() => {
-          const el = document.getElementById('apply');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12 pb-12">
@@ -466,10 +462,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <NoticeBoard
         notices={notices}
         onOpenNoticeDetail={(notice) => setSelectedNoticeForModal(notice)}
-        onNavigateApply={() => {
-          const el = document.getElementById('apply');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
       />
 
       {/* Academic Leadership & Teachers Section */}

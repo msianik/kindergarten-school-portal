@@ -514,9 +514,27 @@ export interface StaffChannelMeta {
   textColor: string;
   memberCount: number;
   memberIds?: string[];
+  allowedRoles?: UserRole[];
   isDefault?: boolean;
+  isLocked?: boolean;
   createdBy?: string;
   createdAt?: number;
+}
+
+export interface StaffChatMember {
+  id: string;
+  teacherId?: string;
+  directorId?: string;
+  nameBn: string;
+  nameEn: string;
+  role: UserRole;
+  designationBn: string;
+  departmentBn?: string;
+  photoUrl: string;
+  phone?: string;
+  email?: string;
+  username?: string;
+  category: 'director' | 'principal' | 'teacher' | 'support_staff' | 'accountant';
 }
 
 export interface StaffInternalMessage {
@@ -541,6 +559,18 @@ export interface StaffInternalMessage {
   timestamp: string;
   createdAt: number;
   isPinned?: boolean;
+  isEdited?: boolean;
+  editedAt?: string;
+  editedByBn?: string;
+  editedById?: string;
+  replyTo?: {
+    id: string;
+    senderNameBn: string;
+    text: string;
+  };
+  reactions?: Record<string, string[]>; // emoji -> array of user names
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 export interface DirectorAccessPermission {
