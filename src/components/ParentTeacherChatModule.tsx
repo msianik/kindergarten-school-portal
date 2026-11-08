@@ -23,8 +23,10 @@ import {
   toBengaliNumber,
 } from '../utils/schoolLogic';
 import { SCHOOL_TEACHERS } from '../data/mockData';
+import { StaffRoomChatModule } from './StaffRoomChatModule';
 import {
   MessageSquare,
+  Building2,
   Send,
   Smile,
   Heart,
@@ -53,6 +55,7 @@ interface ParentTeacherChatModuleProps {
   onSendChatNotification?: (notif: FcmNotification) => void;
   initialSelectedStudentId?: string;
   onNavigateTab?: (tab: string) => void;
+  initialChatMode?: 'parent_chat' | 'staff_room';
 }
 
 export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = ({
@@ -62,10 +65,22 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
   onSendChatNotification,
   initialSelectedStudentId,
   onNavigateTab,
+  initialChatMode,
 }) => {
   const isParent = currentRole === 'parent';
   const isTeacher = currentRole === 'teacher';
   const isAdmin = currentRole === 'principal' || currentRole === 'super_admin' || currentRole === 'director';
+
+  const [activeChatSection, setActiveChatSection] = useState<'parent_chat' | 'staff_room'>(() => {
+    if (currentRole === 'parent') return 'parent_chat';
+    return initialChatMode || 'parent_chat';
+  });
+
+  useEffect(() => {
+    if (isParent) {
+      setActiveChatSection('parent_chat');
+    }
+  }, [isParent]);
 
   // Identify default student for logged-in parent
   const parentDefaultChild = useMemo(() => {
@@ -306,8 +321,85 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
         </div>
       )}
 
-      {/* Main Responsive Chat Container (Fits dynamically in viewport, no page scroll) */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col md:flex-row h-[calc(100vh-175px)] min-h-[520px] max-h-[820px] relative">
+      {/* Role Navigation Switcher for Teachers & Staff */}
+      {!isParent && (
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-xs transition-colors shrink-0 ${
+                activeChatSection === 'staff_room'
+                  ? 'bg-gradient-to-br from-indigo-600 to-violet-700 text-white'
+                  : 'bg-gradient-to-br from-teal-600 to-emerald-700 text-white'
+              }`}
+            >
+              {activeChatSection === 'staff_room' ? (
+                <Building2 className="w-5 h-5" />
+              ) : (
+                <MessageSquare className="w-5 h-5" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-extrabold text-slate-900 leading-tight">
+                  {activeChatSection === 'staff_room'
+                    ? 'শিক্ষক ও স্টাফ কমনরুম (কমিউনিকেশন হাব)'
+                    : 'শিক্ষার্থী ও অভিভাবক সরাসরি বার্তা আদান-প্রদান'}
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                  {activeChatSection === 'staff_room' ? 'অভ্যন্তরীণ লাউঞ্জ' : 'অভিভাবক সংযোগ'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                {activeChatSection === 'staff_room'
+                  ? 'সহকর্মীদের সাথে চ্যাট, প্রক্সি রিকোয়েস্ট ও জরুরি নোটিশ ম্যানেজমেন্ট'
+                  : 'শ্রেণির প্রতিটি শিক্ষার্থীর অভিভাবকের সাথে সরাসরি ওয়ান-অন-ওয়ান চ্যাট'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl self-stretch sm:self-auto border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setActiveChatSection('parent_chat')}
+              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeChatSection === 'parent_chat'
+                  ? 'bg-teal-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>অভিভাবক চ্যাট</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChatSection('staff_room')}
+              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeChatSection === 'staff_room'
+                  ? 'bg-indigo-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>শিক্ষক কমনরুম</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white">
+                স্টাফ
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* RENDER VIEW BASED ON ACTIVE SECTION */}
+      {!isParent && activeChatSection === 'staff_room' ? (
+        <StaffRoomChatModule
+          currentRole={currentRole}
+          loggedInAccount={loggedInAccount}
+          onSendNotification={onSendChatNotification}
+        />
+      ) : (
+        <>
+          {/* Main Responsive Chat Container (Fits dynamically in viewport, no page scroll) */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col md:flex-row h-[calc(100vh-175px)] min-h-[520px] max-h-[820px] relative">
         {/* ========================================================================= */}
         {/* LEFT COLUMN: Student Directory (Visible for Teachers/Admins on Desktop)   */}
         {/* ========================================================================= */}
@@ -774,6 +866,8 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
             </button>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

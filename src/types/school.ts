@@ -407,6 +407,7 @@ export type FcmNotificationType =
   | 'homework_task_assigned'
   | 'absence_alert'
   | 'parent_teacher_message'
+  | 'staff_internal_message'
   | 'inventory_low_stock';
 
 export interface FcmNotification {
@@ -478,6 +479,54 @@ export interface ParentTeacherMessage {
   isRead: boolean;
   readAt?: string;
   isUrgent?: boolean;
+}
+
+export type StaffRoomType = 'channel' | 'direct';
+
+export type StaffActionType = 
+  | 'chat'
+  | 'substitute_request'   // প্রক্সি / সাবস্টিটিউট ক্লাসের অনুরোধ
+  | 'emergency_briefing'   // জরুরি মিটিং বা ব্রিফিং নোটিশ
+  | 'resource_requisition' // মন্টেসরি ও শিক্ষা উপকরণ রিকুইজিশন
+  | 'duty_roster';         // দায়িত্ব বা ডিউটি নোটিশ
+
+export interface StaffSubstituteRequest {
+  id: string;
+  requesterTeacherId: string;
+  requesterNameBn: string;
+  className: SchoolClass;
+  periodLabelBn: string;
+  subjectBn: string;
+  dateStr: string;
+  reasonBn: string;
+  status: 'pending' | 'accepted' | 'declined';
+  acceptedByTeacherId?: string;
+  acceptedByTeacherNameBn?: string;
+  timestamp: string;
+}
+
+export interface StaffInternalMessage {
+  id: string;
+  roomId: string;
+  roomType: StaffRoomType;
+  roomNameBn: string;
+  senderId: string;
+  senderNameBn: string;
+  senderRoleTitleBn: string;
+  senderAvatarUrl?: string;
+  receiverId?: string;
+  receiverNameBn?: string;
+  text: string;
+  actionType: StaffActionType;
+  actionDetails?: {
+    substitute?: StaffSubstituteRequest;
+    meetingTime?: string;
+    meetingTopic?: string;
+    requisitionItems?: string[];
+  };
+  timestamp: string;
+  createdAt: number;
+  isPinned?: boolean;
 }
 
 export interface DirectorAccessPermission {

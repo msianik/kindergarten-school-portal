@@ -84,6 +84,7 @@ import {
   Gift,
   IdCard,
   MessageSquare,
+  Building2,
 } from 'lucide-react';
 
 interface TeacherPortalDashboardProps {
@@ -226,6 +227,14 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
           >
             <MessageSquare className="w-4 h-4" />
             <span>প্যারেন্ট চ্যাট ও মেসেজ</span>
+          </button>
+          <button
+            onClick={() => onNavigateTab('messages')}
+            className="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            title="সহকর্মী শিক্ষক ও স্টাফদের অভ্যন্তরীণ কমনরুম ও প্রক্সি সমন্বয়"
+          >
+            <Building2 className="w-4 h-4" />
+            <span>শিক্ষক কমনরুম ও স্টাফ চ্যাট</span>
           </button>
           <button
             onClick={() => onNavigateTab('attendance')}
