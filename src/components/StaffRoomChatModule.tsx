@@ -1828,72 +1828,6 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL: EDIT MESSAGE (Principal or Admin ONLY)                              */}
-      {/* ========================================================================= */}
-      {editingMessage && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-indigo-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-700 to-violet-800 text-white p-5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Edit3 className="w-5 h-5 text-indigo-200" />
-                <div>
-                  <h3 className="text-base font-bold">বার্তা সম্পাদনা করুন</h3>
-                  <p className="text-xs text-indigo-100">
-                    কর্তৃপক্ষ হিসেবে বার্তার টেক্সট পরিবর্তন করুন
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingMessage(null)}
-                className="text-white hover:bg-white/20 p-1.5 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEditedMessage} className="p-5 space-y-4">
-              <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs space-y-1">
-                <p className="font-bold text-indigo-950">
-                  মূল প্রেরক: {editingMessage.senderNameBn} ({editingMessage.senderRoleTitleBn})
-                </p>
-                <p className="text-indigo-800">
-                  সম্পাদনা করছেন: <strong>{currentUser.nameBn}</strong> ({currentRole === 'principal' ? 'প্রিন্সিপাল' : 'অ্যাডমিন'})
-                </p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">সম্পাদিত বার্তার বিবরণ:</label>
-                <textarea
-                  value={editMessageInputText}
-                  onChange={(e) => setEditMessageInputText(e.target.value)}
-                  rows={4}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-hidden focus:bg-white focus:border-indigo-500"
-                  placeholder="বার্তার টেক্সট পরিবর্তন করুন..."
-                  required
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setEditingMessage(null)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer"
-                >
-                  পরিবর্তন সংরক্ষণ করুন
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* MODAL: DELETE MESSAGE CONFIRMATION (Principal or Admin ONLY)               */}
@@ -2049,10 +1983,10 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 <Settings className="w-5 h-5 text-indigo-200" />
                 <div>
                   <h3 className="text-base font-bold">
-                    {editingChannel ? 'গ্রুপ রুম সম্পাদনা ও সদস্য বিন্যাস' : 'নতুন গ্রুপ রুম তৈরি'}
+                    {editingChannel ? 'চ্যাট রুমের শিরোনাম, বিবরণ ও সদস্য এডিট' : 'নতুন চ্যাট রুম তৈরি'}
                   </h3>
                   <p className="text-xs text-indigo-100">
-                    প্রিন্সিপাল ও অ্যাডমিন রুম কনফিগারেশন
+                    শুধুমাত্র প্রিন্সিপাল অথবা অ্যাডমিন কর্তৃক নিয়ন্ত্রণযোগ্য
                   </p>
                 </div>
               </div>
@@ -2067,19 +2001,19 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
 
             <form onSubmit={handleSaveChannel} className="p-5 space-y-4 overflow-y-auto flex-1">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">রুমের শিরোনাম / নাম (বাংলা):</label>
+                <label className="text-xs font-bold text-slate-700">চ্যাট রুমের শিরোনাম / নাম (বাংলা):</label>
                 <input
                   type="text"
                   value={channelTitleInput}
                   onChange={(e) => setChannelTitleInput(e.target.value)}
-                  placeholder="যেমন: প্রি-স্কুল উইং, অ্যাকাডেমিক কমিটি ইত্যাদি"
+                  placeholder="যেমন: পরিচালনা পর্ষদ, প্রি-স্কুল উইং, অ্যাকাডেমিক কমিটি ইত্যাদি"
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:border-indigo-500"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">সংক্ষিপ্ত বিবরণ / উদ্দেশ্য:</label>
+                <label className="text-xs font-bold text-slate-700">রুমের বিষয় / সাবটাইটেল (আলোচনার বিষয়বস্তু):</label>
                 <input
                   type="text"
                   value={channelSubtitleInput}
