@@ -513,6 +513,7 @@ export interface StaffChannelMeta {
   badgeBg: string;
   textColor: string;
   memberCount: number;
+  memberIds?: string[];
   isDefault?: boolean;
   createdBy?: string;
   createdAt?: number;

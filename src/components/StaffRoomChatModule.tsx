@@ -41,6 +41,10 @@ import {
   CheckCircle2,
   CheckCheck,
   Check,
+  CheckSquare,
+  Square,
+  UserCheck,
+  UserPlus,
   Phone,
   Search,
   ChevronLeft,
@@ -137,7 +141,12 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   const [channelSubtitleInput, setChannelSubtitleInput] = useState<string>('');
   const [channelIconInput, setChannelIconInput] = useState<string>('Building2');
   const [channelColorInput, setChannelColorInput] = useState<string>('emerald');
-  const [channelMemberCountInput, setChannelMemberCountInput] = useState<number>(8);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [memberSearchQuery, setMemberSearchQuery] = useState<string>('');
+
+  // View Members Modal / Drawer State
+  const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
+  const [memberRosterSearch, setMemberRosterSearch] = useState<string>('');
 
   // Current logged in teacher identity
   const currentTeacher = useMemo(() => {
@@ -175,6 +184,48 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     return () => window.removeEventListener(STAFF_CHAT_STORAGE_EVENT, handleSync);
   }, []);
 
+  // Compute members of active room
+  const activeRoomMembersList = useMemo(() => {
+    if (selectedRoomType === 'channel') {
+      const chan = channels.find((c) => c.id === selectedChannelId) || channels[0] || DEFAULT_STAFF_CHANNELS[0];
+      if (chan.memberIds && Array.isArray(chan.memberIds) && chan.memberIds.length > 0) {
+        return SCHOOL_TEACHERS.filter((t) => chan.memberIds!.includes(t.id));
+      }
+      return SCHOOL_TEACHERS;
+    } else {
+      const colleague =
+        SCHOOL_TEACHERS.find((t) => t.id === selectedColleagueId) || SCHOOL_TEACHERS[0];
+      return [currentTeacher, colleague].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i);
+    }
+  }, [selectedRoomType, selectedChannelId, selectedColleagueId, channels, currentTeacher]);
+
+  // Filtered members inside the View Members Modal
+  const filteredActiveRoomMembers = useMemo(() => {
+    if (!memberRosterSearch.trim()) return activeRoomMembersList;
+    const q = memberRosterSearch.toLowerCase().trim();
+    return activeRoomMembersList.filter(
+      (t) =>
+        t.nameBn.toLowerCase().includes(q) ||
+        t.nameEn.toLowerCase().includes(q) ||
+        t.designationBn.toLowerCase().includes(q) ||
+        (t.phone && t.phone.includes(q))
+    );
+  }, [activeRoomMembersList, memberRosterSearch]);
+
+  // Filtered teachers list for selection in Create/Edit Modal
+  const filteredTeachersForSelection = useMemo(() => {
+    if (!memberSearchQuery.trim()) return SCHOOL_TEACHERS;
+    const q = memberSearchQuery.toLowerCase().trim();
+    return SCHOOL_TEACHERS.filter(
+      (t) =>
+        t.nameBn.toLowerCase().includes(q) ||
+        t.nameEn.toLowerCase().includes(q) ||
+        t.designationBn.toLowerCase().includes(q) ||
+        (t.assignedClass && t.assignedClass.toLowerCase().includes(q)) ||
+        (t.departmentBn && t.departmentBn.toLowerCase().includes(q))
+    );
+  }, [memberSearchQuery]);
+
   // Compute active Room ID and Title
   const activeRoomMeta = useMemo(() => {
     if (selectedRoomType === 'channel') {
@@ -183,7 +234,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         roomId: chan.id,
         roomNameBn: chan.titleBn,
         subtitleBn: chan.subtitleBn,
-        memberCount: chan.memberCount,
+        memberCount: activeRoomMembersList.length,
         channel: chan,
         isDirect: false,
       };
@@ -194,12 +245,12 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         roomId: getDirectRoomId(currentTeacher.id, colleague.id),
         roomNameBn: colleague.nameBn,
         subtitleBn: `${colleague.designationBn} · ফোন: ${colleague.phone}`,
-        memberCount: 2,
+        memberCount: activeRoomMembersList.length,
         isDirect: true,
         colleague,
       };
     }
-  }, [selectedRoomType, selectedChannelId, selectedColleagueId, currentTeacher, channels]);
+  }, [selectedRoomType, selectedChannelId, selectedColleagueId, currentTeacher, channels, activeRoomMembersList]);
 
   // Messages for active room
   const activeRoomMessages = useMemo(() => {
@@ -478,7 +529,8 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     setChannelSubtitleInput('');
     setChannelIconInput('Building2');
     setChannelColorInput('emerald');
-    setChannelMemberCountInput(8);
+    setSelectedMemberIds(SCHOOL_TEACHERS.map((t) => t.id)); // Default: select all
+    setMemberSearchQuery('');
     setShowChannelModal(true);
   };
 
@@ -489,14 +541,40 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     setChannelIconInput(chan.iconType || 'Building2');
     const matchedColor = COLOR_PRESETS.find((p) => p.badgeBg === chan.badgeBg)?.key || 'emerald';
     setChannelColorInput(matchedColor);
-    setChannelMemberCountInput(chan.memberCount || 8);
+    if (chan.memberIds && Array.isArray(chan.memberIds) && chan.memberIds.length > 0) {
+      setSelectedMemberIds(chan.memberIds);
+    } else {
+      setSelectedMemberIds(SCHOOL_TEACHERS.map((t) => t.id));
+    }
+    setMemberSearchQuery('');
     setShowChannelModal(true);
+  };
+
+  const handleToggleMember = (teacherId: string) => {
+    setSelectedMemberIds((prev) =>
+      prev.includes(teacherId)
+        ? prev.filter((id) => id !== teacherId)
+        : [...prev, teacherId]
+    );
+  };
+
+  const handleSelectAllMembers = () => {
+    setSelectedMemberIds(SCHOOL_TEACHERS.map((t) => t.id));
+  };
+
+  const handleDeselectAllMembers = () => {
+    setSelectedMemberIds([]);
   };
 
   const handleSaveChannel = (e: React.FormEvent) => {
     e.preventDefault();
     if (!channelTitleInput.trim()) {
       alert('অনুগ্রহ করে গ্রুপ রুমের একটি শিরোনাম / নাম লিখুন।');
+      return;
+    }
+
+    if (selectedMemberIds.length === 0) {
+      alert('অনুগ্রহ করে কমপক্ষে একজন শিক্ষক বা কর্মীকে এই রুমের সদস্য হিসেবে নির্বাচন করুন।');
       return;
     }
 
@@ -510,9 +588,10 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         iconType: channelIconInput,
         badgeBg: selectedColor.badgeBg,
         textColor: selectedColor.textColor,
-        memberCount: Number(channelMemberCountInput) || 8,
+        memberIds: selectedMemberIds,
+        memberCount: selectedMemberIds.length,
       });
-      setToastBanner(`✓ গ্রুপ রুম "${channelTitleInput.trim()}" এর হেডিং ও বিবরণ সফলভাবে আপডেট হয়েছে!`);
+      setToastBanner(`✓ গ্রুপ রুম "${channelTitleInput.trim()}" এর হেডিং ও ${toBengaliNumber(selectedMemberIds.length)} জন সদস্যের তালিকা আপডেট হয়েছে!`);
     } else {
       const created = createStaffChannel({
         titleBn: channelTitleInput.trim(),
@@ -520,12 +599,13 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         iconType: channelIconInput,
         badgeBg: selectedColor.badgeBg,
         textColor: selectedColor.textColor,
-        memberCount: Number(channelMemberCountInput) || 8,
+        memberIds: selectedMemberIds,
+        memberCount: selectedMemberIds.length,
         createdBy: currentTeacher.nameBn,
       });
       setSelectedChannelId(created.id);
       setSelectedRoomType('channel');
-      setToastBanner(`✓ নতুন গ্রুপ রুম "${created.titleBn}" সফলভাবে তৈরি করা হয়েছে!`);
+      setToastBanner(`✓ নতুন গ্রুপ রুম "${created.titleBn}" (${toBengaliNumber(selectedMemberIds.length)} জন সদস্য সহ) তৈরি হয়েছে!`);
     }
 
     setShowChannelModal(false);
@@ -863,16 +943,30 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200">
                     {activeRoomMeta.isDirect ? '১-অন-১ ব্যক্তিগত চ্যাট' : 'অফিসিয়াল ফোরাম'}
                   </span>
+                  {/* View Members Pill Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberRosterSearch('');
+                      setShowMembersModal(true);
+                    }}
+                    className="px-2.5 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title="এই চ্যাটরুমের সকল মেম্বার দেখুন"
+                  >
+                    <Users className="w-3 h-3 text-emerald-700" />
+                    <span>{toBengaliNumber(activeRoomMembersList.length)} জন সদস্য দেখুন</span>
+                  </button>
+
                   {/* Super Admin Direct Edit Button for Room Heading & Subtitle */}
                   {isSuperAdmin && !activeRoomMeta.isDirect && activeRoomMeta.channel && (
                     <button
                       type="button"
                       onClick={() => handleOpenEditChannelModal(activeRoomMeta.channel!)}
                       className="px-2 py-0.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                      title="এই কমন রুমের হেডিং ও তথ্য পরিবর্তন করুন (সুপার অ্যাডমিন)"
+                      title="এই কমন রুমের হেডিং ও সদস্য তালিকা পরিবর্তন করুন (সুপার অ্যাডমিন)"
                     >
                       <Edit3 className="w-3 h-3 text-indigo-700" />
-                      <span>হেডিং এডিট</span>
+                      <span>হেডিং ও সদস্য এডিট</span>
                     </button>
                   )}
                 </div>
@@ -1469,17 +1563,97 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 </div>
               </div>
 
-              {/* Member Count */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">আনুমানিক সদস্য সংখ্যা:</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={channelMemberCountInput}
-                  onChange={(e) => setChannelMemberCountInput(Number(e.target.value))}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-hidden focus:bg-white focus:border-indigo-500"
-                />
+              {/* Scrollable Member Selection List */}
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-indigo-700" />
+                    <span>রুমের সদস্য নির্বাচন করুন (User Selection):</span>
+                  </label>
+                  <span className="text-[11px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                    নির্বাচিত: {toBengaliNumber(selectedMemberIds.length)} জন
+                  </span>
+                </div>
+
+                {/* Search & Select All / Deselect All Controls */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={memberSearchQuery}
+                      onChange={(e) => setMemberSearchQuery(e.target.value)}
+                      placeholder="শিক্ষক বা স্টাফ খুঁজুন..."
+                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-indigo-500"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllMembers}
+                    className="px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 cursor-pointer whitespace-nowrap transition"
+                  >
+                    সবাইকে যোগ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeselectAllMembers}
+                    className="px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 cursor-pointer whitespace-nowrap transition"
+                  >
+                    ক্লিয়ার
+                  </button>
+                </div>
+
+                {/* Scrollable Members List */}
+                <div className="max-h-56 overflow-y-auto p-1.5 bg-slate-50 rounded-2xl border border-slate-200 divide-y divide-slate-100 space-y-1">
+                  {filteredTeachersForSelection.map((teacher) => {
+                    const isSelected = selectedMemberIds.includes(teacher.id);
+                    return (
+                      <div
+                        key={teacher.id}
+                        onClick={() => handleToggleMember(teacher.id)}
+                        className={`p-2 rounded-xl flex items-center justify-between gap-2.5 cursor-pointer transition select-none ${
+                          isSelected
+                            ? 'bg-indigo-50/90 border border-indigo-200 shadow-2xs'
+                            : 'hover:bg-white border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="relative shrink-0">
+                            <img
+                              src={teacher.photoUrl || '/assets/fb/logo.jpg'}
+                              alt={teacher.nameBn}
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                            />
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-2 ring-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h5 className="text-xs font-bold text-slate-900 truncate">
+                                {teacher.nameBn}
+                              </h5>
+                              {teacher.isHeadTeacher && (
+                                <span className="text-[9px] font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">
+                                  প্রধান
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate">
+                              {teacher.designationBn} {teacher.assignedClass ? `· শ্রেণি: ${getSchoolClassNameBn(teacher.assignedClass)}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 flex items-center pr-1 text-indigo-700">
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 text-indigo-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Modal Buttons */}
@@ -1518,6 +1692,144 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: VIEW ROOM MEMBERS ROSTER (চ্যাটরুমের সদস্য তালিকা)               */}
+      {/* ========================================================================= */}
+      {showMembersModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-indigo-200 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="bg-gradient-to-r from-teal-700 via-indigo-800 to-indigo-900 text-white p-5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold flex items-center gap-2">
+                    <span>{activeRoomMeta.roomNameBn}</span>
+                    <span className="text-xs bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-extrabold">
+                      {toBengaliNumber(activeRoomMembersList.length)} জন
+                    </span>
+                  </h3>
+                  <p className="text-xs text-indigo-100">
+                    এই চ্যাটরুমে যুক্ত শিক্ষক ও কর্মীদের তালিকা
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMembersModal(false)}
+                className="text-white hover:bg-white/20 p-1.5 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Member in Room */}
+            <div className="p-3.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2 shrink-0">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={memberRosterSearch}
+                  onChange={(e) => setMemberRosterSearch(e.target.value)}
+                  placeholder="সদস্যদের নাম, পদবি বা ফোন নম্বর খুঁজুন..."
+                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
+                />
+              </div>
+
+              {isSuperAdmin && !activeRoomMeta.isDirect && activeRoomMeta.channel && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    handleOpenEditChannelModal(activeRoomMeta.channel!);
+                  }}
+                  className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="সুপার অ্যাডমিন: সদস্য পরিবর্তন করুন"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>সদস্য পরিবর্তন</span>
+                </button>
+              )}
+            </div>
+
+            {/* Scrollable Members Directory */}
+            <div className="p-3 overflow-y-auto space-y-2 flex-1">
+              {filteredActiveRoomMembers.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  কোনো সদস্যের তথ্য পাওয়া যায়নি।
+                </div>
+              ) : (
+                filteredActiveRoomMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="p-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3 transition"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <img
+                          src={member.photoUrl || '/assets/fb/logo.jpg'}
+                          alt={member.nameBn}
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                        />
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">
+                            {member.nameBn}
+                          </h4>
+                          {member.isHeadTeacher && (
+                            <span className="text-[9px] font-black bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full border border-amber-200">
+                              প্রধান
+                            </span>
+                          )}
+                          {member.isDirector && (
+                            <span className="text-[9px] font-black bg-purple-100 text-purple-900 px-1.5 py-0.2 rounded-full border border-purple-200">
+                              পরিচালক
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10.5px] text-slate-500 truncate">
+                          {member.designationBn}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {member.departmentBn || 'আনন্দ পাঠশালা ফ্যাকাল্টি'} {member.assignedClass ? `· শ্রেণি: ${getSchoolClassNameBn(member.assignedClass)}` : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex items-center gap-1.5">
+                      {member.phone && (
+                        <a
+                          href={`tel:${member.phone}`}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 text-[10.5px] font-bold border border-slate-200 transition flex items-center gap-1"
+                          title={`${member.nameBn}-কে কল করুন`}
+                        >
+                          <Phone className="w-3 h-3 text-emerald-600" />
+                          <span className="hidden sm:inline">{member.phone}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>মোট সদস্য: {toBengaliNumber(activeRoomMembersList.length)} জন</span>
+              <button
+                type="button"
+                onClick={() => setShowMembersModal(false)}
+                className="px-4 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
           </div>
         </div>
       )}

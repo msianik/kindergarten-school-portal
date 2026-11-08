@@ -17,7 +17,8 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     iconType: 'Building2',
     badgeBg: 'bg-emerald-100',
     textColor: 'text-emerald-800',
-    memberCount: 8,
+    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'tch-6', 'tch-7', 'tch-8', 'tch-9'],
+    memberCount: 9,
     isDefault: true,
   },
   {
@@ -27,7 +28,8 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     iconType: 'Smile',
     badgeBg: 'bg-amber-100',
     textColor: 'text-amber-800',
-    memberCount: 4,
+    memberIds: ['tch-2', 'tch-3', 'tch-5', 'tch-6', 'tch-7'],
+    memberCount: 5,
     isDefault: true,
   },
   {
@@ -37,7 +39,8 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     iconType: 'Palette',
     badgeBg: 'bg-purple-100',
     textColor: 'text-purple-800',
-    memberCount: 3,
+    memberIds: ['tch-1', 'tch-2', 'tch-3', 'tch-6'],
+    memberCount: 4,
     isDefault: true,
   },
 ];
@@ -305,7 +308,21 @@ export function getStoredStaffChannels(): StaffChannelMeta[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((ch: StaffChannelMeta) => {
+          if (!ch.memberIds || !Array.isArray(ch.memberIds) || ch.memberIds.length === 0) {
+            const defMatch = DEFAULT_STAFF_CHANNELS.find((d) => d.id === ch.id);
+            const memberIds = defMatch?.memberIds || ['tch-1', 'tch-2', 'tch-3', 'tch-4'];
+            return {
+              ...ch,
+              memberIds,
+              memberCount: memberIds.length,
+            };
+          }
+          return {
+            ...ch,
+            memberCount: ch.memberIds.length,
+          };
+        });
       }
     }
   } catch (err) {
