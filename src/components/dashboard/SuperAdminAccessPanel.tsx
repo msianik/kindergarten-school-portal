@@ -1,36 +1,68 @@
 import React from 'react';
+import { Eye, ShieldCheck, Check, Sparkles, Building2, GraduationCap, DollarSign, Bell, KeyRound } from 'lucide-react';
 import { DirectorAccessPermission } from '../../types/school';
 
-interface SuperAdminAccessPanelProps {
+export interface SuperAdminAccessPanelProps {
   isSuperAdmin: boolean;
   directorPermissions: DirectorAccessPermission[];
-  onToggleViewAll: (directorId: string) => void;
-  onToggleEditAccess: (directorId: string) => void;
-  onToggleModule: (directorId: string, moduleId: string) => void;
-  onSetAllAccess?: (enable: boolean) => void;
+  onToggleMasterEdit: (directorId: string) => void;
+  onToggleEditPermission: (
+    directorId: string,
+    permissionKey:
+      | 'canEditSchoolAndBoard'
+      | 'canManageStudentsAndAdmissions'
+      | 'canManageFeesAndAccounts'
+      | 'canManageNoticesAndEvents'
+      | 'canApproveGatePassAndDiary'
+  ) => void;
+  onSetAllEditAccess?: (enable: boolean) => void;
   logoUrl?: string;
-  onToggleDirectorAccess?: (directorId: string) => void;
+  // Backward compatibility
+  onToggleViewAll?: (directorId: string) => void;
+  onToggleEditAccess?: (directorId: string) => void;
+  onToggleModule?: (directorId: string, moduleId: string) => void;
+  onSetAllAccess?: (enable: boolean) => void;
 }
 
-const MODULE_OPTIONS = [
-  { id: 'students', label: 'শিক্ষার্থী' },
-  { id: 'routine', label: 'রুটিন' },
-  { id: 'calendar', label: 'ক্যালেন্ডার' },
-  { id: 'pickup', label: 'গেট-পাস' },
-  { id: 'diary', label: 'ডায়েরি' },
-  { id: 'messages', label: 'চ্যাট' },
-  { id: 'skills', label: 'স্কিল' },
-  { id: 'attendance', label: 'হাজিরা' },
-  { id: 'fees', label: 'বেতন/ফি' },
-  { id: 'inventory', label: 'অ্যাসেট' },
+const EDIT_PERMISSION_OPTIONS = [
+  {
+    key: 'canEditSchoolAndBoard' as const,
+    label: 'স্কুল ও পর্ষদ',
+    description: 'স্কুল প্রোফাইল, পরিচালনা পর্ষদ ও শিক্ষক তালিকা এডিট ও সেভ করার অনুমোদন',
+    icon: Building2,
+  },
+  {
+    key: 'canManageStudentsAndAdmissions' as const,
+    label: 'শিক্ষার্থী ও ভর্তি',
+    description: 'নতুন শিক্ষার্থী যোগ, তথ্য এডিট ও শিক্ষার্থী ডাটাবেজ নিয়ন্ত্রণ অনুমোদন',
+    icon: GraduationCap,
+  },
+  {
+    key: 'canManageFeesAndAccounts' as const,
+    label: 'ফি ও হিসাব',
+    description: 'টিউশন ফি কালেকশন অনুমোদন, ইনভয়েস তৈরি ও স্কুল একাউন্টস এডিট সুবিধা',
+    icon: DollarSign,
+  },
+  {
+    key: 'canManageNoticesAndEvents' as const,
+    label: 'নোটিশ ও ইভেন্ট',
+    description: 'জরুরি নোটিশ প্রকাশ, অর্জন এডিট ও একাডেমিক ক্যালেন্ডার আপডেট অনুমোদন',
+    icon: Bell,
+  },
+  {
+    key: 'canApproveGatePassAndDiary' as const,
+    label: 'গেট-পাস ও ডায়েরি',
+    description: 'ডিজিটাল গেট-পাস ছাড়পত্র প্রদান ও ক্লাসরুম ডায়েরি অনুমোদন সুবিধা',
+    icon: KeyRound,
+  },
 ];
 
 export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
   isSuperAdmin,
   directorPermissions,
-  onToggleViewAll,
-  onToggleEditAccess,
-  onToggleModule,
+  onToggleMasterEdit,
+  onToggleEditPermission,
+  onSetAllEditAccess,
   onSetAllAccess,
   logoUrl,
 }) => {
@@ -38,51 +70,61 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
 
   const nonSuperAdminDirectors = directorPermissions.filter((perm) => !perm.isSuperAdmin);
 
+  const handleSetAll = (enable: boolean) => {
+    if (onSetAllEditAccess) {
+      onSetAllEditAccess(enable);
+    } else if (onSetAllAccess) {
+      onSetAllAccess(enable);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-2xl border border-amber-200/90 p-4 sm:p-5 shadow-xs space-y-3.5 print:hidden">
+    <div className="bg-white rounded-3xl border border-amber-200/90 p-4 sm:p-5 shadow-xs space-y-3.5 print:hidden">
       {/* Compact Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-100 pb-2.5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-amber-100/80 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-2xs shrink-0 text-sm">
+          <div className="w-9 h-9 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shadow-2xs shrink-0 text-base">
             👑
           </div>
           <div>
-            <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5 flex-wrap">
-              <span>পরিচালনা পর্ষদের ভিউ ও অ্যাক্সেস নিয়ন্ত্রণ প্যানেল</span>
-              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.2 rounded-full border border-amber-200">
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
+              <span>পরিচালনা পর্ষদের এডিট ও নিয়ন্ত্রণ ক্ষমতা</span>
+              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
                 সুপার অ্যাডমিন
               </span>
             </h3>
-            <p className="text-[11px] text-slate-500">
-              পরিচালকের নামের পাশে এক লাইনে অপশন দেওয়া আছে। যে অপশনে টিক দিবেন, সে কেবল সেই অপশনটি দেখতে ও ব্যবহার করতে পারবে।
+            <p className="text-[11px] text-slate-500 leading-tight">
+              সুপার অ্যাডমিন ও পরিচালকের মধ্যে ভিউ ১০০% উন্মুক্ত। পরিচালকের নামের পাশে এক লাইনে এডিট অপশনসমূহ রয়েছে; যেটিতে টিক দিবেন, কেবল তিনি সেটি এডিট করতে পারবেন।
             </p>
           </div>
         </div>
 
-        {onSetAllAccess && (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => onSetAllAccess(true)}
-              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold transition cursor-pointer shadow-2xs"
-            >
-              সবাইকে সব ভিউ দিন
-            </button>
-            <button
-              type="button"
-              onClick={() => onSetAllAccess(false)}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 text-[10.5px] font-bold transition cursor-pointer"
-            >
-              সব বন্ধ করুন
-            </button>
-          </div>
-        )}
+        {/* Global Batch Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleSetAll(true)}
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black transition cursor-pointer shadow-2xs flex items-center gap-1.5"
+            title="সকল পরিচালকের জন্য পূর্ণ এডিট ক্ষমতা উন্মুক্ত করুন"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>সবাইকে পূর্ণ এডিট দিন</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetAll(false)}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] font-black transition cursor-pointer flex items-center gap-1.5"
+            title="সকল পরিচালকের জন্য শুধুমাত্র ভিউ মোড সক্রিয় করুন (এডিট বন্ধ)"
+          >
+            <Eye className="w-3.5 h-3.5 text-slate-500" />
+            <span>সবাইকে শুধু ভিউ মোড</span>
+          </button>
+        </div>
       </div>
 
-      {/* Vertical list of Directors with side-by-side single-line options */}
+      {/* Vertical list of Directors with side-by-side single-line options filling the row */}
       <div className="space-y-2">
         {nonSuperAdminDirectors.map((perm) => {
-          const isViewAll = Boolean(perm.viewAllModules);
           const isFullEdit = Boolean(
             perm.canEditSchoolAndBoard &&
               perm.canManageNoticesAndEvents &&
@@ -91,91 +133,107 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
               perm.canApproveGatePassAndDiary
           );
 
+          const activeCount = [
+            perm.canEditSchoolAndBoard,
+            perm.canManageStudentsAndAdmissions,
+            perm.canManageFeesAndAccounts,
+            perm.canManageNoticesAndEvents,
+            perm.canApproveGatePassAndDiary,
+          ].filter(Boolean).length;
+
           return (
             <div
               key={perm.directorId}
-              className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-xl border border-slate-200/90 hover:border-amber-300 bg-slate-50/50 hover:bg-white shadow-2xs transition-all"
+              className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200/90 hover:border-amber-300/80 bg-slate-50/60 hover:bg-white shadow-2xs transition-all"
             >
-              {/* Director Identity (Name & Designation) */}
-              <div className="flex items-center gap-2.5 min-w-[200px] shrink-0">
+              {/* Director Identity (Photo, Name, Designation & Mode Pill) */}
+              <div className="flex items-center gap-2.5 min-w-[210px] shrink-0">
                 <img
                   src={perm.photoUrl || logoUrl || '/assets/fb/logo.jpg'}
                   alt={perm.nameBn}
                   referrerPolicy="no-referrer"
-                  className="w-9 h-9 rounded-xl object-cover border border-amber-300 shrink-0 bg-white"
+                  className="w-10 h-10 rounded-xl object-cover border border-amber-300 shrink-0 bg-white shadow-2xs"
                 />
                 <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">
-                    {perm.nameBn}
-                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                      {perm.nameBn}
+                    </h4>
+                    {isFullEdit ? (
+                      <span className="text-[9.5px] font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-md border border-amber-300">
+                        পূর্ণ এডিট
+                      </span>
+                    ) : activeCount > 0 ? (
+                      <span className="text-[9.5px] font-bold bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded-md border border-emerald-300">
+                        {activeCount} এডিট
+                      </span>
+                    ) : (
+                      <span className="text-[9.5px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded-md">
+                        ভিউ অনলি
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[10.5px] font-semibold text-slate-500 truncate">
                     {perm.roleTitleBn}
                   </p>
                 </div>
               </div>
 
-              {/* Side-by-Side Single-Line Options: View, Access, and Modules */}
-              <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap py-0.5">
-                {/* 1. সব ভিউ (Master View) */}
-                <label
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black border transition-all cursor-pointer shrink-0 select-none ${
-                    isViewAll
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
-                  }`}
-                  title="সকল মডিউল দেখার অপশন একসাথে চালু বা বন্ধ করুন"
+              {/* Side-by-Side Single-Line Options: View Pill + Full Edit + Specific Edit Options */}
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 flex-wrap xl:flex-nowrap justify-start xl:justify-end py-0.5">
+                {/* 1. ভিউ স্ট্যাটাস (View Status: All Open) */}
+                <div
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shrink-0 select-none cursor-default"
+                  title="সুপার অ্যাডমিনের মতোই সকল পরিচালক সম্পূর্ণ পোর্টাল ভিউ করতে পারেন (উন্মুক্ত)"
                 >
-                  <input
-                    type="checkbox"
-                    checked={isViewAll}
-                    onChange={() => onToggleViewAll(perm.directorId)}
-                    className="w-3.5 h-3.5 rounded text-emerald-700 focus:ring-0 cursor-pointer accent-emerald-600"
-                  />
-                  <span>সব ভিউ</span>
-                </label>
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>সব ভিউ: উন্মুক্ত</span>
+                </div>
 
-                {/* 2. এডিট অ্যাক্সেস (Master Edit / Access) */}
+                {/* 2. মাস্টার পূর্ণ এডিট (Full Edit Toggle) */}
                 <label
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black border transition-all cursor-pointer shrink-0 select-none ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black border transition-all cursor-pointer shrink-0 select-none ${
                     isFullEdit
-                      ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-2xs'
+                      ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-2xs ring-1 ring-amber-400/40'
                       : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
                   }`}
-                  title="স্কুল প্রোফাইল, শিক্ষার্থী ও ফি এডিট ও অনুমোদন সুবিধা"
+                  title="পরিচালককে সকল সেকশনের এডিট ক্ষমতা একসাথে প্রদান করুন"
                 >
                   <input
                     type="checkbox"
                     checked={isFullEdit}
-                    onChange={() => onToggleEditAccess(perm.directorId)}
-                    className="w-3.5 h-3.5 rounded text-amber-600 focus:ring-0 cursor-pointer accent-amber-600"
+                    onChange={() => onToggleMasterEdit(perm.directorId)}
+                    className="w-3.5 h-3.5 rounded text-slate-900 focus:ring-0 cursor-pointer accent-amber-500"
                   />
-                  <span>এডিট অ্যাক্সেস</span>
+                  <span>✏️ পূর্ণ এডিট</span>
                 </label>
 
-                {/* Divider between master toggles and module pills */}
-                <span className="h-5 w-px bg-slate-300 shrink-0 mx-0.5 hidden sm:inline-block" />
+                {/* Vertical Divider */}
+                <span className="hidden xl:inline-block h-6 w-px bg-slate-300/80 shrink-0 mx-0.5" />
 
-                {/* 3. Individual Modules (যে অপশনগুলো টিক দিলে দেখতে পারবে) */}
-                {MODULE_OPTIONS.map((mod) => {
-                  const isChecked = isViewAll || (perm.allowedModules || []).includes(mod.id);
+                {/* 3. Specific Edit Options (এক লাইনে পাশাপাশি) */}
+                {EDIT_PERMISSION_OPTIONS.map((opt) => {
+                  const isChecked = Boolean(perm[opt.key]);
+                  const Icon = opt.icon;
 
                   return (
                     <label
-                      key={mod.id}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer shrink-0 select-none ${
+                      key={opt.key}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer shrink-0 select-none ${
                         isChecked
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 opacity-60'
+                          ? 'bg-emerald-50 text-emerald-950 border-emerald-400/90 shadow-2xs font-black'
+                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/90 hover:border-slate-300'
                       }`}
-                      title={`${mod.label} মডিউলের ভিউ অ্যাক্সেস`}
+                      title={opt.description}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => onToggleModule(perm.directorId, mod.id)}
-                        className="w-3 h-3 rounded text-emerald-600 focus:ring-0 cursor-pointer accent-emerald-600"
+                        onChange={() => onToggleEditPermission(perm.directorId, opt.key)}
+                        className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-0 cursor-pointer accent-emerald-600"
                       />
-                      <span>{mod.label}</span>
+                      <Icon className={`w-3.5 h-3.5 ${isChecked ? 'text-emerald-700' : 'text-slate-400'}`} />
+                      <span>{opt.label}</span>
                     </label>
                   );
                 })}

@@ -36,6 +36,7 @@ export const ALL_PORTAL_MODULE_IDS = [
   'pickup',
   'diary',
   'messages',
+  'notices',
   'skills',
   'attendance',
   'fees',
@@ -1526,6 +1527,350 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       descriptionBn: 'গেট লগ ও সারসংক্ষেপ',
     },
   ];
+}
+
+export interface NavPillarItem {
+  id: string;
+  labelBn: string;
+  shortLabelBn: string;
+  descriptionBn: string;
+}
+
+export interface NavPillar {
+  id: string;
+  labelBn: string;
+  shortLabelBn: string;
+  defaultTab: string;
+  iconName: string;
+  color: string;
+  itemIds: string[];
+  items: NavPillarItem[];
+}
+
+/**
+ * Returns world-class 6 core navigation pillars for simplified, non-repetitive navigation.
+ */
+export function getGroupedNavPillars(role: string, directorId?: string): NavPillar[] {
+  const allPillars: NavPillar[] = [
+    {
+      id: 'pillar_overview',
+      labelBn: 'ড্যাশবোর্ড',
+      shortLabelBn: 'হোম',
+      defaultTab: 'overview',
+      iconName: 'UserCheck',
+      color: 'text-emerald-600',
+      itemIds: ['overview'],
+      items: [
+        {
+          id: 'overview',
+          labelBn: role === 'super_admin' ? 'কেন্দ্রীয় হোম ড্যাশবোর্ড' : 'অ্যাডমিন ড্যাশবোর্ড',
+          shortLabelBn: 'হোম',
+          descriptionBn: 'স্কুল সামগ্রিক সামারি, পালস ও পরিচালনা পর্ষদ',
+        },
+      ],
+    },
+    {
+      id: 'pillar_students',
+      labelBn: 'শিক্ষার্থী',
+      shortLabelBn: 'শিক্ষার্থী',
+      defaultTab: 'students',
+      iconName: 'Users',
+      color: 'text-amber-600',
+      itemIds: ['students', 'idcards', 'health'],
+      items: [
+        {
+          id: 'students',
+          labelBn: 'শিক্ষার্থী তালিকা ও ভর্তি',
+          shortLabelBn: 'তালিকা',
+          descriptionBn: 'ক্লাস ভিত্তিক ছাত্র-ছাত্রীর পূর্ণাঙ্গ প্রোফাইল ও ভর্তি',
+        },
+        {
+          id: 'idcards',
+          labelBn: 'ডিজিটাল আইডি কার্ড',
+          shortLabelBn: 'আইডি কার্ড',
+          descriptionBn: 'ডাইনামিক কিউআর ও প্রিন্ট-রেডি স্মার্ট স্টুডেন্ট আইডি',
+        },
+        {
+          id: 'health',
+          labelBn: 'স্বাস্থ্য ও অ্যালার্জি',
+          shortLabelBn: 'স্বাস্থ্য',
+          descriptionBn: 'উচ্চতা, ওজন, BMI, রক্তের গ্রুপ ও জরুরি অ্যালার্জি প্রোফাইল',
+        },
+      ],
+    },
+    {
+      id: 'pillar_academics',
+      labelBn: 'একাডেমিক',
+      shortLabelBn: 'একাডেমিক',
+      defaultTab: 'routine',
+      iconName: 'BookOpen',
+      color: 'text-indigo-600',
+      itemIds: ['routine', 'calendar', 'results', 'skills'],
+      items: [
+        {
+          id: 'routine',
+          labelBn: 'ক্লাস রুটিন',
+          shortLabelBn: 'রুটিন',
+          descriptionBn: 'ক্লাস ভিত্তিক সময়সূচি ও পিরিয়ড ব্যবস্থাপনা',
+        },
+        {
+          id: 'calendar',
+          labelBn: 'একাডেমিক ক্যালেন্ডার',
+          shortLabelBn: 'ক্যালেন্ডার',
+          descriptionBn: 'স্কুল ইভেন্ট, পরীক্ষা, ছুটি ও নোটিশ দিনপঞ্জি',
+        },
+        {
+          id: 'results',
+          labelBn: 'ফলাফল ও মার্কশিট',
+          shortLabelBn: 'ফলাফল',
+          descriptionBn: 'টার্ম পরীক্ষা, নম্বর এন্ট্রি ও প্রিন্ট-রেডি রিপোর্ট কার্ড',
+        },
+        {
+          id: 'skills',
+          labelBn: 'হোলিস্টিক স্কিল কার্ড',
+          shortLabelBn: 'স্কিল',
+          descriptionBn: 'শিশুদের সামাজিক আচরণ ও সৃজনশীল মেধা মূল্যায়ন',
+        },
+      ],
+    },
+    {
+      id: 'pillar_operations',
+      labelBn: 'দৈনিক স্কুল',
+      shortLabelBn: 'দৈনিক',
+      defaultTab: 'attendance',
+      iconName: 'CalendarCheck',
+      color: 'text-teal-600',
+      itemIds: ['attendance', 'pickup', 'diary'],
+      items: [
+        {
+          id: 'attendance',
+          labelBn: 'দৈনিক হাজিরা',
+          shortLabelBn: 'হাজিরা',
+          descriptionBn: 'ডিজিটাল ক্লাসরুম হাজিরা ও অনুপস্থিতির SMS',
+        },
+        {
+          id: 'pickup',
+          labelBn: 'গেট-পাস ও পিক-আপ',
+          shortLabelBn: 'গেট-পাস',
+          descriptionBn: 'নিরাপদ স্কুল প্রস্থান ও অভিভাবক ভেরিফিকেশন লগ',
+        },
+        {
+          id: 'diary',
+          labelBn: 'ডিজিটাল ডায়েরি',
+          shortLabelBn: 'ডায়েরি',
+          descriptionBn: 'ক্লাস অ্যাক্টিভিটি, ছবির গ্যালারি ও হোমওয়ার্ক পোস্ট',
+        },
+      ],
+    },
+    {
+      id: 'pillar_communication',
+      labelBn: 'যোগাযোগ',
+      shortLabelBn: 'যোগাযোগ',
+      defaultTab: 'messages',
+      iconName: 'MessageSquare',
+      color: 'text-rose-600',
+      itemIds: ['messages', 'notices'],
+      items: [
+        {
+          id: 'messages',
+          labelBn: 'চ্যাট হাব',
+          shortLabelBn: 'চ্যাট',
+          descriptionBn: 'অভিভাবক, শিক্ষক ও স্টাফদের সরাসরি মেসেজিং হাব',
+        },
+        {
+          id: 'notices',
+          labelBn: 'নোটিশ বোর্ড ও সার্কুলার',
+          shortLabelBn: 'নোটিশ',
+          descriptionBn: 'জরুরি নোটিশ, প্রাতিষ্ঠানিক সার্কুলার ও পুশ ব্রডকাস্ট',
+        },
+      ],
+    },
+    {
+      id: 'pillar_finance',
+      labelBn: 'হিসাব ও সম্পদ',
+      shortLabelBn: 'হিসাব',
+      defaultTab: 'fees',
+      iconName: 'CreditCard',
+      color: 'text-emerald-700',
+      itemIds: ['fees', 'inventory', 'workspace'],
+      items: [
+        {
+          id: 'fees',
+          labelBn: 'বেতন ও ৩-পার্ট ভাউচার',
+          shortLabelBn: 'বেতন/ফি',
+          descriptionBn: 'টিউশন ফি, ইনভয়েস ও ৩-পার্ট ক্যাশ ভাউচার প্রিন্ট',
+        },
+        {
+          id: 'inventory',
+          labelBn: 'স্কুল অ্যাসেট ও উপকরণ',
+          shortLabelBn: 'অ্যাসেট',
+          descriptionBn: 'স্কুল সামগ্রী, মন্টেসরি উপকরণ ও সরঞ্জাম ট্র্যাকার',
+        },
+        {
+          id: 'workspace',
+          labelBn: 'গুগল ড্রাইভ ও ক্লাউড',
+          shortLabelBn: 'ড্রাইভ',
+          descriptionBn: 'Google Drive, Sheets ও ক্যালেন্ডার ক্লাউড ব্যাকআপ',
+        },
+      ],
+    },
+  ];
+
+  if (role === 'teacher') {
+    return [
+      {
+        id: 'pillar_overview',
+        labelBn: 'শিক্ষক ড্যাশবোর্ড',
+        shortLabelBn: 'হোম',
+        defaultTab: 'overview',
+        iconName: 'UserCheck',
+        color: 'text-indigo-600',
+        itemIds: ['overview'],
+        items: [{ id: 'overview', labelBn: 'শিক্ষক ক্লাসরুম হোম', shortLabelBn: 'হোম', descriptionBn: 'ক্লাসরুম রোস্টার ও FCM অ্যালার্ট' }],
+      },
+      {
+        id: 'pillar_students',
+        labelBn: 'শিক্ষার্থী',
+        shortLabelBn: 'শিক্ষার্থী',
+        defaultTab: 'students',
+        iconName: 'Users',
+        color: 'text-amber-600',
+        itemIds: ['students', 'idcards', 'health'],
+        items: [
+          { id: 'students', labelBn: 'শিক্ষার্থী তালিকা', shortLabelBn: 'তালিকা', descriptionBn: 'ক্লাসের ছাত্র-ছাত্রীর প্রোফাইল' },
+          { id: 'idcards', labelBn: 'আইডি কার্ড', shortLabelBn: 'আইডি কার্ড', descriptionBn: 'ক্লাসের শিক্ষার্থীদের আইডি কার্ড প্রিন্ট' },
+          { id: 'health', labelBn: 'স্বাস্থ্য ও অ্যালার্জি', shortLabelBn: 'স্বাস্থ্য', descriptionBn: 'স্বাস্থ্য, বৃদ্ধি ও অ্যালার্জি সতর্কতা' },
+        ],
+      },
+      {
+        id: 'pillar_academics',
+        labelBn: 'একাডেমিক',
+        shortLabelBn: 'একাডেমিক',
+        defaultTab: 'routine',
+        iconName: 'BookOpen',
+        color: 'text-indigo-600',
+        itemIds: ['routine', 'calendar', 'results', 'skills'],
+        items: [
+          { id: 'routine', labelBn: 'ক্লাস রুটিন', shortLabelBn: 'রুটিন', descriptionBn: 'আজকের পাঠদান ও সাপ্তাহিক সময়সূচি' },
+          { id: 'calendar', labelBn: 'অ্যাকাডেমিক ক্যালেন্ডার', shortLabelBn: 'ক্যালেন্ডার', descriptionBn: 'স্কুল ইভেন্ট, পরীক্ষা ও ছুটির তালিকা' },
+          { id: 'results', labelBn: 'ফলাফল ও মার্কশিট', shortLabelBn: 'ফলাফল', descriptionBn: 'নম্বর এন্ট্রি ও প্রোগ্রেস রিপোর্ট কার্ড' },
+          { id: 'skills', labelBn: 'স্কিল মূল্যায়ন', shortLabelBn: 'স্কিল', descriptionBn: 'শিশুদের আচরণ ও মেধা পর্যবেক্ষণ' },
+        ],
+      },
+      {
+        id: 'pillar_operations',
+        labelBn: 'ক্লাসরুম পরিচালনা',
+        shortLabelBn: 'পরিচালনা',
+        defaultTab: 'attendance',
+        iconName: 'CalendarCheck',
+        color: 'text-teal-600',
+        itemIds: ['attendance', 'pickup', 'diary'],
+        items: [
+          { id: 'attendance', labelBn: 'দৈনিক হাজিরা', shortLabelBn: 'হাজিরা', descriptionBn: 'ক্লাসরুম রোল কল ও হাজিরা' },
+          { id: 'pickup', labelBn: 'গেট-পাস', shortLabelBn: 'গেট-পাস', descriptionBn: 'পিক-আপ কল ও অভিভাবক যাচাই' },
+          { id: 'diary', labelBn: 'ডায়েরি পোস্ট', shortLabelBn: 'ডায়েরি', descriptionBn: 'ছবি, ক্রাফট ও টিফিন আপডেট' },
+        ],
+      },
+      {
+        id: 'pillar_communication',
+        labelBn: 'যোগাযোগ',
+        shortLabelBn: 'যোগাযোগ',
+        defaultTab: 'messages',
+        iconName: 'MessageSquare',
+        color: 'text-rose-600',
+        itemIds: ['messages', 'notices'],
+        items: [
+          { id: 'messages', labelBn: 'চ্যাট হাব', shortLabelBn: 'চ্যাট', descriptionBn: 'অভিভাবকদের সাথে সরাসরি ক্লাসরুম মেসেজিং' },
+          { id: 'notices', labelBn: 'নোটিশ বোর্ড', shortLabelBn: 'নোটিশ', descriptionBn: 'স্কুল নোটিশ ও জরুরি সার্কুলার' },
+        ],
+      },
+      {
+        id: 'pillar_finance',
+        labelBn: 'বেতন ও ড্রাইভ',
+        shortLabelBn: 'বেতন',
+        defaultTab: 'fees',
+        iconName: 'CreditCard',
+        color: 'text-emerald-700',
+        itemIds: ['fees', 'workspace'],
+        items: [
+          { id: 'fees', labelBn: 'ক্লাস ফি বকেয়া ও স্লিপ', shortLabelBn: 'ফি', descriptionBn: 'নির্ধারিত ক্লাসের ফি ও বেতন স্লিপ' },
+          { id: 'workspace', labelBn: 'গুগল ড্রাইভ', shortLabelBn: 'ড্রাইভ', descriptionBn: 'ক্লাস ডকুমেন্ট ও ক্যালেন্ডার ড্রাইভ' },
+        ],
+      },
+    ];
+  }
+
+  if (role === 'parent') {
+    return [
+      {
+        id: 'pillar_overview',
+        labelBn: 'আমার সন্তান',
+        shortLabelBn: 'সন্তান',
+        defaultTab: 'overview',
+        iconName: 'UserCheck',
+        color: 'text-amber-600',
+        itemIds: ['overview'],
+        items: [{ id: 'overview', labelBn: 'সন্তানের হোম ড্যাশবোর্ড', shortLabelBn: 'হোম', descriptionBn: 'সন্তানের লাইভ স্ট্যাটাস ও সারসংক্ষেপ' }],
+      },
+      {
+        id: 'pillar_academics',
+        labelBn: 'পড়াশোনা ও ফলাফল',
+        shortLabelBn: 'পড়াশোনা',
+        defaultTab: 'routine',
+        iconName: 'BookOpen',
+        color: 'text-indigo-600',
+        itemIds: ['routine', 'calendar', 'results', 'diary', 'skills'],
+        items: [
+          { id: 'routine', labelBn: 'ক্লাস রুটিন', shortLabelBn: 'রুটিন', descriptionBn: 'সন্তানের দৈনিক ও সাপ্তাহিক ক্লাস সময়সূচি' },
+          { id: 'calendar', labelBn: 'অ্যাকাডেমিক ক্যালেন্ডার', shortLabelBn: 'ক্যালেন্ডার', descriptionBn: 'ছুটি, পরীক্ষা ও স্কুলের বিশেষ দিনপঞ্জি' },
+          { id: 'results', labelBn: 'পরীক্ষার ফলাফল', shortLabelBn: 'ফলাফল', descriptionBn: 'একাডেমিক মার্কশিট ও কালারফুল রিপোর্ট কার্ড' },
+          { id: 'diary', labelBn: 'ক্লাস ডায়েরি', shortLabelBn: 'ডায়েরি', descriptionBn: 'আজকের ক্লাসের কাজ, টিফিন ও ছবি' },
+          { id: 'skills', labelBn: 'প্রগ্রেস কার্ড', shortLabelBn: 'প্রগ্রেস', descriptionBn: 'হোলিস্টিক স্কিল ও মেধা বিকাশ রিপোর্ট' },
+        ],
+      },
+      {
+        id: 'pillar_operations',
+        labelBn: 'নিরাপত্তা ও স্বাস্থ্য',
+        shortLabelBn: 'নিরাপত্তা',
+        defaultTab: 'pickup',
+        iconName: 'ShieldCheck',
+        color: 'text-teal-600',
+        itemIds: ['pickup', 'idcards', 'health'],
+        items: [
+          { id: 'pickup', labelBn: 'গেট-পাস ও কিউআর', shortLabelBn: 'গেট-পাস', descriptionBn: 'অনুমোদিত অভিভাবক ও পিক-আপ কিউআর' },
+          { id: 'idcards', labelBn: 'ডিজিটাল আইডি কার্ড', shortLabelBn: 'আইডি কার্ড', descriptionBn: 'সন্তানের স্মার্ট স্টুডেন্ট আইডি' },
+          { id: 'health', labelBn: 'স্বাস্থ্য ও বৃদ্ধি', shortLabelBn: 'স্বাস্থ্য', descriptionBn: 'শিশুর উচ্চতা, ওজন, BMI ও অ্যালার্জি প্রোফাইল' },
+        ],
+      },
+      {
+        id: 'pillar_finance',
+        labelBn: 'বেতন ও পেমেন্ট',
+        shortLabelBn: 'বেতন',
+        defaultTab: 'fees',
+        iconName: 'CreditCard',
+        color: 'text-rose-600',
+        itemIds: ['fees'],
+        items: [
+          { id: 'fees', labelBn: 'স্কুল ফি ও রসিদ', shortLabelBn: 'ফি', descriptionBn: 'পেমেন্ট স্ট্যাটাস, বকেয়া ও ৩-পার্ট রসিদ' },
+        ],
+      },
+      {
+        id: 'pillar_communication',
+        labelBn: 'চ্যাট ও নোটিশ',
+        shortLabelBn: 'চ্যাট',
+        defaultTab: 'messages',
+        iconName: 'MessageSquare',
+        color: 'text-rose-600',
+        itemIds: ['messages', 'notices'],
+        items: [
+          { id: 'messages', labelBn: 'শিক্ষক চ্যাট', shortLabelBn: 'চ্যাট', descriptionBn: 'শ্রেণি শিক্ষকের সাথে সরাসরি চ্যাট' },
+          { id: 'notices', labelBn: 'স্কুল নোটিশ বোর্ড', shortLabelBn: 'নোটিশ', descriptionBn: 'স্কুলের জরুরি ঘোষণা ও ছুটির সার্কুলার' },
+        ],
+      },
+    ];
+  }
+
+  return allPillars;
 }
 
 // =========================================================================

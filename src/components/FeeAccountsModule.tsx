@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { FeeInvoice, UserRole, Student, PortalAccount, SchoolClass } from '../types/school';
-import { calculateFeeSummary, toBengaliNumber, getSchoolClassNameBn, ALL_SCHOOL_CLASSES } from '../utils/schoolLogic';
+import { calculateFeeSummary, toBengaliNumber, getSchoolClassNameBn, ALL_SCHOOL_CLASSES, getPermissionForDirector } from '../utils/schoolLogic';
 import { getDaysUntilDueDate } from '../utils/feeReminderLogic';
 import {
   getStudentFeeConfig,
@@ -115,15 +115,21 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
   const isParentRole = currentRole === 'parent' || loggedInAccount?.role === 'parent';
   const isTeacherRole = currentRole === 'teacher' || loggedInAccount?.role === 'teacher';
 
-  // Strictly only Principal and Super Admin (and Accountant) can view all school finances and set/confirm fees
+  const dirPerm =
+    currentRole === 'director' ? getPermissionForDirector(loggedInAccount?.directorId) : null;
+
+  // Directors can view all school finances identically to Super Admin.
+  // But can only create invoices or confirm payments if granted by Super Admin.
+  const canEditFees =
+    currentRole === 'super_admin' ||
+    currentRole === 'principal' ||
+    currentRole === 'accountant' ||
+    Boolean(currentRole === 'director' && dirPerm?.canManageFeesAndAccounts);
+
   const canManageAllFees =
     !isParentRole &&
     !isTeacherRole &&
-    (currentRole === 'super_admin' ||
-      currentRole === 'principal' ||
-      currentRole === 'accountant' ||
-      loggedInAccount?.role === 'super_admin' ||
-      loggedInAccount?.role === 'principal');
+    (canEditFees || currentRole === 'director');
 
   const ownParentStudentId = loggedInAccount?.studentId || students[0]?.id || 'std-1';
   const ownParentStudent = useMemo(
@@ -1357,7 +1363,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                 <Download className="w-4 h-4 text-rose-600" />
                 <span>Download Report (PDF / CSV)</span>
               </button>
-              {canManageAllFees && (
+              {canEditFees ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -1376,7 +1382,11 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                   <FilePlus2 className="w-4 h-4 text-amber-400" />
                   <span>নতুন পেমেন্ট / ইনভয়েস জেনারেট করুন</span>
                 </button>
-              )}
+              ) : currentRole === 'director' ? (
+                <div className="px-4 py-3 rounded-2xl bg-white/20 text-white text-xs font-black shadow-md flex items-center gap-1.5 border border-white/30">
+                  <span>👁️ সম্পূর্ণ হিসাব ভিউ মোড</span>
+                </div>
+              ) : null}
               <div className="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/20 text-center">
                 <span className="text-[10px] uppercase font-bold text-white/80 block">
                   কালেকশন হার
@@ -1814,10 +1824,10 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
             currentRole={currentRole}
             loggedInAccount={loggedInAccount}
             onPayInvoice={handleStartPayment}
-            onAdminConfirmPayment={canManageAllFees ? handleOpenAdminConfirmModal : undefined}
+            onAdminConfirmPayment={canEditFees ? handleOpenAdminConfirmModal : undefined}
             onViewReceipt={(inv) => setReceiptInvoice(inv)}
-            onUpdateInvoices={canManageAllFees ? onUpdateInvoices : undefined}
-            onUpdateStudent={canManageAllFees ? onUpdateStudent : undefined}
+            onUpdateInvoices={canEditFees ? onUpdateInvoices : undefined}
+            onUpdateStudent={canEditFees ? onUpdateStudent : undefined}
             onOpenDownloadReportModal={handleOpenDownloadReportModal}
           />
 
@@ -1868,7 +1878,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                 <Download className="w-3.5 h-3.5" />
                 <span>Download Report (PDF / CSV)</span>
               </button>
-              {canManageAllFees && (
+              {canEditFees && (
                 <button
                   type="button"
                   onClick={() => setIsCreateInvoiceModalOpen(true)}
@@ -1927,7 +1937,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                           </span>
                         )}
 
-                        {canManageAllFees && !isEditingThisInv && (
+                        {canEditFees && !isEditingThisInv && (
                           <button
                             type="button"
                             onClick={() => {
@@ -1943,7 +1953,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                       </div>
                     </div>
 
-                    {canManageAllFees && isEditingThisInv ? (
+                    {canEditFees && isEditingThisInv ? (
                       <div className="my-3 p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between gap-2">
                         <span className="text-xs font-bold text-indigo-950">নতুন নির্ধারিত ফি (৳):</span>
                         <div className="flex items-center gap-2">
@@ -2033,7 +2043,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                         </>
                       ) : (
                         <>
-                          {canManageAllFees && (
+                          {canEditFees && (
                             <button
                               type="button"
                               onClick={() => handleOpenAdminConfirmModal(inv)}

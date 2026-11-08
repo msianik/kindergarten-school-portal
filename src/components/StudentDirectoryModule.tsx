@@ -6,6 +6,7 @@ import {
   PickupPerson,
   PortalAccountRole,
   SkillAssessment,
+  PortalAccount,
 } from '../types/school';
 import {
   getSchoolClassNameBn,
@@ -18,6 +19,7 @@ import {
   toBengaliNumber,
   exportStudentDirectoryToCsv,
   downloadStudentDirectoryCsvFile,
+  getPermissionForDirector,
 } from '../utils/schoolLogic';
 import { 
   Users, 
@@ -57,6 +59,7 @@ interface StudentDirectoryModuleProps {
   onUpdateStudent: (updatedStudent: Student) => void;
   onDeleteStudent: (studentId: string) => void;
   currentRole: UserRole;
+  loggedInAccount?: PortalAccount | null;
   onNavigateTab: (tab: string) => void;
   assessments?: Record<string, SkillAssessment>;
 }
@@ -85,15 +88,23 @@ export const StudentDirectoryModule: React.FC<StudentDirectoryModuleProps> = ({
   onUpdateStudent,
   onDeleteStudent,
   currentRole,
+  loggedInAccount,
   onNavigateTab,
   assessments,
 }) => {
-  // Access Guard: Super Admin, Directors, Principal, and Teachers
+  // Access Guard: Super Admin, Directors, Principal, and Teachers can view all students
   const hasAccess =
     currentRole === 'super_admin' ||
     currentRole === 'director' ||
     currentRole === 'principal' ||
     currentRole === 'teacher';
+
+  const dirPerm =
+    currentRole === 'director' ? getPermissionForDirector(loggedInAccount?.directorId) : null;
+  const canEditStudents =
+    currentRole === 'super_admin' ||
+    currentRole === 'principal' ||
+    (currentRole === 'director' && Boolean(dirPerm?.canManageStudentsAndAdmissions));
 
   const [selectedClass, setSelectedClass] = useState<SchoolClass | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -567,14 +578,20 @@ export const StudentDirectoryModule: React.FC<StudentDirectoryModuleProps> = ({
               <FileSpreadsheet className="w-4 h-4 text-emerald-300" />
               <span>CSV এক্সপোর্ট ({filteredStudents.length})</span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal()}
-              className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>+ নতুন শিক্ষার্থী যোগ করুন</span>
-            </button>
+            {canEditStudents ? (
+              <button
+                type="button"
+                onClick={() => handleOpenAddModal()}
+                className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>+ নতুন শিক্ষার্থী যোগ করুন</span>
+              </button>
+            ) : currentRole === 'director' ? (
+              <div className="px-4 py-2.5 bg-white/20 text-white border border-white/30 rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-xs">
+                <span>👁️ সম্পূর্ণ ডাটাবেজ ভিউ মোড</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -869,14 +886,16 @@ export const StudentDirectoryModule: React.FC<StudentDirectoryModuleProps> = ({
                 <span>সার্চ রিসেট করে সব দেখুন</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal(selectedClass === 'all' ? 'HateKhori' : selectedClass)}
-              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>নতুন শিক্ষার্থী যোগ করুন</span>
-            </button>
+            {canEditStudents && (
+              <button
+                type="button"
+                onClick={() => handleOpenAddModal(selectedClass === 'all' ? 'HateKhori' : selectedClass)}
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>নতুন শিক্ষার্থী যোগ করুন</span>
+              </button>
+            )}
           </div>
         </div>
       ) : viewMode === 'grid' ? (
@@ -991,23 +1010,27 @@ export const StudentDirectoryModule: React.FC<StudentDirectoryModuleProps> = ({
                       <QrCode className="w-3.5 h-3.5 text-teal-700" />
                       <span>আইডি কার্ড</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditModal(std)}
-                      className="px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1 transition cursor-pointer"
-                      title="শিক্ষার্থীর তথ্য আপডেট করুন"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>এডিট</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStudentToDelete(std)}
-                      className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
-                      title="তালিকা থেকে মুছুন"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canEditStudents && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(std)}
+                          className="px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1 transition cursor-pointer"
+                          title="শিক্ষার্থীর তথ্য আপডেট করুন"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>এডিট</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStudentToDelete(std)}
+                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
+                          title="তালিকা থেকে মুছুন"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -1137,22 +1160,26 @@ export const StudentDirectoryModule: React.FC<StudentDirectoryModuleProps> = ({
                         >
                           <QrCode className="w-3.5 h-3.5 text-teal-700" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(std)}
-                          className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition cursor-pointer"
-                          title="এডিট করুন"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setStudentToDelete(std)}
-                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
-                          title="মুছে ফেলুন"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canEditStudents && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(std)}
+                              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition cursor-pointer"
+                              title="এডিট করুন"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setStudentToDelete(std)}
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
+                              title="মুছে ফেলুন"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

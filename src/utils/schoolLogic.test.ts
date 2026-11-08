@@ -13,6 +13,7 @@ import {
   mergeNotificationsIdempotent,
   authenticateAndDetectRole,
   getRoleNavMetadata,
+  getGroupedNavPillars,
   getStudentConsistencyTier,
   generateMonthlyAttendanceSummary,
   exportAttendanceToCsv,
@@ -409,6 +410,34 @@ test('createLowStockFcmPayload generates high-priority administrator alerts when
   const urgentPayload = createLowStockFcmPayload(outOfStockAsset, 'এইমাত্র');
   assert.equal(urgentPayload.priority, 'urgent');
   assert.ok(urgentPayload.titleBn.includes('স্টক শূন্য সতর্কতা'));
+});
+
+test('getGroupedNavPillars returns simplified, non-repetitive core pillars', () => {
+  const adminPillars = getGroupedNavPillars('principal');
+  assert.equal(adminPillars.length, 6);
+  assert.equal(adminPillars[0].id, 'pillar_overview');
+  assert.equal(adminPillars[1].id, 'pillar_students');
+  assert.equal(adminPillars[2].id, 'pillar_academics');
+  assert.equal(adminPillars[3].id, 'pillar_operations');
+  assert.equal(adminPillars[4].id, 'pillar_communication');
+  assert.equal(adminPillars[5].id, 'pillar_finance');
+
+  // Verify all pillars have default tabs and valid items
+  for (const pillar of adminPillars) {
+    assert.ok(pillar.defaultTab.length > 0);
+    assert.ok(pillar.labelBn.length > 0);
+    assert.ok(pillar.items.length > 0);
+    assert.ok(pillar.itemIds.includes(pillar.defaultTab));
+  }
+
+  // Teacher pillars
+  const teacherPillars = getGroupedNavPillars('teacher');
+  assert.equal(teacherPillars.length, 6);
+
+  // Parent pillars
+  const parentPillars = getGroupedNavPillars('parent');
+  assert.equal(parentPillars.length, 5);
+  assert.equal(parentPillars[0].labelBn, 'আমার সন্তান');
 });
 
 

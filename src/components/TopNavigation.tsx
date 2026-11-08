@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserRole, PortalAccount } from '../types/school';
-import { getRoleNavMetadata } from '../utils/schoolLogic';
+import { getRoleNavMetadata, getGroupedNavPillars, NavPillar } from '../utils/schoolLogic';
 import {
   ShieldCheck,
   BookOpen,
@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Smartphone,
   Users,
   Sliders,
@@ -27,6 +28,9 @@ import {
   CalendarDays,
   IdCard,
   MessageSquare,
+  FileCheck2,
+  HeartPulse,
+  Megaphone,
 } from 'lucide-react';
 import { PWAInstallButton } from './MobileAppShell';
 import {
@@ -55,18 +59,29 @@ interface TopNavigationProps {
   logoUrl?: string;
 }
 
-const ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  super_admin_panel: { icon: Sliders, color: 'text-amber-600' },
+const PILLAR_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  pillar_overview: UserCheck,
+  pillar_students: Users,
+  pillar_academics: BookOpen,
+  pillar_operations: CalendarCheck,
+  pillar_communication: MessageSquare,
+  pillar_finance: CreditCard,
+};
+
+const ITEM_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   overview: { icon: UserCheck, color: 'text-emerald-600' },
   students: { icon: Users, color: 'text-amber-600' },
   idcards: { icon: IdCard, color: 'text-teal-700' },
+  health: { icon: HeartPulse, color: 'text-rose-600' },
   routine: { icon: Clock, color: 'text-indigo-600' },
   calendar: { icon: CalendarDays, color: 'text-purple-600' },
+  results: { icon: FileCheck2, color: 'text-indigo-700' },
+  skills: { icon: Award, color: 'text-amber-500' },
+  attendance: { icon: CalendarCheck, color: 'text-emerald-600' },
   pickup: { icon: ShieldCheck, color: 'text-teal-600' },
   diary: { icon: BookOpen, color: 'text-indigo-600' },
   messages: { icon: MessageSquare, color: 'text-teal-600' },
-  skills: { icon: Award, color: 'text-amber-500' },
-  attendance: { icon: CalendarCheck, color: 'text-emerald-600' },
+  notices: { icon: Megaphone, color: 'text-rose-600' },
   fees: { icon: CreditCard, color: 'text-rose-500' },
   workspace: { icon: Cloud, color: 'text-blue-600' },
   inventory: { icon: Package, color: 'text-amber-600' },
@@ -88,8 +103,21 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const [activeThemeColor, setActiveThemeColor] = useState<string>(() => getStoredThemeColor());
-  const [, setPermTick] = useState(0);
+  const [activeDropdownPillarId, setActiveDropdownPillarId] = useState<string | null>(null);
+  const navContainerRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navContainerRef.current && !navContainerRef.current.contains(e.target as Node)) {
+        setActiveDropdownPillarId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const [, setPermTick] = useState(0);
   useEffect(() => {
     const handlePermSync = () => setPermTick((t) => t + 1);
     window.addEventListener('ananda-director-permissions-updated', handlePermSync);
@@ -158,28 +186,22 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
     ? '👨‍👧 অভিভাবক ও সন্তান পোর্টাল'
     : '🛡️ গেট সিকিউরিটি পোর্টাল';
 
-  const rawNavMeta = getRoleNavMetadata(currentRole, loggedInAccount?.directorId);
-  const navItems = rawNavMeta.map((meta) => {
-    const mapped =
-      meta.id === 'overview' && isParent
-        ? { icon: Heart, color: 'text-rose-600' }
-        : ICON_MAP[meta.id] || { icon: UserCheck, color: 'text-emerald-600' };
-    return {
-      ...meta,
-      icon: mapped.icon,
-      color: mapped.color,
-    };
-  });
+  // 6 Core Clean Pillars
+  const pillars: NavPillar[] = getGroupedNavPillars(currentRole, loggedInAccount?.directorId);
 
-  const handleSelectFromMenu = (tabId: string) => {
+  const handleSelectTab = (tabId: string) => {
     onSelectTab(tabId);
+    setActiveDropdownPillarId(null);
     setIsSideMenuOpen(false);
   };
 
   return (
     <>
-      <header className="bg-white border-b border-amber-200/80 sticky top-0 z-40 shadow-xs w-full print:hidden no-print">
-        {/* Role Portal Banner & Instant Role Switcher (Responsive & Wrapped) */}
+      <header
+        ref={navContainerRef}
+        className="bg-white border-b border-amber-200/80 sticky top-0 z-40 shadow-xs w-full print:hidden no-print"
+      >
+        {/* Role Portal Banner & Instant Role Switcher (Compact) */}
         <div
           className={`${topStripBg} text-white text-xs px-2 sm:px-4 py-1 flex flex-wrap items-center justify-between gap-1.5`}
         >
@@ -189,113 +211,89 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             </span>
             {loggedInAccount && (
               <span className="hidden md:inline text-amber-200 text-[11px] font-semibold truncate">
-                · লগইনকৃত: {loggedInAccount.nameBn} ({loggedInAccount.roleTitleBn})
+                · {loggedInAccount.nameBn} ({loggedInAccount.roleTitleBn})
               </span>
             )}
           </div>
 
-          {isSuperAdmin ? (
-            <div className="flex flex-wrap items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded-xl">
+          <div className="flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded-xl shrink-0">
+            {isSuperAdmin && (
               <span className="hidden sm:inline text-[10px] font-medium opacity-80 mr-0.5 whitespace-nowrap">
-                পোর্টাল:
+                রোল পরিবর্তন:
               </span>
-              <button
-                type="button"
-                onClick={() => onSelectRole('super_admin')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isSuperAdmin
-                    ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-white'
-                }`}
-              >
-                সুপার অ্যাডমিন
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectRole('director')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isDirector
-                    ? 'bg-white text-teal-950 font-bold shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-white'
-                }`}
-              >
-                পরিচালক
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectRole('principal')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isPrincipal
-                    ? 'bg-white text-emerald-950 font-bold shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-white'
-                }`}
-              >
-                প্রিন্সিপাল
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectRole('teacher')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isTeacher
-                    ? 'bg-white text-indigo-950 font-bold shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-white'
-                }`}
-              >
-                শিক্ষক
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectRole('parent')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isParent
-                    ? 'bg-white text-amber-950 font-bold shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-white'
-                }`}
-              >
-                অভিভাবক
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectTab('public')}
-                className="px-1.5 py-0.5 rounded bg-white/15 hover:bg-white/25 text-amber-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap"
-              >
-                <Globe className="w-2.5 h-2.5 text-amber-300" />
-                <span>পাবলিক সাইট</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 shrink-0">
-              {loggedInAccount && (
-                <span className="inline-flex md:hidden items-center px-2 py-0.5 rounded-full bg-black/25 text-amber-200 text-[10px] font-semibold truncate max-w-[150px]">
-                  {loggedInAccount.nameBn}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => onSelectTab('public')}
-                className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap"
-              >
-                <Globe className="w-3 h-3 text-amber-300" />
-                <span>পাবলিক ওয়েবসাইট</span>
-              </button>
-            </div>
-          )}
+            )}
+            {isSuperAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('super_admin')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isSuperAdmin
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  সুপার অ্যাডমিন
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('principal')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isPrincipal
+                      ? 'bg-white text-emerald-950 font-bold shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  প্রিন্সিপাল
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('teacher')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isTeacher
+                      ? 'bg-white text-indigo-950 font-bold shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  শিক্ষক
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('parent')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isParent
+                      ? 'bg-white text-amber-950 font-bold shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  অভিভাবক
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => onSelectTab('public')}
+              className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-amber-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap"
+            >
+              <Globe className="w-2.5 h-2.5 text-amber-300" />
+              <span>পাবলিক সাইট</span>
+            </button>
+          </div>
         </div>
 
-        {/* Main Role-Tailored Portal Top Bar (Compact & Single-Page Responsive) */}
-        <div className="max-w-7xl w-full mx-auto px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-1.5 sm:gap-2 relative">
-          {/* Zone 1: Left Brand & Logo (Compact & Anchored cleanly to the left) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* 3-Dash Left Hamburger Menu Trigger for Mobile / Tablet / Preview */}
+        {/* Main Clean Top Bar */}
+        <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 flex items-center justify-between gap-2 relative">
+          {/* Brand & Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Hamburger Trigger for Mobile */}
             <button
               type="button"
               onClick={() => setIsSideMenuOpen(true)}
               aria-label="সাইড মেনু খুলুন"
-              aria-expanded={isSideMenuOpen}
               className={`${
                 isMobilePreview ? 'inline-flex' : 'inline-flex lg:hidden'
               } items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200/90 shadow-2xs transition-colors shrink-0 cursor-pointer`}
-              title="বাম পাশের সাইড মেনু খুলুন"
+              title="মেনু খুলুন"
             >
               <Menu className="w-4 h-4 text-emerald-800" />
             </button>
@@ -304,19 +302,19 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-amber-500 to-lime-500 p-0.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
               <img
                 src={logoUrl}
-                alt="আনন্দ পাঠশালা কুষ্টিয়া অফিশিয়াল লোগো"
+                alt="আনন্দ পাঠশালা লোগো"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover rounded-[10px] bg-white"
               />
             </div>
 
-            {/* School Name & Portal Subtitle */}
+            {/* School Title */}
             <div className="shrink-0">
               <a
                 href="#home"
                 onClick={(e) => {
                   e.preventDefault();
-                  onSelectTab('overview');
+                  handleSelectTab('overview');
                 }}
                 className="text-xs sm:text-sm lg:text-base font-black tracking-tight text-slate-900 hover:text-emerald-700 transition-colors whitespace-nowrap block leading-tight"
               >
@@ -336,41 +334,130 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             </div>
           </div>
 
-          {/* Zone 2: Desktop Role-Specific Nav Links (Compact & Wrapped so it never overflows right) */}
+          {/* Desktop Clean Pillar Navigation (6 Pillars with Instant 1-Click Access & Smart Dropdowns) */}
           <nav
             aria-label="ডেস্কটপ পোর্টাল মেনু"
             className={`${
               isMobilePreview ? 'hidden' : 'hidden lg:flex'
-            } flex-1 min-w-0 flex-wrap items-center justify-center gap-1 text-[11px] xl:text-xs font-semibold text-slate-700 px-1`}
+            } flex-1 min-w-0 items-center justify-center gap-1.5 text-xs font-semibold px-2`}
           >
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = currentTab === item.id;
+            {pillars.map((pillar) => {
+              const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
+              const isPillarActive = pillar.itemIds.includes(currentTab);
+              const isDropdownOpen = activeDropdownPillarId === pillar.id;
+              const hasSubItems = pillar.items.length > 1;
+              const hasChatAlert =
+                pillar.id === 'pillar_communication' && directChatUnreadCount > 0;
+
               return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onSelectTab(item.id)}
-                  className={`px-2 py-1 rounded-lg transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
-                    active
-                      ? 'text-slate-950 bg-amber-100/95 border border-amber-300/90 font-extrabold shadow-2xs'
-                      : 'hover:text-slate-950 hover:bg-slate-100/90 border border-transparent'
-                  }`}
-                  title={item.descriptionBn}
+                <div
+                  key={pillar.id}
+                  className="relative"
+                  onMouseEnter={() => hasSubItems && setActiveDropdownPillarId(pillar.id)}
+                  onMouseLeave={() => setActiveDropdownPillarId(null)}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${item.color} shrink-0`} />
-                  <span>{item.labelBn}</span>
-                  {item.id === 'messages' && directChatUnreadCount > 0 && (
-                    <span className="min-w-[15px] h-[15px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center animate-pulse">
-                      {directChatUnreadCount}
-                    </span>
+                  <div
+                    className={`inline-flex items-center rounded-xl transition-all ${
+                      isPillarActive
+                        ? 'bg-slate-900 text-white font-extrabold shadow-xs'
+                        : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100 border border-transparent'
+                    }`}
+                  >
+                    {/* Primary 1-Click Action to Default Tab */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTab(pillar.defaultTab)}
+                      className="px-3 py-1.5 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                      title={`${pillar.labelBn} মডিউল খুলুন`}
+                    >
+                      <PillarIcon
+                        className={`w-3.5 h-3.5 ${
+                          isPillarActive ? 'text-amber-400' : pillar.color
+                        } shrink-0`}
+                      />
+                      <span>{pillar.labelBn}</span>
+                      {hasChatAlert && (
+                        <span className="min-w-[15px] h-[15px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center animate-pulse">
+                          {directChatUnreadCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Chevron Trigger for Sub-Item Dropdown */}
+                    {hasSubItems && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveDropdownPillarId(isDropdownOpen ? null : pillar.id);
+                        }}
+                        className={`pr-2 py-1.5 pl-0.5 text-xs opacity-70 hover:opacity-100 cursor-pointer ${
+                          isPillarActive ? 'text-white' : 'text-slate-500'
+                        }`}
+                        title="উপ-অপশনসমূহ দেখুন"
+                      >
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform duration-200 ${
+                            isDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Clean Floating Sub-Items Dropdown */}
+                  {hasSubItems && isDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl p-1.5 z-50 animate-fade-in space-y-0.5">
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                        {pillar.labelBn} বিভাগ
+                      </div>
+                      {pillar.items.map((subItem) => {
+                        const isSubActive = currentTab === subItem.id;
+                        const subIconConfig = ITEM_ICON_MAP[subItem.id] || {
+                          icon: ChevronRight,
+                          color: 'text-slate-600',
+                        };
+                        const SubIcon = subIconConfig.icon;
+
+                        return (
+                          <button
+                            key={subItem.id}
+                            type="button"
+                            onClick={() => handleSelectTab(subItem.id)}
+                            className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                              isSubActive
+                                ? 'bg-emerald-50 text-emerald-950 font-black border border-emerald-200'
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                                isSubActive
+                                  ? 'bg-emerald-700 text-white'
+                                  : 'bg-slate-100 ' + subIconConfig.color
+                              }`}
+                            >
+                              <SubIcon className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold truncate">
+                                {subItem.labelBn}
+                              </div>
+                              <div className="text-[10px] text-slate-400 truncate">
+                                {subItem.descriptionBn}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </nav>
 
-          {/* Zone 3: Mobile App PWA Button, School Theme, FCM Notification Bell & Logout (Compact & Anchored inside page) */}
+          {/* Right Header Controls (PWA, Theme, Alerts, Logout) */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <PWAInstallButton
               onOpenMobileModal={onOpenMobileModal}
@@ -379,11 +466,11 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all shadow-2xs shrink-0 relative group cursor-pointer"
             />
 
-            {/* School Theme Quick Palette Toggle Button */}
+            {/* School Theme Toggle */}
             <button
               type="button"
               onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-              aria-label="স্কুল থিম ও কালার প্যালেট"
+              aria-label="স্কুল থিম"
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 transition-all shadow-2xs shrink-0 relative group cursor-pointer"
               title="স্কুল থিম ও ব্র্যান্ড কালার"
             >
@@ -392,16 +479,13 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white shadow-2xs"
                 style={{ backgroundColor: activeThemeColor }}
               />
-              <span className="sr-only">স্কুল থিম</span>
-              <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-medium py-1 px-2 rounded-lg whitespace-nowrap shadow-lg z-50">
-                স্কুল থিম
-              </span>
             </button>
 
+            {/* FCM Alert Bell */}
             <button
               type="button"
               onClick={onOpenNotifications}
-              aria-label="FCM শিক্ষক নোটিফিকেশন"
+              aria-label="FCM অ্যালার্ট"
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-amber-50 hover:bg-amber-100 border border-amber-300 text-slate-800 transition-all shadow-2xs shrink-0 relative group cursor-pointer"
               title="FCM অ্যালার্ট ও নোটিফিকেশন"
             >
@@ -411,12 +495,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   {unreadAlertsCount}
                 </span>
               )}
-              <span className="sr-only">FCM অ্যালার্ট</span>
-              <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-medium py-1 px-2 rounded-lg whitespace-nowrap shadow-lg z-50">
-                FCM অ্যালার্ট
-              </span>
             </button>
 
+            {/* Logout */}
             <button
               type="button"
               onClick={onLogout}
@@ -425,439 +506,227 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               title="লগআউট"
             >
               <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="sr-only">লগআউট</span>
-              <span className="pointer-events-none absolute -bottom-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-medium py-1 px-2 rounded-lg whitespace-nowrap shadow-lg z-50">
-                লগআউট
-              </span>
             </button>
           </div>
         </div>
 
-        {/* Responsive Compact Menu Bar for Tablet / Small Laptop / Mobile (<lg or Mobile Preview) */}
+        {/* Responsive Compact 6-Pillar Row for Tablet & Mobile (<lg) */}
         <nav
-          aria-label="রেসপন্সিভ কমপ্যাক্ট পোর্টাল মেনু"
+          aria-label="মোবাইল স্তম্ভ মেনু"
           className={`${
             isMobilePreview ? 'flex' : 'flex lg:hidden'
-          } w-full flex-wrap items-center justify-center gap-1 px-2 py-1.5 bg-amber-50/50 border-t border-amber-200/70`}
+          } w-full items-center justify-around px-2 py-1 bg-slate-50 border-t border-slate-200/80 overflow-x-auto`}
         >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = currentTab === item.id;
+          {pillars.map((pillar) => {
+            const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
+            const isPillarActive = pillar.itemIds.includes(currentTab);
+            const hasChatAlert =
+              pillar.id === 'pillar_communication' && directChatUnreadCount > 0;
+
             return (
               <button
-                key={item.id}
+                key={pillar.id}
                 type="button"
-                onClick={() => onSelectTab(item.id)}
-                className={`px-2 py-1 rounded-lg text-[10.5px] sm:text-[11px] transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
-                  active
-                    ? 'text-slate-950 bg-amber-200/90 border border-amber-400 font-extrabold shadow-2xs'
-                    : 'bg-white/90 text-slate-700 hover:text-slate-950 hover:bg-amber-100/60 border border-amber-200/80 font-semibold'
+                onClick={() => handleSelectTab(pillar.defaultTab)}
+                className={`flex-1 py-1 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer min-w-[55px] ${
+                  isPillarActive
+                    ? 'bg-slate-900 text-white font-black shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
-                title={item.descriptionBn}
+                title={pillar.labelBn}
               >
-                <Icon className={`w-3 h-3 ${item.color} shrink-0`} />
-                <span>{item.labelBn}</span>
-                {item.id === 'messages' && directChatUnreadCount > 0 && (
-                  <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-rose-600 text-white text-[8.5px] font-black flex items-center justify-center animate-pulse">
-                    {directChatUnreadCount}
-                  </span>
-                )}
+                <div className="relative">
+                  <PillarIcon
+                    className={`w-3.5 h-3.5 ${
+                      isPillarActive ? 'text-amber-400' : pillar.color
+                    }`}
+                  />
+                  {hasChatAlert && (
+                    <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                  )}
+                </div>
+                <span className="text-[10px] leading-tight truncate">
+                  {pillar.shortLabelBn}
+                </span>
               </button>
             );
           })}
         </nav>
       </header>
 
-      {/* Left-Side Slide-Out Navigation Drawer (সাইড মেনু ড্রয়ার) */}
+      {/* Side Menu Drawer for Mobile / Tablet */}
       {isSideMenuOpen && (
-        <div
-          className="fixed inset-0 z-50 flex"
-          role="dialog"
-          aria-modal="true"
-          aria-label="পোর্টাল সাইড নেভিগেশন মেনু"
-        >
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-50 flex">
           <div
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
             onClick={() => setIsSideMenuOpen(false)}
           />
 
-          {/* Left Slide-Out Drawer Panel */}
-          <aside className="relative z-10 w-72 max-w-[84vw] bg-white h-full shadow-2xl border-r border-amber-200 flex flex-col justify-between overflow-y-auto">
-            <div>
-              {/* Drawer Header with Brand & Active Role */}
-              <div className={`${topStripBg} text-white p-4 space-y-3`}>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={logoUrl}
-                      alt="আনন্দ পাঠশালা লোগো"
-                      referrerPolicy="no-referrer"
-                      className="w-10 h-10 rounded-2xl object-cover bg-white p-0.5 border border-amber-300 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-black tracking-tight truncate">
-                        আনন্দ পাঠশালা
-                      </h3>
-                      <span className="text-[10px] text-amber-200 font-bold block truncate">
-                        {portalLabelBn}
-                      </span>
-                    </div>
+          <div className="relative ml-0 mr-auto w-full max-w-xs bg-white h-full shadow-2xl flex flex-col z-10 overflow-y-auto">
+            {/* Header */}
+            <div className={`p-4 ${topStripBg} text-white space-y-3`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-white p-0.5 overflow-hidden">
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsSideMenuOpen(false)}
-                    aria-label="সাইড মেনু বন্ধ করুন"
-                    className="p-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-colors shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div>
+                    <h3 className="font-black text-sm">আনন্দ পাঠশালা</h3>
+                    <span className="text-[10px] text-amber-200 font-bold block">
+                      {portalLabelBn}
+                    </span>
+                  </div>
                 </div>
-
-                {loggedInAccount && (
-                  <div className="bg-black/25 rounded-xl p-2.5 border border-white/15 text-xs">
-                    <div className="font-bold text-white truncate">{loggedInAccount.nameBn}</div>
-                    <div className="text-[10px] text-amber-200 truncate">
-                      {loggedInAccount.roleTitleBn}
-                    </div>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSideMenuOpen(false)}
+                  className="p-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Vertical Navigation Menu List */}
-              <div className="p-3 space-y-1">
-                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  পোর্টাল মেনু অপশনসমূহ ({navItems.length}টি)
-                </div>
-
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = currentTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleSelectFromMenu(item.id)}
-                      className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-2xl text-left transition-all ${
-                        active
-                          ? 'bg-emerald-700 text-white shadow-xs'
-                          : 'hover:bg-amber-50/80 text-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            active ? 'bg-white/20 text-white' : 'bg-slate-100 ' + item.color
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold block truncate">{item.labelBn}</span>
-                            {item.id === 'messages' && directChatUnreadCount > 0 && (
-                              <span className="bg-rose-600 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
-                                {directChatUnreadCount} নতুন
-                              </span>
-                            )}
-                          </div>
-                          <span
-                            className={`text-[10px] block truncate ${
-                              active ? 'text-emerald-100' : 'text-slate-500'
-                            }`}
-                          >
-                            {item.descriptionBn}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight
-                        className={`w-4 h-4 shrink-0 ${
-                          active ? 'text-amber-300' : 'text-slate-400'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Drawer Footer: Role Switcher & Quick Portal Actions */}
-            <div className="p-3 border-t border-slate-200 bg-slate-50 space-y-2.5">
-              {isSuperAdmin && (
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-500 px-1 block">
-                    দ্রুত রোল ভিউ পরিবর্তন:
-                  </span>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectRole('super_admin');
-                        setIsSideMenuOpen(false);
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                        isSuperAdmin
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-white border border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      সুপার অ্যাডমিন
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectRole('director');
-                        setIsSideMenuOpen(false);
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                        isDirector
-                          ? 'bg-teal-700 text-white'
-                          : 'bg-white border border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      পরিচালক পর্ষদ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectRole('principal');
-                        setIsSideMenuOpen(false);
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                        isPrincipal
-                          ? 'bg-emerald-700 text-white'
-                          : 'bg-white border border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      প্রিন্সিপাল
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectRole('teacher');
-                        setIsSideMenuOpen(false);
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                        isTeacher
-                          ? 'bg-indigo-700 text-white'
-                          : 'bg-white border border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      শিক্ষক
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectRole('parent');
-                        setIsSideMenuOpen(false);
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                        isParent
-                          ? 'bg-amber-700 text-white'
-                          : 'bg-white border border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      অভিভাবক
-                    </button>
+              {loggedInAccount && (
+                <div className="bg-black/25 rounded-xl p-2.5 border border-white/15 text-xs">
+                  <div className="font-bold text-white truncate">{loggedInAccount.nameBn}</div>
+                  <div className="text-[10px] text-amber-200 truncate">
+                    {loggedInAccount.roleTitleBn}
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-1.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelectTab('public');
-                    setIsSideMenuOpen(false);
-                  }}
-                  className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5"
-                >
-                  <Globe className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>পাবলিক সাইট</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSideMenuOpen(false);
-                    onOpenMobileModal();
-                  }}
-                  className="py-2 px-2.5 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-900 text-[11px] font-bold flex items-center justify-center gap-1.5"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>মোবাইল অ্যাপ</span>
-                </button>
-              </div>
+            {/* Hierarchical Grouped Pillar List in Drawer */}
+            <div className="p-3 space-y-4 flex-1 overflow-y-auto">
+              {pillars.map((pillar) => {
+                const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
+                const isPillarActive = pillar.itemIds.includes(currentTab);
 
+                return (
+                  <div key={pillar.id} className="space-y-1">
+                    {/* Pillar Title */}
+                    <div className="flex items-center gap-2 px-2 py-1 text-xs font-black text-slate-800 bg-slate-50 rounded-lg border border-slate-100">
+                      <PillarIcon className={`w-3.5 h-3.5 ${pillar.color}`} />
+                      <span>{pillar.labelBn}</span>
+                    </div>
+
+                    {/* Sub-Items */}
+                    <div className="space-y-0.5 pl-2">
+                      {pillar.items.map((item) => {
+                        const isSubActive = currentTab === item.id;
+                        const subConfig = ITEM_ICON_MAP[item.id] || {
+                          icon: ChevronRight,
+                          color: 'text-slate-600',
+                        };
+                        const SubIcon = subConfig.icon;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => handleSelectTab(item.id)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                              isSubActive
+                                ? 'bg-slate-900 text-white font-bold shadow-xs'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <SubIcon
+                                className={`w-3.5 h-3.5 shrink-0 ${
+                                  isSubActive ? 'text-amber-400' : subConfig.color
+                                }`}
+                              />
+                              <span className="truncate">{item.labelBn}</span>
+                              {item.id === 'messages' && directChatUnreadCount > 0 && (
+                                <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black">
+                                  {directChatUnreadCount}
+                                </span>
+                              )}
+                            </div>
+                            <ChevronRight
+                              className={`w-3.5 h-3.5 shrink-0 ${
+                                isSubActive ? 'text-amber-300' : 'text-slate-400'
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-slate-200 bg-slate-50 space-y-2">
               <button
                 type="button"
                 onClick={() => {
-                  setIsSideMenuOpen(false);
-                  onLogout();
+                  handleSelectTab('public');
                 }}
-                className="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-700" />
+                <span>পাবলিক ওয়েবসাইটে যান</span>
+              </button>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="w-full py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>পোর্টাল থেকে লগআউট করুন</span>
+                <span>লগআউট</span>
               </button>
             </div>
-          </aside>
+          </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* FLOATING TOP THEME SWITCHER MODAL (Always on top, responsive & zero-leak) */}
-      {/* ========================================================================= */}
+      {/* Theme Picker Modal */}
       {isThemeMenuOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center sm:justify-end p-3 sm:p-5 pt-14 sm:pt-16 sm:pr-8 pointer-events-none">
-          {/* Backdrop overlay */}
-          <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs pointer-events-auto transition-opacity"
-            onClick={() => setIsThemeMenuOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Popover Card */}
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="quick-theme-title"
-            className="relative pointer-events-auto w-full max-w-[360px] bg-white rounded-3xl shadow-2xl border-2 border-slate-100 p-4 sm:p-5 z-10 animate-fade-in space-y-4 max-h-[85vh] overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-9 h-9 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs transition-colors duration-200"
-                  style={{ backgroundColor: activeThemeColor }}
-                >
-                  <Palette className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3
-                    id="quick-theme-title"
-                    className="text-sm font-black text-slate-900 flex items-center gap-1.5"
-                  >
-                    <span>স্কুল থিম ও কালার</span>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">
-                    ৯টি প্রি-সেট কালার থেকে নির্বাচন করুন
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 border border-purple-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-purple-700" />
+                <h3 className="font-bold text-sm text-slate-900">স্কুল থিম কালার</h3>
               </div>
-
               <button
                 type="button"
                 onClick={() => setIsThemeMenuOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
-                aria-label="বন্ধ করুন"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Active Theme Status Pill */}
-            {(() => {
-              const currentPreset = PRESET_SCHOOL_THEMES.find(
-                (p) => p.primaryColor.toLowerCase() === activeThemeColor.toLowerCase()
-              );
-              return (
-                <div
-                  className="px-3.5 py-2 rounded-2xl border flex items-center justify-between text-xs"
-                  style={{
-                    backgroundColor: `${activeThemeColor}12`,
-                    borderColor: `${activeThemeColor}30`,
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-4 h-4 rounded-full shadow-inner border border-white shrink-0"
-                      style={{ backgroundColor: activeThemeColor }}
-                    />
-                    <span className="font-bold text-slate-900 text-xs">
-                      {currentPreset ? currentPreset.nameBn : 'কাস্টম থিম'}
-                    </span>
-                  </div>
-                  <span className="font-mono text-[10px] font-bold text-slate-600 bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200/60">
-                    {activeThemeColor}
-                  </span>
-                </div>
-              );
-            })()}
-
-            {/* 9 Preset Themes Grid (3x3) */}
-            <div className="grid grid-cols-3 gap-2">
-              {PRESET_SCHOOL_THEMES.map((preset) => {
-                const isSelected = activeThemeColor.toLowerCase() === preset.primaryColor.toLowerCase();
+            <div className="grid grid-cols-2 gap-2">
+              {PRESET_SCHOOL_THEMES.map((theme) => {
+                const isSelected = activeThemeColor === theme.color;
                 return (
                   <button
-                    key={preset.id}
+                    key={theme.color}
                     type="button"
                     onClick={() => {
-                      applySchoolTheme(preset.primaryColor);
-                      setActiveThemeColor(preset.primaryColor);
+                      applySchoolTheme(theme.color);
+                      setActiveThemeColor(theme.color);
+                      setIsThemeMenuOpen(false);
                     }}
-                    className={`p-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 relative group ${
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
                       isSelected
-                        ? 'border-2 shadow-sm ring-2 ring-offset-1 bg-slate-50'
-                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                        ? 'border-purple-600 bg-purple-50 text-purple-950 shadow-xs'
+                        : 'border-slate-200 hover:border-purple-300'
                     }`}
-                    style={
-                      isSelected
-                        ? {
-                            borderColor: preset.primaryColor,
-                            backgroundColor: preset.lightBg,
-                          }
-                        : {}
-                    }
-                    title={`${preset.nameBn} (${preset.primaryColor})`}
                   >
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 shadow-2xs transition-transform group-hover:scale-105"
-                      style={{ backgroundColor: preset.primaryColor }}
-                    >
-                      {isSelected ? (
-                        <Check className="w-4 h-4 stroke-[3]" />
-                      ) : (
-                        <div className="w-2 h-2 rounded-full bg-white/40" />
-                      )}
-                    </div>
-                    <span className="text-[10.5px] font-bold text-slate-800 leading-tight truncate w-full">
-                      {preset.nameEn.split(' ')[0]}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-400 font-medium leading-none">
-                      {preset.primaryColor}
-                    </span>
+                    <span
+                      className="w-4 h-4 rounded-full shrink-0 border border-black/20"
+                      style={{ backgroundColor: theme.color }}
+                    />
+                    <span className="truncate">{theme.nameBn}</span>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsThemeMenuOpen(false);
-                  window.dispatchEvent(new CustomEvent('open-school-theme-settings'));
-                }}
-                className="w-full py-2.5 px-3 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs hover:opacity-95"
-                style={{ backgroundColor: activeThemeColor }}
-              >
-                <Palette className="w-3.5 h-3.5 text-white" />
-                <span>সম্পূর্ণ কালার হুইল ও বিস্তারিত সেটিংস</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  applySchoolTheme(DEFAULT_THEME_COLOR);
-                  setActiveThemeColor(DEFAULT_THEME_COLOR);
-                }}
-                className="w-full py-1.5 px-3 rounded-xl hover:bg-slate-100 text-slate-600 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
-              >
-                <span>মূল পান্না সবুজ (#065f46) এ রিসেট</span>
-              </button>
             </div>
           </div>
         </div>
@@ -865,4 +734,3 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
     </>
   );
 };
-

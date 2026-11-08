@@ -64,6 +64,7 @@ import {
   Edit3,
   Palette,
   Megaphone,
+  ChevronRight,
 } from 'lucide-react';
 import { EditSchoolProfileModal } from './EditSchoolProfileModal';
 import { GlobalDashboardSearch } from './GlobalDashboardSearch';
@@ -195,6 +196,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     (currentRole === 'director' && hasDirectorEditAccess);
 
   const [achievementToast, setAchievementToast] = useState<string | null>(null);
+  const [institutionTab, setInstitutionTab] = useState<'teachers' | 'directors' | 'gallery' | 'achievements'>('teachers');
 
   const handleToggleDirectorViewAll = (directorId: string) => {
     const updated = directorPermissions.map((perm) => {
@@ -1123,6 +1125,35 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <SuperAdminAccessPanel
         isSuperAdmin={isSuperAdmin}
         directorPermissions={directorPermissions}
+        onToggleMasterEdit={handleToggleDirectorEditAccess}
+        onToggleEditPermission={(directorId, permKey) =>
+          handleToggleDirectorPermission(directorId, permKey)
+        }
+        onSetAllEditAccess={(enable) => {
+          const updated = directorPermissions.map((perm) => {
+            if (perm.isSuperAdmin) return perm;
+            return {
+              ...perm,
+              viewAllModules: true,
+              allowedModules: [...ALL_PORTAL_MODULE_IDS],
+              canEditSchoolAndBoard: enable,
+              canManageNoticesAndEvents: enable,
+              canManageStudentsAndAdmissions: enable,
+              canManageFeesAndAccounts: enable,
+              canApproveGatePassAndDiary: enable,
+              lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+              lastUpdatedAtBn: enable ? 'সকল পরিচালকে পূর্ণ এডিট প্রদান' : 'সকল পরিচালক ভিউ-অনলি মোডে',
+            };
+          });
+          setDirectorPermissions(updated);
+          saveDirectorPermissions(updated);
+          setAchievementToast(
+            enable
+              ? '✅ সকল পরিচালকের পূর্ণ এডিট ক্ষমতা উন্মুক্ত করা হয়েছে!'
+              : '👁️ সকল পরিচালকের জন্য শুধু ভিউ মোড সক্রিয় করা হয়েছে (সবকিছু দেখতে পারবেন, এডিট বন্ধ)।'
+          );
+          setTimeout(() => setAchievementToast(null), 3500);
+        }}
         onToggleViewAll={handleToggleDirectorViewAll}
         onToggleEditAccess={handleToggleDirectorEditAccess}
         onToggleModule={handleToggleDirectorModule}
@@ -1309,40 +1340,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Official Principal, Head Teacher & Teacher Directory */}
-      <TeachersDirectorySection
-        teachersList={teachersList}
-        leadershipProfiles={leadershipProfiles}
-        schoolProfile={schoolProfile}
-        isPrincipal={isPrincipal}
-        onOpenEditProfileModal={openEditProfileModal}
-        onOpenAddNewTeacher={openAddNewTeacherModal}
-        onOpenAddNewSupportStaff={openAddNewSupportStaffModal}
-        onOpenEditTeacher={openEditTeacherModal}
-      />
-
-
-      {/* Dedicated Institution Governing Body & Board of Directors */}
-      <BoardOfDirectorsSection
-        directorsList={directorsList}
-        isPrincipal={isPrincipal}
-        logoUrl={logoUrl}
-        onAddNewDirector={openAddNewDirectorModal}
-        onEditDirector={openEditDirectorModal}
-        onDeleteDirector={handleDeleteDirector}
-        onResetDirectorsToDefault={handleResetDirectorsToDefault}
-        onNavigateTab={onNavigateTab}
-      />
-
-      {/* Connected Facebook Page & Live Campus Photo Gallery */}
-      <FacebookGallerySection
-        fbGallery={fbGallery}
-        logoUrl={logoUrl}
-        onOpenMediaManager={() => setShowMediaManager(true)}
-        onNavigateTab={onNavigateTab}
-        onSelectPhoto={(photo) => setActiveLightboxPhoto(photo)}
-      />
-
       {/* Toast Notification Alert for Reminders / Status Updates */}
       {achievementToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-500/40 animate-fade-in text-xs max-w-md print:hidden">
@@ -1360,99 +1357,209 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      {/* School Notice Board & Announcements */}
-      <section className="space-y-4 print:hidden">
-        <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white border border-emerald-500/30 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>ডিজিটাল নোটিশবোর্ড ম্যানেজমেন্ট</span>
+      {/* 1. Recent School Notices & Circulars Card */}
+      <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 rounded-3xl p-4 sm:p-5 text-white border border-emerald-500/30 shadow-md space-y-3.5 print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs">
+              <Megaphone className="w-5 h-5" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white">
-              পাবলিক নোটিশবোর্ড ও লাইভ স্ক্রলিং অ্যানাউন্সমেন্ট
-            </h3>
-            <p className="text-xs sm:text-sm text-emerald-200/80 max-w-2xl">
-              ওয়েবসাইটের শীর্ষে চলমান স্ক্রলিং টিকার এবং মূল নোটিশ বোর্ডের বিজ্ঞপ্তি, অভ্যন্তরীণ ভর্তি মেলা, ফ্রি ক্লাস, পরীক্ষার রুটিন ও ছুটির নোটিশ পরিচালনা করুন।
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black text-white">
+                  সর্বশেষ নোটিশ ও প্রাতিষ্ঠানিক সার্কুলার
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">
+                  {notices.length}টি নোটিশ
+                </span>
+              </div>
+              <p className="text-xs text-emerald-200/80">
+                ছুটি, পরীক্ষা, ভর্তি মেলা ও জরুরি পুশ ব্রডকাস্ট আপডেট
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {isPrincipal && (
               <button
                 type="button"
                 onClick={openAddNoticeModal}
-                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-2 transition shadow-md cursor-pointer"
+                className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
               >
-                <Plus className="w-4 h-4 text-slate-950" />
-                <span>+ নতুন নোটিশ প্রকাশ করুন</span>
+                <Plus className="w-3.5 h-3.5 text-slate-950" />
+                <span>+ নতুন নোটিশ</span>
               </button>
             )}
-
             <button
               type="button"
-              onClick={() => onNavigateTab('public')}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition border border-white/20 cursor-pointer"
+              onClick={() => onNavigateTab('notices')}
+              className="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-white/20 cursor-pointer"
             >
-              <ExternalLink className="w-4 h-4 text-emerald-300" />
-              <span>পাবলিক ওয়েবসাইটে প্রিভিউ</span>
+              <span>সকল নোটিশ ও সার্কুলার দেখুন</span>
+              <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
             </button>
-
-            {isPrincipal && (
-              <button
-                type="button"
-                onClick={handleResetNoticesToDefault}
-                className="px-3 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition border border-rose-500/30 cursor-pointer"
-                title="সকল নোটিশ প্রাতিষ্ঠানিক ডিফল্ট তালিকায় ফিরিয়ে নিন"
-              >
-                <span>রিসেট ডিফল্ট</span>
-              </button>
-            )}
           </div>
         </div>
 
-        <NoticeBoard
-          notices={notices}
-          isAdmin={isPrincipal}
-          onAddNotice={openAddNoticeModal}
-          onEditNotice={openEditNoticeModal}
-          onDeleteNotice={handleDeleteNotice}
-          onNavigateApply={() => onNavigateTab('public')}
-          onSendBroadcastNotification={(title, body) => {
-            const notif = {
-              id: `notif-broadcast-${Date.now()}`,
-              type: 'broadcast_announcement',
-              priority: 'high',
-              titleBn: title,
-              bodyBn: body,
-              targetRole: 'parent',
-              studentOrApplicantNameBn: 'সকল শিক্ষার্থী ও অভিভাবক',
-              className: 'HateKhori',
-              guardianNameBn: loggedInAccount?.nameBn || 'অধ্যক্ষ',
-              guardianPhone: '01914057512',
-              timestamp: 'এইমাত্র',
-              read: false,
-              actionTab: 'overview',
-              fcmMessageId: `projects/gen-lang-client-0036381817/messages/notice-${Date.now()}`,
-            };
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(
-                new CustomEvent('ananda-new-fcm-notification', { detail: { notification: notif } })
-              );
-            }
-          }}
-        />
-      </section>
+        {/* Top 2 Recent Notices */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {notices.slice(0, 2).map((notice) => {
+            const isUrgent = notice.priority === 'urgent';
+            return (
+              <div
+                key={notice.id}
+                onClick={() => onNavigateTab('notices')}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                  isUrgent
+                    ? 'bg-rose-950/40 border-rose-500/40 hover:border-rose-400'
+                    : 'bg-emerald-950/40 border-emerald-500/40 hover:border-emerald-400'
+                }`}
+                title="সম্পূর্ণ নোটিশ ও সার্কুলার পড়তে ক্লিক করুন"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                        isUrgent
+                          ? 'bg-rose-600 text-white animate-pulse'
+                          : 'bg-amber-400 text-slate-950'
+                      }`}
+                    >
+                      {notice.badgeBn || (isUrgent ? 'জরুরি বিজ্ঞপ্তি' : 'সাধারণ নোটিশ')}
+                    </span>
+                    <span className="text-[10px] text-emerald-200/90 font-mono">
+                      {notice.dateBn}
+                    </span>
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-1 leading-snug">
+                    {notice.titleBn}
+                  </h4>
+                  <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">
+                    {notice.descriptionBn}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-amber-300 font-semibold pt-1 border-t border-white/10">
+                  <span>প্রাপক: {notice.targetAudienceBn || 'সকল অভিভাবক ও শিক্ষক'}</span>
+                  <span className="flex items-center gap-0.5 text-white/90">
+                    <span>বিস্তারিত</span>
+                    <ChevronRight className="w-3 h-3 text-amber-300" />
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
+      {/* 2. Institutional Hub: Tabbed Switcher (Teachers, Directors, Gallery, Achievements) */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4 print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+              <span>🏛️ প্রতিষ্ঠান পরিচিতি ও পরিচালনা পর্ষদ</span>
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-500">
+              শিক্ষক ও স্টাফ, পরিচালনা পর্ষদ, ক্যাম্পাস ফটো গ্যালারি ও সম্মাননা
+            </p>
+          </div>
 
-      {/* Achievements & Milestones Showcase Section */}
-      <AchievementsSection
-        achievements={achievements}
-        isPrincipal={isPrincipal}
-        onOpenAddAchievement={() => setShowAddAchievementModal(true)}
-        onSelectAchievementDetail={(a) => setSelectedAchievementForModal(a)}
-        onToggleFeatured={handleToggleFeaturedAchievement}
-        onDeleteAchievement={handleDeleteAchievement}
-      />
+          {/* 4 Tabs */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setInstitutionTab('teachers')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                institutionTab === 'teachers'
+                  ? 'bg-slate-900 text-white font-black shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              👨‍🏫 শিক্ষক ও স্টাফ ({teachersList.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setInstitutionTab('directors')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                institutionTab === 'directors'
+                  ? 'bg-slate-900 text-white font-black shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              👑 পরিচালনা পর্ষদ ({directorsList.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setInstitutionTab('gallery')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                institutionTab === 'gallery'
+                  ? 'bg-slate-900 text-white font-black shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              📸 ক্যাম্পাস গ্যালারি ({fbGallery.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setInstitutionTab('achievements')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                institutionTab === 'achievements'
+                  ? 'bg-slate-900 text-white font-black shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              🏆 অর্জন ও সম্মাননা ({achievements.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Active Tab Panel */}
+        {institutionTab === 'teachers' && (
+          <TeachersDirectorySection
+            teachersList={teachersList}
+            leadershipProfiles={leadershipProfiles}
+            schoolProfile={schoolProfile}
+            isPrincipal={isPrincipal}
+            onOpenEditProfileModal={openEditProfileModal}
+            onOpenAddNewTeacher={openAddNewTeacherModal}
+            onOpenAddNewSupportStaff={openAddNewSupportStaffModal}
+            onOpenEditTeacher={openEditTeacherModal}
+          />
+        )}
+
+        {institutionTab === 'directors' && (
+          <BoardOfDirectorsSection
+            directorsList={directorsList}
+            isPrincipal={isPrincipal}
+            logoUrl={logoUrl}
+            onAddNewDirector={openAddNewDirectorModal}
+            onEditDirector={openEditDirectorModal}
+            onDeleteDirector={handleDeleteDirector}
+            onResetDirectorsToDefault={handleResetDirectorsToDefault}
+            onNavigateTab={onNavigateTab}
+          />
+        )}
+
+        {institutionTab === 'gallery' && (
+          <FacebookGallerySection
+            fbGallery={fbGallery}
+            logoUrl={logoUrl}
+            onOpenMediaManager={() => setShowMediaManager(true)}
+            onNavigateTab={onNavigateTab}
+            onSelectPhoto={(photo) => setActiveLightboxPhoto(photo)}
+          />
+        )}
+
+        {institutionTab === 'achievements' && (
+          <AchievementsSection
+            achievements={achievements}
+            isPrincipal={isPrincipal}
+            onOpenAddAchievement={() => setShowAddAchievementModal(true)}
+            onSelectAchievementDetail={(a) => setSelectedAchievementForModal(a)}
+            onToggleFeatured={handleToggleFeaturedAchievement}
+            onDeleteAchievement={handleDeleteAchievement}
+          />
+        )}
+      </div>
 
       {/* Photo Lightbox Modal */}
       <PhotoLightboxModal

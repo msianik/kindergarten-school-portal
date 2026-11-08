@@ -20,6 +20,7 @@ import {
   parseDateString,
 } from '../utils/calendarLogic';
 import { useAcademicEvents } from '../utils/calendarStorage';
+import { getPermissionForDirector } from '../utils/schoolLogic';
 import {
   CalendarDays,
   Calendar as CalendarIcon,
@@ -66,9 +67,13 @@ export const AcademicCalendarModule: React.FC<AcademicCalendarModuleProps> = ({
 }) => {
   const { events, addEvent, editEvent, removeEvent, resetAll } = useAcademicEvents();
 
-  // Role permissions
+  // Role permissions: Viewing is open to all, editing requires admin or director with notice/event permission
+  const dirPerm =
+    currentRole === 'director' ? getPermissionForDirector(loggedInAccount?.directorId) : null;
   const isAdmin =
-    currentRole === 'super_admin' || currentRole === 'principal' || currentRole === 'director';
+    currentRole === 'super_admin' ||
+    currentRole === 'principal' ||
+    Boolean(currentRole === 'director' && dirPerm?.canManageNoticesAndEvents);
 
   // View state: 'grid' (visual month) | 'agenda' (timeline cards) | 'list' (compact table)
   const [activeView, setActiveView] = useState<'grid' | 'agenda' | 'list'>('grid');

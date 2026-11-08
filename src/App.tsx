@@ -14,6 +14,7 @@ import {
   SchoolProfile,
   LeadershipProfiles,
   SchoolAssetItem,
+  SchoolNotice,
 } from './types/school';
 import {
   INITIAL_STUDENTS,
@@ -25,6 +26,7 @@ import {
   INITIAL_ADMISSIONS,
   INITIAL_FB_GALLERY,
   INITIAL_FCM_NOTIFICATIONS,
+  INITIAL_SCHOOL_NOTICES,
   SCHOOL_PROFILE,
   PRINCIPAL_AND_DIRECTOR_PROFILES,
   INITIAL_SCHOOL_ASSETS,
@@ -56,6 +58,8 @@ import { ClassRoutineModule } from './components/ClassRoutineModule';
 import { AcademicCalendarModule } from './components/AcademicCalendarModule';
 import { ExamResultsModule } from './components/ExamResultsModule';
 import { ChildHealthModule } from './components/ChildHealthModule';
+import { NoticeBoard } from './components/NoticeBoard';
+import { ModuleSubNavPills } from './components/ModuleSubNavPills';
 import { FcmNotificationCenter } from './components/FcmNotificationCenter';
 import { LoginModal } from './components/LoginModal';
 import {
@@ -214,6 +218,29 @@ export default function App() {
       localStorage.setItem('ananda_school_assets_v1', JSON.stringify(updated));
     } catch {}
   };
+
+  // School Notices State (Synced with localStorage and custom event)
+  const [notices, setNotices] = useState<SchoolNotice[]>(() => {
+    try {
+      const stored = localStorage.getItem('ananda_school_notices_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_SCHOOL_NOTICES;
+  });
+
+  useEffect(() => {
+    const handleNoticeSync = (e: Event) => {
+      const customEv = e as CustomEvent<{ notices?: SchoolNotice[] }>;
+      if (customEv.detail?.notices) {
+        setNotices(customEv.detail.notices);
+      }
+    };
+    window.addEventListener('ananda-notices-updated', handleNoticeSync);
+    return () => window.removeEventListener('ananda-notices-updated', handleNoticeSync);
+  }, []);
 
   // Real-Time Firebase Cloud Messaging (FCM) Notification States
   const [fcmNotifications, setFcmNotifications] = useState<FcmNotification[]>(
@@ -777,6 +804,14 @@ export default function App() {
                 </div>
               ) : (
                 <>
+                  {currentTab !== 'overview' && currentTab !== 'public' && (
+                    <ModuleSubNavPills
+                      currentTab={currentTab}
+                      onSelectTab={setCurrentTab}
+                      currentRole={currentRole}
+                    />
+                  )}
+
                   {currentTab === 'overview' && (
                     <>
                       {currentRole === 'teacher' && loggedInAccount ? (
@@ -837,6 +872,7 @@ export default function App() {
                       onUpdateStudent={handleUpdateStudent}
                       onDeleteStudent={handleDeleteStudent}
                       currentRole={currentRole}
+                      loggedInAccount={loggedInAccount}
                       onNavigateTab={setCurrentTab}
                     />
                   )}
@@ -946,6 +982,15 @@ export default function App() {
                       loggedInAccount={loggedInAccount}
                       onSendChatNotification={dispatchRealTimeFcmNotification}
                       onNavigateTab={(tab) => setCurrentTab(tab as any)}
+                    />
+                  )}
+
+                  {currentTab === 'notices' && (
+                    <NoticeBoard
+                      notices={notices}
+                      isAdmin={currentRole === 'super_admin' || currentRole === 'principal'}
+                      onNavigateApply={() => setCurrentTab('public')}
+                      onSendBroadcastNotification={dispatchRealTimeFcmNotification}
                     />
                   )}
 
