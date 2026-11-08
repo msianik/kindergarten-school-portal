@@ -552,19 +552,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
         {/* All Teachers & Staff Members Grid (Principal & Head Teacher excluded to eliminate duplicate appearance) */}
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-2xs space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-                <GraduationCap className="w-6 h-6 text-emerald-700" />
-                <span>আমাদের সম্মানিত সহকারী শিক্ষক ও কর্মকর্তা পর্ষদ ({generalFacultyList.length} জন)</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                আনন্দ পাঠশালা কুষ্টিয়ার নিবেদিতপ্রাণ শিক্ষক ও প্রশাসনিক কর্মকর্তা
-              </p>
-            </div>
-            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 self-start sm:self-auto">
-              মোট সহকারী শিক্ষক ও কর্মকর্তা: {generalFacultyList.length < 10 ? `০${generalFacultyList.length}` : generalFacultyList.length} জন
-            </span>
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+              <GraduationCap className="w-6 h-6 text-emerald-700" />
+              <span>আমাদের সম্মানিত সহকারী শিক্ষক ও কর্মকর্তা পর্ষদ</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              আনন্দ পাঠশালা কুষ্টিয়ার নিবেদিতপ্রাণ শিক্ষক ও প্রশাসনিক কর্মকর্তা
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

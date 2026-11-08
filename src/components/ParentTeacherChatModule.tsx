@@ -73,6 +73,9 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
 
   const [activeChatSection, setActiveChatSection] = useState<'parent_chat' | 'staff_room'>(() => {
     if (currentRole === 'parent') return 'parent_chat';
+    if (currentRole === 'director' || currentRole === 'super_admin' || currentRole === 'accountant' || currentRole === 'gate_security') {
+      return 'staff_room';
+    }
     return initialChatMode || 'parent_chat';
   });
 
@@ -342,16 +345,16 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-extrabold text-slate-900 leading-tight">
                   {activeChatSection === 'staff_room'
-                    ? 'শিক্ষক ও স্টাফ কমনরুম (কমিউনিকেশন হাব)'
+                    ? 'স্কুল চ্যাট রুম ও ফোরাম (পরিচালক ও স্টাফ)'
                     : 'শিক্ষার্থী ও অভিভাবক সরাসরি বার্তা আদান-প্রদান'}
                 </h2>
                 <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                  {activeChatSection === 'staff_room' ? 'অভ্যন্তরীণ লাউঞ্জ' : 'অভিভাবক সংযোগ'}
+                  {activeChatSection === 'staff_room' ? 'পরিচালক ও স্টাফ হাব' : 'অভিভাবক সংযোগ'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
                 {activeChatSection === 'staff_room'
-                  ? 'সহকর্মীদের সাথে চ্যাট, প্রক্সি রিকোয়েস্ট ও জরুরি নোটিশ ম্যানেজমেন্ট'
+                  ? 'পরিচালনা পর্ষদ ফোরাম, সর্বজনীন স্টাফ লাউঞ্জ, উইং গ্রুপ ও ১-অন-১ চ্যাট'
                   : 'শ্রেণির প্রতিটি শিক্ষার্থীর অভিভাবকের সাথে সরাসরি ওয়ান-অন-ওয়ান চ্যাট'}
               </p>
             </div>
@@ -380,9 +383,9 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
-              <span>শিক্ষক কমনরুম</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white">
-                স্টাফ
+              <span>স্কুল চ্যাট রুম</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white">
+                পরিচালক ও স্টাফ
               </span>
             </button>
           </div>
