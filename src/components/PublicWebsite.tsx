@@ -607,7 +607,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         className="bg-white rounded-3xl border border-amber-200/90 p-6 sm:p-8 shadow-2xs space-y-7"
       >
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="border-b border-slate-100 pb-5">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
@@ -623,114 +623,126 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               আনন্দ পাঠশালা কুষ্টিয়ার সার্বিক নীতি নির্ধারণ, প্রাতিষ্ঠানিক উৎকর্ষ, শিশু অধিকার ও আধুনিক শিশুবান্ধব মন্টেসরি শিক্ষা নিশ্চিতকরণে নিবেদিতপ্রাণ সম্মানিত পরিচালনা পর্ষদ
             </p>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-bold text-amber-900 bg-amber-50 px-3.5 py-1.5 rounded-xl border border-amber-200 shadow-2xs">
-              মোট পরিচালনা পর্ষদ: {directorsList.length < 10 ? `০${directorsList.length}` : directorsList.length} জন
-            </span>
-          </div>
         </div>
 
-        {/* Unified Board of Directors Presentation (Each member mentioned exactly once) */}
+        {/* Board of Directors Presentation: Chairman on Top, Fellow Directors in Grid Below */}
         <div className="space-y-6">
-          {/* Executive Leadership: Chairman & Managing Director */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {directorsList
-              .filter((d) => d.isChairman || d.isManagingDirector)
-              .map((director) => (
-                <div
-                  key={director.id}
-                  className={`bg-white rounded-3xl border p-6 sm:p-7 shadow-xs flex flex-col justify-between space-y-4 ${
-                    director.isChairman
-                      ? 'border-amber-300 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20'
-                      : 'border-emerald-300 bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/20'
-                  }`}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                      <span
-                        className={`text-xs font-black px-3 py-1 rounded-full border ${
-                          director.isChairman
-                            ? 'bg-amber-100 text-amber-900 border-amber-300'
-                            : 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                        }`}
-                      >
-                        {director.isChairman ? '👑 সভাপতি ও চেয়ারম্যান (Chairman)' : '⭐ ব্যবস্থাপনা পরিচালক (Managing Director)'}
-                      </span>
-                      <Quote className="w-5 h-5 text-amber-400 shrink-0 opacity-80" />
-                    </div>
-
-                    <div className="flex items-start gap-4">
+          {/* Chairman / President Message (উপরে সভাপতির বাণী বড় বক্স আকারে) */}
+          {(() => {
+            const chairman = directorsList.find((d) => d.isChairman) || directorsList[0];
+            if (!chairman) return null;
+            return (
+              <div className="bg-gradient-to-br from-amber-500/10 via-amber-50/70 to-orange-50/40 rounded-3xl border border-amber-300/90 p-6 sm:p-8 shadow-xs">
+                <div className="flex flex-col md:flex-row items-start gap-6">
+                  {/* Chairman Avatar & Bio */}
+                  <div className="flex sm:flex-col items-center sm:items-start gap-4 shrink-0 w-full md:w-64 border-b md:border-b-0 md:border-r border-amber-200/80 pb-4 md:pb-0 md:pr-6">
+                    <div className="relative">
                       <img
-                        src={director.photoUrl || logoUrl}
-                        alt={director.nameBn}
+                        src={chairman.photoUrl || logoUrl}
+                        alt={chairman.nameBn}
                         referrerPolicy="no-referrer"
-                        className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl object-cover border-2 border-amber-400 shadow-sm shrink-0 bg-white p-0.5"
+                        className="w-24 h-28 sm:w-28 sm:h-34 rounded-2xl object-cover border-2 border-amber-500 shadow-md bg-white p-0.5"
                       />
-                      <div className="space-y-1 min-w-0">
-                        <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
-                          {director.nameBn}
-                        </h3>
-                        <p className="text-xs font-semibold text-slate-500">
-                          {director.nameEn}
-                        </p>
-                        {director.professionBn && (
-                          <p className="text-xs text-amber-900 font-medium flex items-center gap-1 pt-0.5">
-                            <Briefcase className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                            <span>{director.professionBn}</span>
-                          </p>
-                        )}
-                      </div>
+                      <span className="absolute -top-2 -right-2 bg-amber-600 text-white text-[9.5px] font-black px-2 py-0.5 rounded-full shadow-xs">
+                        👑 সভাপতি
+                      </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium bg-amber-50/40 p-3.5 rounded-2xl border border-amber-200/60">
-                      “{director.messageBn}”
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-3 text-slate-600">
-                      {director.phone && (
-                        <span className="font-semibold flex items-center gap-1 text-[11px]">
-                          <Phone className="w-3 h-3 text-amber-600" />
-                          <span>{director.phone}</span>
-                        </span>
+                    <div className="space-y-1 min-w-0">
+                      <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-950 border border-amber-300">
+                        {chairman.roleBn}
+                      </span>
+                      <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
+                        {chairman.nameBn}
+                      </h3>
+                      <p className="text-xs font-semibold text-slate-600">
+                        {chairman.nameEn}
+                      </p>
+                      {chairman.professionBn && (
+                        <p className="text-[11px] text-amber-900 font-medium flex items-center gap-1 pt-0.5">
+                          <Briefcase className="w-3 h-3 text-amber-700 shrink-0" />
+                          <span>{chairman.professionBn}</span>
+                        </p>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setViewingDirector(director)}
-                      className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs inline-flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>বাণী ও পূর্ণ প্রোফাইল</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                  </div>
+
+                  {/* Chairman Message Body */}
+                  <div className="space-y-4 flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3 border-b border-amber-200/70 pb-3">
+                      <div className="flex items-center gap-2">
+                        <MessageSquareQuote className="w-5 h-5 text-amber-600" />
+                        <h4 className="text-sm sm:text-base font-black text-amber-950">
+                          {chairman.roleBn} এর অফিসিয়াল বাণী ও দিকনির্দেশনা
+                        </h4>
+                      </div>
+                      <Quote className="w-6 h-6 text-amber-400 shrink-0 opacity-70" />
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium bg-white/80 p-4 sm:p-5 rounded-2xl border border-amber-200/80 shadow-2xs">
+                      “{chairman.messageBn}”
+                    </p>
+
+                    {chairman.messageEn && (
+                      <p className="text-xs text-slate-600 italic leading-relaxed px-1">
+                        "{chairman.messageEn}"
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {chairman.phone && (
+                          <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                            <Phone className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{chairman.phone}</span>
+                          </div>
+                        )}
+                        {chairman.email && (
+                          <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                            <Mail className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{chairman.email}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setViewingDirector(chairman)}
+                        className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>পূর্ণাঙ্গ বিবরণ ও বাণী দেখুন</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-          </div>
+              </div>
+            );
+          })()}
 
-          {/* Board Directors & Member Secretary */}
+          {/* Board Directors & Member Secretary Grid (ব্যবস্থাপনা পরিচালকসহ সকল পরিচালক ছোট বক্স আকারে) */}
           <div className="space-y-3 pt-2">
             <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
               <Users className="w-4 h-4 text-amber-600" />
               <span>পরিচালনা পর্ষদের সম্মানিত পরিচালক ও সদস্য সচিববৃন্দ</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {directorsList
-                .filter((d) => !d.isChairman && !d.isManagingDirector)
+                .filter((d) => !d.isChairman)
                 .map((director) => (
                   <div
                     key={director.id}
                     onClick={() => setViewingDirector(director)}
-                    className="rounded-2xl border border-slate-200 p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md hover:border-amber-300 cursor-pointer group bg-gradient-to-b from-slate-50/40 to-white"
+                    className="rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md hover:border-amber-300 cursor-pointer group bg-gradient-to-b from-slate-50/40 to-white"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
                         <span
                           className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg border ${
-                            director.roleBn?.includes('সদস্য সচিব')
+                            director.isManagingDirector
+                              ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                              : director.roleBn?.includes('সদস্য সচিব')
                               ? 'bg-blue-100 text-blue-900 border-blue-300'
                               : 'bg-slate-100 text-slate-800 border-slate-200'
                           }`}
@@ -739,7 +751,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex items-start gap-3.5">
+                      <div className="flex items-start gap-3">
                         <img
                           src={director.photoUrl || logoUrl}
                           alt={director.nameBn}
@@ -747,14 +759,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                           className="w-16 h-20 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0 bg-slate-100"
                         />
                         <div className="min-w-0 space-y-0.5">
-                          <h4 className="text-base font-black text-slate-900 group-hover:text-amber-800 transition-colors">
+                          <h4 className="text-sm sm:text-base font-black text-slate-900 group-hover:text-amber-800 transition-colors">
                             {director.nameBn}
                           </h4>
-                          <p className="text-xs font-semibold text-slate-500 truncate">
+                          <p className="text-[11px] font-semibold text-slate-500 truncate">
                             {director.nameEn}
                           </p>
                           {director.professionBn && (
-                            <p className="text-[11px] text-slate-600 font-medium truncate pt-0.5">
+                            <p className="text-[10.5px] text-slate-600 font-medium truncate pt-0.5">
                               {director.professionBn}
                             </p>
                           )}
