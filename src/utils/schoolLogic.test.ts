@@ -414,13 +414,14 @@ test('createLowStockFcmPayload generates high-priority administrator alerts when
 
 test('getGroupedNavPillars returns simplified, non-repetitive core pillars', () => {
   const adminPillars = getGroupedNavPillars('principal');
-  assert.equal(adminPillars.length, 6);
+  assert.equal(adminPillars.length, 7);
   assert.equal(adminPillars[0].id, 'pillar_overview');
   assert.equal(adminPillars[1].id, 'pillar_students');
   assert.equal(adminPillars[2].id, 'pillar_academics');
   assert.equal(adminPillars[3].id, 'pillar_operations');
-  assert.equal(adminPillars[4].id, 'pillar_communication');
-  assert.equal(adminPillars[5].id, 'pillar_finance');
+  assert.equal(adminPillars[4].id, 'pillar_chat');
+  assert.equal(adminPillars[5].id, 'pillar_notices');
+  assert.equal(adminPillars[6].id, 'pillar_finance');
 
   // Verify all pillars have default tabs and valid items
   for (const pillar of adminPillars) {
@@ -432,12 +433,14 @@ test('getGroupedNavPillars returns simplified, non-repetitive core pillars', () 
 
   // Teacher pillars
   const teacherPillars = getGroupedNavPillars('teacher');
-  assert.equal(teacherPillars.length, 6);
+  assert.equal(teacherPillars.length, 7);
 
   // Parent pillars
   const parentPillars = getGroupedNavPillars('parent');
-  assert.equal(parentPillars.length, 5);
+  assert.equal(parentPillars.length, 6);
   assert.equal(parentPillars[0].labelBn, 'আমার সন্তান');
+  assert.ok(parentPillars.some((p) => p.id === 'pillar_chat'));
+  assert.ok(parentPillars.some((p) => p.id === 'pillar_notices'));
 });
 
 

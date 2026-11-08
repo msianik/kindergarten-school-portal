@@ -64,7 +64,8 @@ const PILLAR_ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   pillar_students: Users,
   pillar_academics: BookOpen,
   pillar_operations: CalendarCheck,
-  pillar_communication: MessageSquare,
+  pillar_chat: MessageSquare,
+  pillar_notices: Megaphone,
   pillar_finance: CreditCard,
 };
 
@@ -347,7 +348,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               const isDropdownOpen = activeDropdownPillarId === pillar.id;
               const hasSubItems = pillar.items.length > 1;
               const hasChatAlert =
-                pillar.id === 'pillar_communication' && directChatUnreadCount > 0;
+                (pillar.id === 'pillar_chat' || pillar.defaultTab === 'messages') && directChatUnreadCount > 0;
 
               return (
                 <div
@@ -521,7 +522,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
             const isPillarActive = pillar.itemIds.includes(currentTab);
             const hasChatAlert =
-              pillar.id === 'pillar_communication' && directChatUnreadCount > 0;
+              (pillar.id === 'pillar_chat' || pillar.defaultTab === 'messages') && directChatUnreadCount > 0;
 
             return (
               <button

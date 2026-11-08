@@ -75,16 +75,6 @@ const SUB_NAV_GROUPS: SubNavGroup[] = [
     ],
   },
   {
-    id: 'communication_group',
-    categoryLabelBn: 'যোগাযোগ ও নোটিশ হাব',
-    categoryIcon: MessageSquare,
-    accentColor: 'rose',
-    tabs: [
-      { id: 'messages', labelBn: 'চ্যাট হাব', icon: MessageSquare, descriptionBn: 'অভিভাবক, শিক্ষক ও স্টাফদের সরাসরি মেসেজিং' },
-      { id: 'notices', labelBn: 'নোটিশ বোর্ড ও সার্কুলার', icon: Megaphone, descriptionBn: 'জরুরি নোটিশ, সার্কুলার ও পুশ ব্রডকাস্ট' },
-    ],
-  },
-  {
     id: 'finance_group',
     categoryLabelBn: 'হিসাব ও সম্পদ',
     categoryIcon: CreditCard,
