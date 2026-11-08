@@ -13,7 +13,7 @@ import {
   SchoolClass,
   WeeklyClassProgressRecord,
 } from '../types/school';
-import { calculateAttendanceStats, getSchoolClassNameBn, toBengaliNumber } from '../utils/schoolLogic';
+import { calculateAttendanceStats, getSchoolClassNameBn, toBengaliNumber, isSameSchoolClass } from '../utils/schoolLogic';
 import {
   getClassRoutines,
   getPeriodsForClass,
@@ -83,6 +83,7 @@ import {
   PartyPopper,
   Gift,
   IdCard,
+  MessageSquare,
 } from 'lucide-react';
 
 interface TeacherPortalDashboardProps {
@@ -218,6 +219,13 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
           >
             <CalendarCheck className="w-4 h-4" />
             <span>ক্লাসরুম হাজিরা নিন</span>
+          </button>
+          <button
+            onClick={() => onNavigateTab('messages')}
+            className="px-4 py-2.5 bg-teal-400 hover:bg-teal-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>প্যারেন্ট চ্যাট ও মেসেজ</span>
           </button>
           <button
             onClick={() => onNavigateTab('attendance')}
@@ -1448,6 +1456,13 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
   const myChild =
     students.find((s) => s.id === (account.studentId || 'std-1')) || students[0];
   const childAssessment = assessments[myChild.id];
+  const childClassTeacher = React.useMemo(() => {
+    return (
+      SCHOOL_TEACHERS.find(
+        (t) => t.assignedClass && isSameSchoolClass(t.assignedClass, myChild.className)
+      ) || SCHOOL_TEACHERS[1]
+    );
+  }, [myChild.className]);
   const [feeConfigSyncVer, setFeeConfigSyncVer] = useState<number>(0);
   const [parentPreviewReceipt, setParentPreviewReceipt] = useState<FeeInvoice | null>(null);
   const [downloadedBannerFile, setDownloadedBannerFile] = useState<string | null>(null);
@@ -1746,8 +1761,45 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
             </span>
           </div>
           <p className="text-[11px] text-white/85">
-            শ্রেণি শিক্ষিকা: রোকেয়া পারভীন · জরুরি হেল্পলাইন: ০১৯১৪-০৫৭৫১১
+            শ্রেণি শিক্ষিকা: {childClassTeacher.nameBn} · জরুরি হেল্পলাইন: {childClassTeacher.phone}
           </p>
+        </div>
+      </div>
+
+      {/* Direct Parent-Teacher Chat & Feedback Card */}
+      <div className="bg-gradient-to-r from-teal-900 via-emerald-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white border border-teal-500/40 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-teal-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm font-bold">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-teal-400 text-slate-950 tracking-wider">
+                💬 সরাসরি যোগাযোগ (Parent-Teacher Chat)
+              </span>
+              <span className="text-teal-200 text-xs font-semibold">
+                শ্রেণি শিক্ষিকা: {childClassTeacher.nameBn} ({childClassTeacher.designationBn})
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black tracking-tight">
+              সন্তানের শ্রেণি শিক্ষকের সাথে সরাসরি চ্যাট বা ফিডব্যাক দিন
+            </h3>
+            <p className="text-xs text-teal-100/90 max-w-xl">
+              আজকের আচরণ, টিফিন ও স্বাস্থ্য জিজ্ঞাসা, দেরিতে আসার পূর্বসতর্কতা বা ওষুধ খাওয়ানোর বিশেষ নোট সরাসরি শ্রেণি শিক্ষককে পাঠান।
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-center">
+          <button
+            type="button"
+            onClick={() => onNavigateTab('messages')}
+            className="px-4 py-2.5 rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>চ্যাট খুলুন ও মেসেজ পাঠান</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 

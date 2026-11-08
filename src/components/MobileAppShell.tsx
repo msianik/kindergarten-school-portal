@@ -21,6 +21,7 @@ import {
   WifiOff,
   Monitor,
   Users,
+  MessageSquare,
 } from 'lucide-react';
 
 interface PWAInstallButtonProps {
@@ -204,16 +205,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     : isTeacher
     ? [
         { id: 'overview', labelBn: 'হোম', icon: UserCheck },
-        { id: 'students', labelBn: 'শিক্ষার্থী', icon: Users },
         { id: 'attendance', labelBn: 'হাজিরা', icon: CalendarCheck },
+        { id: 'messages', labelBn: 'চ্যাট', icon: MessageSquare },
         { id: 'diary', labelBn: 'ডায়েরি', icon: BookOpen },
-        { id: 'skills', labelBn: 'স্কিল', icon: Award },
+        { id: 'students', labelBn: 'শিক্ষার্থী', icon: Users },
       ]
     : isParent
     ? [
         { id: 'overview', labelBn: 'সন্তান', icon: Heart },
+        { id: 'messages', labelBn: 'চ্যাট', icon: MessageSquare },
         { id: 'diary', labelBn: 'ডায়েরি', icon: BookOpen },
-        { id: 'skills', labelBn: 'প্রগ্রেস', icon: Award },
         { id: 'pickup', labelBn: 'গেট-পাস', icon: ShieldCheck },
         { id: 'fees', labelBn: 'বেতন/ফি', icon: CreditCard },
       ]

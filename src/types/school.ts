@@ -406,6 +406,7 @@ export type FcmNotificationType =
   | 'fee_due_reminder'
   | 'homework_task_assigned'
   | 'absence_alert'
+  | 'parent_teacher_message'
   | 'inventory_low_stock';
 
 export interface FcmNotification {
@@ -421,7 +422,7 @@ export interface FcmNotification {
   guardianPhone?: string;
   timestamp: string;
   read: boolean;
-  actionTab: 'pickup' | 'overview' | 'public' | 'diary' | 'fees' | 'students' | 'routine' | 'inventory' | 'calendar' | 'skills' | 'workspace' | 'idcards' | 'attendance';
+  actionTab: 'pickup' | 'overview' | 'public' | 'diary' | 'fees' | 'students' | 'routine' | 'inventory' | 'calendar' | 'skills' | 'workspace' | 'idcards' | 'attendance' | 'messages';
   fcmMessageId: string;
   invoiceId?: string;
   dueAmount?: number;
@@ -448,6 +449,35 @@ export interface PortalAccount {
   assignedClass?: SchoolClass;
   studentId?: string;
   directorId?: string;
+}
+
+export type MessageCategory =
+  | 'daily_mood'        // দৈনিক আচরণ ও মানসিক অবস্থা
+  | 'tiffin_health'     // টিফিন ও স্বাস্থ্য জিজ্ঞাসা
+  | 'homework_study'    // বাড়ির কাজ / পড়া বিষয়ক প্রশ্ন
+  | 'late_pickup_note'  // দেরিতে আসা বা পিক-আপ নোট
+  | 'medication_care'   // ওষুধ খাওয়ানোর বিশেষ অনুরোধ
+  | 'general';          // সাধারণ বার্তা
+
+export interface ParentTeacherMessage {
+  id: string;
+  studentId: string;
+  studentNameBn: string;
+  className: SchoolClass;
+  senderRole: 'parent' | 'teacher' | 'principal' | 'super_admin';
+  senderNameBn: string;
+  senderAvatarUrl?: string;
+  receiverRole: 'parent' | 'teacher' | 'principal';
+  receiverNameBn: string;
+  text: string;
+  category: MessageCategory;
+  categoryLabelBn?: string;
+  photoUrl?: string;
+  timestamp: string;
+  createdAt: number;
+  isRead: boolean;
+  readAt?: string;
+  isUrgent?: boolean;
 }
 
 export interface DirectorAccessPermission {

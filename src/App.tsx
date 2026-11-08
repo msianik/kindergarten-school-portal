@@ -46,6 +46,7 @@ import { DigitalDiaryModule } from './components/DigitalDiaryModule';
 import { SkillAssessmentModule } from './components/SkillAssessmentModule';
 import { FeeAccountsModule } from './components/FeeAccountsModule';
 import { AttendanceModule } from './components/AttendanceModule';
+import { ParentTeacherChatModule } from './components/ParentTeacherChatModule';
 import { PublicWebsite } from './components/PublicWebsite';
 import { GoogleWorkspaceModule } from './components/GoogleWorkspaceModule';
 import { SchoolAssetsModule } from './components/SchoolAssetsModule';
@@ -905,6 +906,16 @@ export default function App() {
                       currentRole={currentRole}
                       onSendHomeworkNotification={dispatchRealTimeFcmNotification}
                       loggedInTeacherNameBn={loggedInAccount?.nameBn}
+                    />
+                  )}
+
+                  {currentTab === 'messages' && (
+                    <ParentTeacherChatModule
+                      students={students}
+                      currentRole={currentRole}
+                      loggedInAccount={loggedInAccount}
+                      onSendChatNotification={dispatchRealTimeFcmNotification}
+                      onNavigateTab={(tab) => setCurrentTab(tab as any)}
                     />
                   )}
 

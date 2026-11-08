@@ -1287,6 +1287,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       descriptionBn: 'ক্লাসের ছবি, টিফিন ও ডিজিটাল ডায়েরি ফিডব্যাক',
     },
     {
+      id: 'messages',
+      labelBn: 'প্যারেন্ট চ্যাট',
+      shortLabelBn: 'চ্যাট',
+      descriptionBn: 'অভিভাবক ও শ্রেণি শিক্ষকের সরাসরি মেসেজিং ও ফিডব্যাক নোট',
+    },
+    {
       id: 'skills',
       labelBn: 'স্কিল কার্ড',
       shortLabelBn: 'স্কিল',
@@ -1376,6 +1382,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         descriptionBn: 'ছবি, ক্রাফট ও টিফিন আপডেট পোস্ট',
       },
       {
+        id: 'messages',
+        labelBn: 'প্যারেন্ট চ্যাট',
+        shortLabelBn: 'চ্যাট',
+        descriptionBn: 'অভিভাবকদের সাথে সরাসরি ক্লাসরুম মেসেজিং ও পরামর্শ',
+      },
+      {
         id: 'skills',
         labelBn: 'স্কিল কার্ড',
         shortLabelBn: 'স্কিল',
@@ -1427,6 +1439,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         labelBn: 'ক্লাস ডায়েরি',
         shortLabelBn: 'ডায়েরি',
         descriptionBn: 'আজকের ক্লাস ও টিফিন আপডেট',
+      },
+      {
+        id: 'messages',
+        labelBn: 'শিক্ষক চ্যাট',
+        shortLabelBn: 'চ্যাট',
+        descriptionBn: 'সন্তানের শ্রেণি শিক্ষক ও অধ্যক্ষের সাথে সরাসরি নিরাপদ বার্তা',
       },
       {
         id: 'skills',

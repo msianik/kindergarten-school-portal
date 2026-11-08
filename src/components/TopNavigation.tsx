@@ -26,6 +26,7 @@ import {
   Check,
   CalendarDays,
   IdCard,
+  MessageSquare,
 } from 'lucide-react';
 import { PWAInstallButton } from './MobileAppShell';
 import {
@@ -34,6 +35,11 @@ import {
   applySchoolTheme,
   getStoredThemeColor,
 } from '../utils/themeManager';
+import {
+  getStoredDirectChatMessages,
+  getUnreadMessagesCount,
+  DIRECT_CHAT_STORAGE_EVENT,
+} from '../utils/directChatLogic';
 
 interface TopNavigationProps {
   currentTab: string;
@@ -58,6 +64,7 @@ const ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string 
   calendar: { icon: CalendarDays, color: 'text-purple-600' },
   pickup: { icon: ShieldCheck, color: 'text-teal-600' },
   diary: { icon: BookOpen, color: 'text-indigo-600' },
+  messages: { icon: MessageSquare, color: 'text-teal-600' },
   skills: { icon: Award, color: 'text-amber-500' },
   attendance: { icon: CalendarCheck, color: 'text-emerald-600' },
   fees: { icon: CreditCard, color: 'text-rose-500' },
@@ -96,6 +103,30 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
     window.addEventListener('school-theme-updated', handleThemeSync);
     return () => window.removeEventListener('school-theme-updated', handleThemeSync);
   }, []);
+
+  const [directChatUnreadCount, setDirectChatUnreadCount] = useState<number>(() => {
+    return getUnreadMessagesCount(
+      getStoredDirectChatMessages(),
+      currentRole,
+      loggedInAccount?.studentId,
+      loggedInAccount?.assignedClass
+    );
+  });
+
+  useEffect(() => {
+    const handleChatSync = () => {
+      setDirectChatUnreadCount(
+        getUnreadMessagesCount(
+          getStoredDirectChatMessages(),
+          currentRole,
+          loggedInAccount?.studentId,
+          loggedInAccount?.assignedClass
+        )
+      );
+    };
+    window.addEventListener(DIRECT_CHAT_STORAGE_EVENT, handleChatSync);
+    return () => window.removeEventListener(DIRECT_CHAT_STORAGE_EVENT, handleChatSync);
+  }, [currentRole, loggedInAccount]);
 
   const isSuperAdmin = currentRole === 'super_admin';
   const isDirector = currentRole === 'director';
@@ -329,6 +360,11 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 >
                   <Icon className={`w-3.5 h-3.5 ${item.color} shrink-0`} />
                   <span>{item.labelBn}</span>
+                  {item.id === 'messages' && directChatUnreadCount > 0 && (
+                    <span className="min-w-[15px] h-[15px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center animate-pulse">
+                      {directChatUnreadCount}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -421,6 +457,11 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               >
                 <Icon className={`w-3 h-3 ${item.color} shrink-0`} />
                 <span>{item.labelBn}</span>
+                {item.id === 'messages' && directChatUnreadCount > 0 && (
+                  <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-rose-600 text-white text-[8.5px] font-black flex items-center justify-center animate-pulse">
+                    {directChatUnreadCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -512,7 +553,14 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <span className="text-xs font-bold block truncate">{item.labelBn}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold block truncate">{item.labelBn}</span>
+                            {item.id === 'messages' && directChatUnreadCount > 0 && (
+                              <span className="bg-rose-600 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                                {directChatUnreadCount} নতুন
+                              </span>
+                            )}
+                          </div>
                           <span
                             className={`text-[10px] block truncate ${
                               active ? 'text-emerald-100' : 'text-slate-500'
