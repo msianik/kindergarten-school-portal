@@ -6,7 +6,8 @@ import {
   UserRole, 
   ConsistencyTier,
   StaffAttendanceRecord,
-  StaffAttendanceStatus
+  StaffAttendanceStatus,
+  FcmNotification
 } from '../types/school';
 import {
   calculateAttendanceStats,
@@ -17,6 +18,7 @@ import {
   ALL_SCHOOL_CLASSES,
   isSameSchoolClass,
   toBengaliNumber,
+  getSchoolClassNameBn,
 } from '../utils/schoolLogic';
 import { INITIAL_STAFF_ATTENDANCE, SCHOOL_TEACHERS } from '../data/mockData';
 import { 
@@ -48,9 +50,30 @@ import {
   CheckCheck,
   Building2,
   RefreshCw,
-  X
+  X,
+  BellRing,
+  CheckCircle2,
+  ChevronDown
 } from 'lucide-react';
 import { exportMonthlyAttendancePdf, generateAttendancePdfHtml } from '../utils/attendancePdfExport';
+import { AbsentAlertModal } from './dashboard/AbsentAlertModal';
+
+const PRE_SCHOOL_LATE_REASONS = [
+  'দেরিতে ঘুম থেকে ওঠা',
+  'যানজট ও রাস্তায় দেরি',
+  'বৃষ্টি ও বৈরী আবহাওয়া',
+  'ডাক্তারের কাছে যাওয়া',
+  'অভিভাবকের জরুরি কাজ',
+  'অন্যান্য কারণ',
+];
+
+const PRE_SCHOOL_ABSENT_REASONS = [
+  'জ্বর ও শারীরিক অসুস্থতা',
+  'পারিবারিক অনুষ্ঠান বা সফর',
+  'বৃষ্টি ও যাতায়াত সমস্যা',
+  'পূর্বানুমোদিত বিশেষ ছুটি',
+  'অন্যান্য কারণ',
+];
 
 interface AttendanceModuleProps {
   students: Student[];
@@ -58,6 +81,7 @@ interface AttendanceModuleProps {
   onUpdateAttendance: (records: AttendanceRecord[]) => void;
   currentRole: UserRole;
   loggedInTeacherNameBn?: string;
+  onSendAttendanceNotification?: (notif: FcmNotification) => void;
 }
 
 export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
@@ -66,9 +90,17 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
   onUpdateAttendance,
   currentRole,
   loggedInTeacherNameBn,
+  onSendAttendanceNotification,
 }) => {
   const [selectedClass, setSelectedClass] = useState<SchoolClass>('HateKhori');
   const [smsSentToast, setSmsSentToast] = useState<string | null>(null);
+  const [attendanceDateStr, setAttendanceDateStr] = useState<string>('আজ, ০৮ নভেম্বর ২০২৬ (রবিবার)');
+  const [isAbsentModalOpen, setIsAbsentModalOpen] = useState(false);
+  const [dailySearchQuery, setDailySearchQuery] = useState('');
+  const [dailyStatusFilter, setDailyStatusFilter] = useState<'all' | 'present' | 'late' | 'absent'>('all');
+  const [activeLateStudentId, setActiveLateStudentId] = useState<string | null>(null);
+  const [activeAbsentStudentId, setActiveAbsentStudentId] = useState<string | null>(null);
+  const [alertSuccessBanner, setAlertSuccessBanner] = useState<string | null>(null);
 
   // ==========================================
   // Staff Attendance & Digital Check-In State
@@ -277,10 +309,48 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
 
   const isStaffOrAdmin = ['principal', 'teacher', 'super_admin'].includes(currentRole);
 
-  const classStudents = students.filter((s) => isSameSchoolClass(s.className, selectedClass));
-  const classRecords = attendanceRecords.filter((r) => isSameSchoolClass(r.className, selectedClass));
+  const classStudents = useMemo(() => {
+    return students.filter((s) => isSameSchoolClass(s.className, selectedClass));
+  }, [students, selectedClass]);
+
+  const classRecords = useMemo(() => {
+    return attendanceRecords.filter((r) => isSameSchoolClass(r.className, selectedClass));
+  }, [attendanceRecords, selectedClass]);
 
   const stats = calculateAttendanceStats(classRecords);
+
+  const filteredClassStudents = useMemo(() => {
+    return classStudents.filter((std) => {
+      const record = attendanceRecords.find((r) => r.studentId === std.id);
+      const currentStat = record?.status || 'present';
+
+      if (dailyStatusFilter !== 'all' && currentStat !== dailyStatusFilter) {
+        return false;
+      }
+
+      if (dailySearchQuery.trim()) {
+        const q = dailySearchQuery.toLowerCase().trim();
+        const matches =
+          std.nameBn.toLowerCase().includes(q) ||
+          std.nameEn.toLowerCase().includes(q) ||
+          std.rollNo.includes(q) ||
+          (std.fatherNameBn && std.fatherNameBn.toLowerCase().includes(q)) ||
+          (std.emergencyPhone && std.emergencyPhone.includes(q));
+        if (!matches) return false;
+      }
+
+      return true;
+    });
+  }, [classStudents, attendanceRecords, dailyStatusFilter, dailySearchQuery]);
+
+  const absentStudentsList = useMemo(() => {
+    return classStudents
+      .map((std) => {
+        const record = attendanceRecords.find((r) => r.studentId === std.id);
+        return { student: std, record };
+      })
+      .filter((item) => item.record?.status === 'absent');
+  }, [classStudents, attendanceRecords]);
 
   // Generate monthly attendance summary for the chosen month and class scope
   const { summaries: allMonthlySummaries, meta: reportMeta } = useMemo(() => {
@@ -380,34 +450,113 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
     }
   };
 
-  const handleSetStatus = (studentId: string, status: 'present' | 'absent' | 'late') => {
-    const updated = attendanceRecords.map((r) => {
-      if (r.studentId === studentId) {
-        return {
-          ...r,
+  const handleSetStatus = (studentId: string, status: 'present' | 'absent' | 'late', reason?: string) => {
+    const existingIndex = attendanceRecords.findIndex((r) => r.studentId === studentId);
+    let updated: AttendanceRecord[];
+
+    if (existingIndex >= 0) {
+      updated = attendanceRecords.map((r) => {
+        if (r.studentId === studentId) {
+          return {
+            ...r,
+            status,
+            checkInTime: status === 'present' ? (r.checkInTime || 'সকাল ০৮:৪৫') : status === 'late' ? (r.checkInTime || 'সকাল ০৯:১৫') : undefined,
+            lateReasonBn: status === 'late' ? (reason ?? r.lateReasonBn ?? 'দেরিতে ঘুম থেকে ওঠা') : undefined,
+            absentReasonBn: status === 'absent' ? (reason ?? r.absentReasonBn) : undefined,
+          };
+        }
+        return r;
+      });
+    } else {
+      const std = students.find((s) => s.id === studentId);
+      if (std) {
+        const newRecord: AttendanceRecord = {
+          studentId: std.id,
+          studentNameBn: std.nameBn,
+          rollNo: std.rollNo,
+          className: std.className,
           status,
           checkInTime: status === 'present' ? 'সকাল ০৮:৪৫' : status === 'late' ? 'সকাল ০৯:১৫' : undefined,
+          lateReasonBn: status === 'late' ? (reason || 'দেরিতে প্রবেশ') : undefined,
+          absentReasonBn: status === 'absent' ? reason : undefined,
         };
+        updated = [...attendanceRecords, newRecord];
+      } else {
+        updated = attendanceRecords;
       }
-      return r;
-    });
+    }
     onUpdateAttendance(updated);
   };
 
+  const handleMarkAllPresent = () => {
+    const updated = [...attendanceRecords];
+    classStudents.forEach((std) => {
+      const idx = updated.findIndex((r) => r.studentId === std.id);
+      if (idx >= 0) {
+        updated[idx] = {
+          ...updated[idx],
+          status: 'present',
+          checkInTime: 'সকাল ০৮:৪৫',
+          lateReasonBn: undefined,
+          absentReasonBn: undefined,
+        };
+      } else {
+        updated.push({
+          studentId: std.id,
+          studentNameBn: std.nameBn,
+          rollNo: std.rollNo,
+          className: std.className,
+          status: 'present',
+          checkInTime: 'সকাল ০৮:৪৫',
+        });
+      }
+    });
+
+    onUpdateAttendance(updated);
+    setSmsSentToast(`✓ ${getSchoolClassNameBn(selectedClass)} শ্রেণির সকল (${toBengaliNumber(classStudents.length)} জন) শিক্ষার্থীকে সফলভাবে উপস্থিত মার্ক করা হয়েছে!`);
+    setTimeout(() => setSmsSentToast(null), 4000);
+  };
+
+  const handleResetAttendance = () => {
+    if (!confirm(`${getSchoolClassNameBn(selectedClass)} শ্রেণির আজকের হাজিরা রিসেট করতে চান?`)) return;
+    const updated = attendanceRecords.filter(
+      (r) => !classStudents.some((std) => std.id === r.studentId)
+    );
+    onUpdateAttendance(updated);
+    setSmsSentToast(`✓ ${getSchoolClassNameBn(selectedClass)} শ্রেণির হাজিরা রিসেট করা হয়েছে।`);
+    setTimeout(() => setSmsSentToast(null), 3000);
+  };
+
   const handleSendAbsentSms = () => {
-    const absentKids = classRecords.filter((r) => r.status === 'absent');
-    if (absentKids.length === 0) {
-      alert('এই শ্রেণিতে বর্তমানে কোনো অনুপস্থিত শিক্ষার্থী নেই।');
+    if (absentStudentsList.length === 0) {
+      alert(`এই শ্রেণিতে (${getSchoolClassNameBn(selectedClass)}) বর্তমানে কোনো অনুপস্থিত শিক্ষার্থী নেই।`);
       return;
     }
+    setIsAbsentModalOpen(true);
+  };
 
-    setSmsSentToast(
-      `${absentKids.length} জন অনুপস্থিত শিক্ষার্থীর অভিভাবকের মোবাইল নম্বরে স্বয়ংক্রিয় সতর্কবার্তা এসএমএস পাঠানো হয়েছে।`
-    );
+  const handleSendAlertsFromModal = ({
+    selectedStudentIds,
+    channel,
+    messageTemplate,
+    notifications,
+  }: {
+    selectedStudentIds: string[];
+    channel: 'sms' | 'push' | 'both';
+    messageTemplate: string;
+    notifications: FcmNotification[];
+  }) => {
+    if (onSendAttendanceNotification) {
+      notifications.forEach((notif) => {
+        onSendAttendanceNotification(notif);
+      });
+    }
 
-    setTimeout(() => {
-      setSmsSentToast(null);
-    }, 5000);
+    const channelText =
+      channel === 'both' ? 'এসএমএস ও পুশ নোটিফিকেশন' : channel === 'sms' ? 'মোবাইল এসএমএস' : 'অ্যাপ পুশ অ্যালার্ট';
+    const msg = `✓ সফলভাবে ${toBengaliNumber(selectedStudentIds.length)} জন শিক্ষার্থীর অভিভাবকের কাছে ${channelText} পাঠানো হয়েছে!`;
+    setAlertSuccessBanner(msg);
+    setTimeout(() => setAlertSuccessBanner(null), 8000);
   };
 
   return (
@@ -556,6 +705,28 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
           </div>
           <button onClick={() => setSmsSentToast(null)} className="text-xs text-slate-400 hover:text-white cursor-pointer font-bold">
             ✕ বন্ধ
+          </button>
+        </div>
+      )}
+
+      {/* Alert Success Banner */}
+      {alertSuccessBanner && (
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3 animate-in fade-in border border-emerald-400/40">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-bold">{alertSuccessBanner}</p>
+              <p className="text-[11px] text-teal-100">অভিভাবকের স্মার্টফোনে পুশ নোটিফিকেশন ও মেসেজ পৌঁছে দেওয়া হয়েছে।</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAlertSuccessBanner(null)}
+            className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg cursor-pointer font-semibold transition shrink-0"
+          >
+            ঠিক আছে
           </button>
         </div>
       )}
@@ -1782,6 +1953,17 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
           </div>
         </div>
       )}
+
+      {/* Absent Alert Modal */}
+      <AbsentAlertModal
+        isOpen={isAbsentModalOpen}
+        onClose={() => setIsAbsentModalOpen(false)}
+        absentStudents={absentStudentsList}
+        className={selectedClass}
+        dateStr={attendanceDateStr}
+        loggedInTeacherNameBn={loggedInTeacherNameBn}
+        onSendAlerts={handleSendAlertsFromModal}
+      />
     </div>
   );
 };

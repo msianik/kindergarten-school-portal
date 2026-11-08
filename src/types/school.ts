@@ -316,6 +316,9 @@ export interface AttendanceRecord {
   className: SchoolClass;
   status: 'present' | 'absent' | 'late';
   checkInTime?: string;
+  lateReasonBn?: string;
+  absentReasonBn?: string;
+  dateStr?: string;
   remarks?: string;
 }
 
@@ -402,6 +405,7 @@ export type FcmNotificationType =
   | 'broadcast_announcement'
   | 'fee_due_reminder'
   | 'homework_task_assigned'
+  | 'absence_alert'
   | 'inventory_low_stock';
 
 export interface FcmNotification {
@@ -417,7 +421,7 @@ export interface FcmNotification {
   guardianPhone?: string;
   timestamp: string;
   read: boolean;
-  actionTab: 'pickup' | 'overview' | 'public' | 'diary' | 'fees' | 'students' | 'routine' | 'inventory' | 'calendar' | 'skills' | 'workspace' | 'idcards';
+  actionTab: 'pickup' | 'overview' | 'public' | 'diary' | 'fees' | 'students' | 'routine' | 'inventory' | 'calendar' | 'skills' | 'workspace' | 'idcards' | 'attendance';
   fcmMessageId: string;
   invoiceId?: string;
   dueAmount?: number;

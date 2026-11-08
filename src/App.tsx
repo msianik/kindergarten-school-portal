@@ -937,6 +937,7 @@ export default function App() {
                       onUpdateAttendance={handleUpdateAttendance}
                       currentRole={currentRole}
                       loggedInTeacherNameBn={loggedInAccount?.nameBn}
+                      onSendAttendanceNotification={dispatchRealTimeFcmNotification}
                     />
                   )}
 
