@@ -436,11 +436,15 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12 pb-12">
         {/* Hero Section with Official Ananda Pathshala Kushtia Cover & Logo */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-teal-800 to-amber-700 text-white p-8 sm:p-12 shadow-lg">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white p-8 sm:p-12 shadow-xl border border-emerald-400/30">
+          {/* Subtle Ambient Decorative Glows */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl pointer-events-none" />
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-7 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold">
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold border border-white/25">
                   <Sparkles className="w-4 h-4 text-amber-200" />
                   <span>ভর্তি চলছে: হাতেখড়ি থেকে ২য় শ্রেণি (২.৫+ বছর থেকে)</span>
                 </div>
@@ -451,7 +455,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                   src={logoUrl}
                   alt="আনন্দ পাঠশালা কুষ্টিয়া লোগো"
                   referrerPolicy="no-referrer"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover bg-white p-1 border-2 border-amber-300 shadow-md shrink-0"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover bg-white p-1 border-2 border-white/60 shadow-md shrink-0"
                 />
                 <div>
                   <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
@@ -470,36 +474,36 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <a
                   href="#apply"
-                  className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2"
+                  className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2 transform active:scale-95"
                 >
                   অনলাইন ভর্তি আবেদন করুন
                   <ArrowRight className="w-4 h-4" />
                 </a>
                 <a
                   href="#teachers"
-                  className="px-5 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-sm font-bold transition-all"
+                  className="px-5 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-sm font-bold transition-all backdrop-blur-md"
                 >
                   প্রিন্সিপাল ও শিক্ষকদের দেখুন
                 </a>
               </div>
             </div>
 
-          {/* Official Campus Cover Photo Card */}
-          <div className="lg:col-span-5">
-            <div className="rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl bg-slate-900">
-              <img
-                src={schoolProfile.coverUrl}
-                alt="আনন্দ পাঠশালা কুষ্টিয়া ক্যাম্পাসের শিক্ষক ও শিক্ষার্থীবৃন্দ"
-                referrerPolicy="no-referrer"
-                className="w-full h-64 sm:h-72 object-cover"
-              />
-              <div className="p-3 bg-slate-900/90 text-xs text-amber-200 font-medium text-center">
-                📍 ১৯/২২, পূর্ণ চন্দ্র লাহিড়ী লেন (গোশালা), কুষ্টিয়া · ফোন: ০১৯১৪-০৫৭৫১১
+            {/* Official Campus Cover Photo Card */}
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl bg-teal-900/60 backdrop-blur-md">
+                <img
+                  src={schoolProfile.coverUrl}
+                  alt="আনন্দ পাঠশালা কুষ্টিয়া ক্যাম্পাসের শিক্ষক ও শিক্ষার্থীবৃন্দ"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-64 sm:h-72 object-cover"
+                />
+                <div className="p-3 bg-teal-950/80 text-xs text-teal-100 font-medium text-center">
+                  📍 ১৯/২২, পূর্ণ চন্দ্র লাহিড়ী লেন (গোশালা), কুষ্টিয়া · ফোন: ০১৯১৪-০৫৭৫১১
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Dynamic Carousel: Announcements, Gallery Highlights & Seasonal Notices */}
       <HomeCarousel

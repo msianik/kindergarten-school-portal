@@ -194,22 +194,25 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
   return (
     <section
       aria-label="স্কুল নোটিশ, গ্যালারি ও ঘোষণা ক্যারোসেল"
-      className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl"
+      className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-800 via-blue-800 to-teal-800 border border-indigo-400/30 shadow-xl"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background Graphic & Atmosphere */}
+      {/* Background Graphic & Atmosphere (Luminous, refined - no black overlay) */}
       <div className="absolute inset-0 z-0">
         <img
           src={current.imageUrl || fallbackCover}
           alt={current.titleBn}
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center scale-105 transition-all duration-700 blur-[1px] opacity-40 brightness-75"
+          className="w-full h-full object-cover object-center scale-105 transition-all duration-700 blur-[1px] opacity-35 brightness-95"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-950/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/85 via-blue-900/65 to-indigo-800/40" />
+        {/* Subtle Ambient Glows */}
+        <div className="absolute top-0 right-10 w-80 h-80 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-10 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Main Content Area */}

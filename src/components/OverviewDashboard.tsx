@@ -195,6 +195,52 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const [achievementToast, setAchievementToast] = useState<string | null>(null);
 
+  const handleToggleDirectorAccess = (directorId: string) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      const willEnable = !perm.viewAllModules;
+      return {
+        ...perm,
+        viewAllModules: willEnable,
+        allowedModules: willEnable ? [...ALL_PORTAL_MODULE_IDS] : [],
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+        lastUpdatedAtBn: willEnable ? 'ভিউ অ্যাক্সেস চালু' : 'অ্যাক্সেস বন্ধ',
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    const targetDir = updated.find((d) => d.directorId === directorId);
+    if (targetDir) {
+      setAchievementToast(
+        targetDir.viewAllModules
+          ? `✅ পরিচালক "${targetDir.nameBn}"-এর ভিউ ও অ্যাক্সেস চালু করা হয়েছে!`
+          : `🔒 পরিচালক "${targetDir.nameBn}"-এর ভিউ ও অ্যাক্সেস বন্ধ করা হয়েছে।`
+      );
+      setTimeout(() => setAchievementToast(null), 3500);
+    }
+  };
+
+  const handleSetAllDirectorsAccess = (enable: boolean) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.isSuperAdmin) return perm;
+      return {
+        ...perm,
+        viewAllModules: enable,
+        allowedModules: enable ? [...ALL_PORTAL_MODULE_IDS] : [],
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+        lastUpdatedAtBn: enable ? 'সকল ভিউ চালু' : 'সকল অ্যাক্সেস বন্ধ',
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    setAchievementToast(
+      enable
+        ? '✅ সকল পরিচালকের ভিউ ও অ্যাক্সেস চালু করা হয়েছে!'
+        : '🔒 সকল পরিচালকের ভিউ ও অ্যাক্সেস বন্ধ করা হয়েছে।'
+    );
+    setTimeout(() => setAchievementToast(null), 3500);
+  };
+
   const handleToggleDirectorPermission = (
     directorId: string,
     field:
@@ -1026,12 +1072,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <SuperAdminAccessPanel
         isSuperAdmin={isSuperAdmin}
         directorPermissions={directorPermissions}
-        showAccessControlPanel={showAccessControlPanel}
-        setShowAccessControlPanel={setShowAccessControlPanel}
-        onResetPermissions={handleResetDirectorPermissions}
-        onSetPreset={handleSetDirectorAccessPreset}
-        onTogglePermission={handleToggleDirectorPermission}
-        onToggleModule={handleToggleDirectorModule}
+        onToggleDirectorAccess={handleToggleDirectorAccess}
+        onSetAllAccess={handleSetAllDirectorsAccess}
         logoUrl={logoUrl}
       />
 
