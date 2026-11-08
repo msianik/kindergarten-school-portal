@@ -77,6 +77,10 @@
 }
 
 /* Global Font Application for All Bengali & Portal Text */
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body,
 button,

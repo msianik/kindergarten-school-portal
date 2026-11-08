@@ -428,7 +428,7 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
   };
 
   return (
-    <section id="notice-board" className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 sm:p-8 space-y-6">
+    <section id="notice-board" className="scroll-mt-24 bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 sm:p-8 space-y-6">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 bg-emerald-800 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs animate-bounce font-medium">
