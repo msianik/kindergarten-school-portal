@@ -71,14 +71,14 @@ export const PRINCIPAL_AND_DIRECTOR_PROFILES = {
       "Quality education is about possibilities. It is about success in real life, discovering the child's innate talents, excitement in learning new things, and being a good human being and a contributing citizen.",
   },
   directorMessage: {
-    nameBn: 'শাফী আব্দুল্লাহ',
-    nameEn: 'Shafee Abdullah',
-    roleBn: 'প্রিন্সিপাল (Principal)',
-    photoUrl: '/assets/biddalay/shafee_abdullah.jpg',
+    nameBn: 'আল নোমান',
+    nameEn: 'Al Noman',
+    roleBn: 'সভাপতি ও চেয়ারম্যান (Chairman)',
+    photoUrl: '/assets/fb/photo-3.jpg',
     quoteBn:
-      'নতুন শিক্ষাবর্ষে পদার্পণের এই লগ্নে আমাদের ক্ষুদে শিক্ষার্থীদের উজ্জ্বল ভবিষ্যৎ নিয়ে আমি অত্যন্ত আনন্দিত ও আশাবাদী। কঠোর পরিশ্রম, নিষ্ঠা ও উৎকর্ষের প্রতি অঙ্গীকারের মাধ্যমে আমরা আনন্দ পাঠশালাকে এমন একটি সহায়ক ও আনন্দময় প্রাঙ্গণ হিসেবে গড়ে তুলেছি যেখানে প্রতিটি শিশু আনন্দের সাথে শেখে ও বিকশিত হয়।',
+      'আনন্দ পাঠশালার মূল লক্ষ্য শিশুদের কোনো রকম মানসিক চাপ ছাড়া আনন্দের সাথে শিক্ষার আলোয় আলোকিত করা। মানসম্মত শিক্ষা উপকরণ, আধুনিক শ্রেণিকক্ষ ও শিশুবান্ধব মন্টেসরি পরিবেশের মাধ্যমে শৈশবের স্বাভাবিক কৌতূহল ও সৃজনশীলতা জাগ্রত করে একটি নৈতিক, আত্মবিশ্বাসী ও মানবিক আগামী প্রজন্ম গড়ে তোলাই আমাদের প্রধান অঙ্গীকার।',
     quoteEn:
-      'As we embark on another school year, I am filled with excitement and anticipation for all that lies ahead. This year, we have many challenges to overcome but we also have numerous opportunities to grow and learn. I believe that with hard work, dedication, and a commitment to excellence, we will be able to achieve our goals and create an environment that is supportive, challenging, and empowering.',
+      'Our primary commitment is to enlighten young minds with joyful learning without any psychological pressure—nurturing curiosity, creativity, and moral integrity.',
   },
 };
 

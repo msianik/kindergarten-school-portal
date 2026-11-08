@@ -190,10 +190,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     return MANAGEMENT_COMMITTEE;
   });
 
-  const [activeDirectorMessageId, setActiveDirectorMessageId] = useState<string>(() => {
-    const chairman = directorsList.find((d) => d.isChairman) || directorsList[0];
-    return chairman?.id || 'dir-4';
-  });
   const [viewingDirector, setViewingDirector] = useState<CommitteeDirector | null>(null);
 
   // Sync directors & teachers across tabs and admin updates
@@ -211,10 +207,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       }
       if (nextList && Array.isArray(nextList) && nextList.length > 0) {
         setDirectorsList(nextList);
-        const chairman = nextList.find((d) => d.isChairman) || nextList[0];
-        if (chairman) {
-          setActiveDirectorMessageId(chairman.id);
-        }
       }
     };
     window.addEventListener('ananda-directors-updated', handleSyncDirectors);
@@ -247,6 +239,15 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [addressBn, setAddressBn] = useState('');
   const [submittedApp, setSubmittedApp] = useState<AdmissionApplication | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Filter out the Principal and Head Teacher from the faculty roster grid, as they are already prominently highlighted in the leadership section right above
+  const generalFacultyList = teachersList.filter(
+    (teacher) =>
+      teacher.id !== 'tch-1' &&
+      teacher.id !== 'tch-2' &&
+      !teacher.isHeadTeacher &&
+      teacher.staffCategory !== 'principal'
+  );
 
   const handleSubmitAdmission = (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,7 +394,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold">
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>ভর্তি চলছে: {schoolProfile.classesBn} (২.৫+ বছর থেকে)</span>
+                  <span>ভর্তি চলছে: হাতেখড়ি থেকে ২য় শ্রেণি (২.৫+ বছর থেকে)</span>
                 </div>
               </div>
 
@@ -415,8 +416,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </div>
 
               <p className="text-sm sm:text-base text-white/95 leading-relaxed font-normal">
-                মানসম্মত শিক্ষা হলো শিশুর সম্ভাবনার দুয়ার খুলে দেওয়া—বাস্তব জীবনে সাফল্য, শিশুর সুপ্ত প্রতিভা আবিষ্কার, নতুন কিছু শেখার আনন্দ এবং একজন ভালো মানুষ ও সুনাগরিক হিসেবে গড়ে ওঠা।
-                আনন্দ পাঠশালা (গোশালা, কুষ্টিয়া)-এ রয়েছে প্রিন্সিপাল <strong>শাফী আব্দুল্লাহ</strong>, প্রধান শিক্ষক <strong>ফাতেমা আক্তার</strong> ও দক্ষ শিক্ষকদের নিবিড় ও স্নেহময় তত্ত্বাবধান।
+                আনন্দ পাঠশালা (গোশালা, কুষ্টিয়া)—শিশুর আনন্দময় শৈশব ও আধুনিক প্রাক-প্রাথমিক শিক্ষার এক নির্ভরযোগ্য ঠিকানা। শিশুবান্ধব মন্টেসরি পদ্ধতি, সুসজ্জিত ক্লাসরুম, বর্ণিল খেলার প্রাঙ্গণ ও দক্ষ শিক্ষকদের নিবিড় ও স্নেহময় তত্ত্বাবধানে এখানে প্রতিটি শিশু আনন্দের সাথে শেখে ও সুনাগরিক হিসেবে গড়ে ওঠে।
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -472,15 +472,15 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         }}
       />
 
-      {/* Principal & Head Teacher's Message Section */}
+      {/* Academic Leadership & Teachers Section */}
       <section id="teachers" className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
-              প্রিন্সিপাল ও প্রধান শিক্ষকের বাণী
+              একাডেমিক নেতৃত্ব ও দিকনির্দেশনা
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
-              আমাদের প্রিন্সিপাল ও প্রধান শিক্ষকের বাণী
+              প্রিন্সিপাল ও প্রধান শিক্ষকের অনুপ্রেরণাদায়ী বাণী
             </h2>
           </div>
           <span className="text-xs font-semibold text-slate-500">
@@ -558,32 +558,28 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </div>
 
-        {/* All Teachers & Officers Grid */}
+        {/* All Teachers & Staff Members Grid (Principal & Head Teacher excluded to eliminate duplicate appearance) */}
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-2xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
                 <GraduationCap className="w-6 h-6 text-emerald-700" />
-                <span>আমাদের সম্মানিত শিক্ষক ও কর্মকর্তা পর্ষদ ({teachersList.length} জন)</span>
+                <span>আমাদের সম্মানিত সহকারী শিক্ষক ও কর্মকর্তা পর্ষদ ({generalFacultyList.length} জন)</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                আনন্দ পাঠশালা কুষ্টিয়ার সকল সম্মানিত শিক্ষক ও প্রশাসনিক কর্মকর্তা
+                আনন্দ পাঠশালা কুষ্টিয়ার নিবেদিতপ্রাণ শিক্ষক ও প্রশাসনিক কর্মকর্তা
               </p>
             </div>
             <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 self-start sm:self-auto">
-              মোট শিক্ষক ও কর্মকর্তা: {teachersList.length < 10 ? `০${teachersList.length}` : teachersList.length} জন
+              মোট সহকারী শিক্ষক ও কর্মকর্তা: {generalFacultyList.length < 10 ? `০${generalFacultyList.length}` : generalFacultyList.length} জন
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {teachersList.map((teacher) => (
+            {generalFacultyList.map((teacher) => (
               <div
                 key={teacher.id}
-                className={`rounded-2xl border p-4 flex items-center gap-4 transition-all hover:shadow-md ${
-                  teacher.isHeadTeacher
-                    ? 'bg-emerald-50/60 border-emerald-300'
-                    : 'bg-slate-50/60 border-slate-200 hover:border-emerald-300'
-                }`}
+                className="rounded-2xl border p-4 flex items-center gap-4 transition-all hover:shadow-md bg-slate-50/60 border-slate-200 hover:border-emerald-300"
               >
                 <img
                   src={teacher.photoUrl}
@@ -594,9 +590,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                 <div className="min-w-0 space-y-1">
                   <span
                     className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded ${
-                      teacher.isHeadTeacher
-                        ? 'bg-emerald-700 text-white'
-                        : teacher.isDirector
+                      teacher.isDirector
                         ? 'bg-amber-100 text-amber-900'
                         : 'bg-indigo-50 text-indigo-800'
                     }`}
@@ -636,7 +630,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-2.5">
               <Users className="w-7 h-7 text-amber-600 shrink-0" />
-              <span>প্রতিষ্ঠান পরিচালনা পর্ষদ ও পরিচালকদের বাণী</span>
+              <span>প্রতিষ্ঠান পরিচালনা পর্ষদ ও দিকনির্দেশনা (Governing Body)</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
               আনন্দ পাঠশালা কুষ্টিয়ার সার্বিক নীতি নির্ধারণ, প্রাতিষ্ঠানিক উৎকর্ষ, শিশু অধিকার ও আধুনিক শিশুবান্ধব মন্টেসরি শিক্ষা নিশ্চিতকরণে নিবেদিতপ্রাণ সম্মানিত পরিচালনা পর্ষদ
@@ -650,253 +644,161 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </div>
 
-        {/* Featured Director Message Spotlight Card */}
-        {directorsList.length > 0 && (() => {
-          const featured =
-            directorsList.find((d) => d.id === activeDirectorMessageId) ||
-            directorsList.find((d) => d.isChairman) ||
-            directorsList[0];
-          return (
-            <div className="bg-gradient-to-br from-amber-500/10 via-amber-50/70 to-orange-50/40 rounded-3xl border border-amber-300/80 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex flex-col lg:flex-row items-start gap-6">
-                {/* Director Portrait & Bio Column */}
-                <div className="flex sm:flex-col items-center sm:items-start gap-4 shrink-0 w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-amber-200/80 pb-4 lg:pb-0 lg:pr-6">
-                  <div className="relative">
-                    <img
-                      src={featured.photoUrl || logoUrl}
-                      alt={featured.nameBn}
-                      referrerPolicy="no-referrer"
-                      className="w-24 h-28 sm:w-32 sm:h-36 rounded-2xl object-cover border-2 border-amber-500 shadow-md bg-white p-0.5"
-                    />
-                    {featured.isChairman && (
-                      <span className="absolute -top-2 -right-2 bg-amber-600 text-white text-[9.5px] font-black px-2 py-0.5 rounded-full shadow-xs">
-                        👑 সভাপতি
+        {/* Unified Board of Directors Presentation (Each member mentioned exactly once) */}
+        <div className="space-y-6">
+          {/* Executive Leadership: Chairman & Managing Director */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {directorsList
+              .filter((d) => d.isChairman || d.isManagingDirector)
+              .map((director) => (
+                <div
+                  key={director.id}
+                  className={`bg-white rounded-3xl border p-6 sm:p-7 shadow-xs flex flex-col justify-between space-y-4 ${
+                    director.isChairman
+                      ? 'border-amber-300 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/20'
+                      : 'border-emerald-300 bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/20'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <span
+                        className={`text-xs font-black px-3 py-1 rounded-full border ${
+                          director.isChairman
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                        }`}
+                      >
+                        {director.isChairman ? '👑 সভাপতি ও চেয়ারম্যান (Chairman)' : '⭐ ব্যবস্থাপনা পরিচালক (Managing Director)'}
                       </span>
-                    )}
-                    {featured.isManagingDirector && (
-                      <span className="absolute -top-2 -right-2 bg-emerald-700 text-white text-[9.5px] font-black px-2 py-0.5 rounded-full shadow-xs">
-                        ⭐ ব্যবস্থাপনা পরিচালক
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1 min-w-0">
-                    <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-950 border border-amber-300">
-                      {featured.roleBn}
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
-                      {featured.nameBn}
-                    </h3>
-                    <p className="text-xs font-semibold text-slate-600">
-                      {featured.nameEn}
-                    </p>
-                    {featured.professionBn && (
-                      <p className="text-[11px] text-amber-900 font-medium flex items-center gap-1 pt-0.5">
-                        <Briefcase className="w-3 h-3 text-amber-700 shrink-0" />
-                        <span>{featured.professionBn}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Director Message Body & Quotes */}
-                <div className="space-y-4 flex-1">
-                  <div className="flex items-center justify-between gap-3 border-b border-amber-200/70 pb-3">
-                    <div className="flex items-center gap-2">
-                      <MessageSquareQuote className="w-5 h-5 text-amber-600" />
-                      <h4 className="text-sm sm:text-base font-black text-amber-950">
-                        {featured.roleBn} এর অফিসিয়াল বাণী ও দিকনির্দেশনা
-                      </h4>
-                    </div>
-                    <Quote className="w-6 h-6 text-amber-400 shrink-0 opacity-70" />
-                  </div>
-
-                  <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-medium bg-white/70 p-4 sm:p-5 rounded-2xl border border-amber-200/80 shadow-2xs">
-                    “{featured.messageBn || 'আনন্দ পাঠশালার সাথে শিশুদের উজ্জ্বল ভবিষ্যতের যাত্রা হোক আনন্দময় ও আলোকিত।'}”
-                  </p>
-
-                  {featured.messageEn && (
-                    <p className="text-xs text-slate-600 italic leading-relaxed px-1">
-                      "{featured.messageEn}"
-                    </p>
-                  )}
-
-                  {/* Contact & Meta Strip */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-600">
-                    <div className="flex items-center gap-4 flex-wrap">
-                      {featured.phone && (
-                        <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                          <Phone className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{featured.phone}</span>
-                        </div>
-                      )}
-                      {featured.email && (
-                        <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                          <Mail className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{featured.email}</span>
-                        </div>
-                      )}
+                      <Quote className="w-5 h-5 text-amber-400 shrink-0 opacity-80" />
                     </div>
 
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={director.photoUrl || logoUrl}
+                        alt={director.nameBn}
+                        referrerPolicy="no-referrer"
+                        className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl object-cover border-2 border-amber-400 shadow-sm shrink-0 bg-white p-0.5"
+                      />
+                      <div className="space-y-1 min-w-0">
+                        <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
+                          {director.nameBn}
+                        </h3>
+                        <p className="text-xs font-semibold text-slate-500">
+                          {director.nameEn}
+                        </p>
+                        {director.professionBn && (
+                          <p className="text-xs text-amber-900 font-medium flex items-center gap-1 pt-0.5">
+                            <Briefcase className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                            <span>{director.professionBn}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium bg-amber-50/40 p-3.5 rounded-2xl border border-amber-200/60">
+                      “{director.messageBn}”
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3 text-slate-600">
+                      {director.phone && (
+                        <span className="font-semibold flex items-center gap-1 text-[11px]">
+                          <Phone className="w-3 h-3 text-amber-600" />
+                          <span>{director.phone}</span>
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setViewingDirector(featured)}
+                      onClick={() => setViewingDirector(director)}
                       className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs inline-flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>পূর্ণাঙ্গ বিবরণ ও বাণী দেখুন</span>
+                      <span>বাণী ও পূর্ণ প্রোফাইল</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Quick Switch Director Message Pills */}
-              <div className="pt-4 border-t border-amber-200/80 space-y-2.5">
-                <span className="text-xs font-bold text-slate-700 block">
-                  অন্যান্য পরিচালকদের বাণী:
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                  {directorsList.map((dir) => {
-                    const isSecretary =
-                      dir.id === 'dir-3' ||
-                      dir.roleBn?.includes('সদস্য সচিব') ||
-                      dir.roleEn?.toLowerCase().includes('secretary') ||
-                      dir.designationBn?.includes('সদস্য সচিব');
-                    const shortRoleLabel = dir.isChairman
-                      ? 'সভাপতি (Chairman)'
-                      : dir.isManagingDirector
-                      ? 'ব্যবস্থাপনা পরিচালক (MD)'
-                      : isSecretary
-                      ? 'পরিচালক ও সদস্য সচিব (Director & Secretary)'
-                      : 'পরিচালক (Director)';
-
-                    return (
-                      <button
-                        key={dir.id}
-                        type="button"
-                        onClick={() => setActiveDirectorMessageId(dir.id)}
-                        className={`px-3 py-2.5 rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-0.5 ${
-                          dir.id === featured.id
-                            ? 'bg-amber-700 text-white shadow-xs ring-2 ring-amber-400'
-                            : 'bg-white hover:bg-amber-100 text-slate-800 border border-amber-200 shadow-2xs'
-                        }`}
-                      >
-                        <span className="text-xs sm:text-sm font-black leading-snug">
-                          {dir.nameBn}
-                        </span>
-                        <span
-                          className={`text-[10px] font-semibold leading-tight ${
-                            dir.id === featured.id ? 'text-amber-100' : 'text-amber-900/80'
-                          }`}
-                        >
-                          {shortRoleLabel}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* All Directors Cards Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-              <Users className="w-5 h-5 text-amber-600" />
-              <span>পরিচালনা পর্ষদের সকল সদস্য পরিচিতি ({directorsList.length} জন)</span>
-            </h3>
-            <span className="text-xs font-medium text-slate-500">
-              বিস্তারিত দেখতে যে কোনো পরিচালকের প্রোফাইলে ক্লিক করুন
-            </span>
+              ))}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {directorsList.map((director) => (
-              <div
-                key={director.id}
-                onClick={() => setViewingDirector(director)}
-                className={`rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md cursor-pointer group bg-gradient-to-b ${
-                  director.isChairman
-                    ? 'border-amber-300 from-amber-50/60 to-white ring-1 ring-amber-300/50'
-                    : director.isManagingDirector
-                    ? 'border-emerald-300 from-emerald-50/50 to-white ring-1 ring-emerald-300/40'
-                    : 'border-slate-200 from-slate-50/40 to-white hover:border-amber-300'
-                }`}
-              >
-                <div className="space-y-3.5">
-                  {/* Top Badge Strip */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg border ${
-                        director.isChairman
-                          ? 'bg-amber-100 text-amber-900 border-amber-300'
-                          : director.isManagingDirector
-                          ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                          : director.roleBn?.includes('সদস্য সচিব')
-                          ? 'bg-blue-100 text-blue-900 border-blue-300'
-                          : 'bg-slate-100 text-slate-800 border-slate-200'
-                      }`}
-                    >
-                      {director.roleBn}
-                    </span>
-                  </div>
+          {/* Board Directors & Member Secretary */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-amber-600" />
+              <span>পরিচালনা পর্ষদের সম্মানিত পরিচালক ও সদস্য সচিববৃন্দ</span>
+            </h3>
 
-                  {/* Director Avatar & Name Info */}
-                  <div className="flex items-start gap-3.5">
-                    <img
-                      src={director.photoUrl || logoUrl}
-                      alt={director.nameBn}
-                      referrerPolicy="no-referrer"
-                      className="w-16 h-20 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0 bg-slate-100"
-                    />
-                    <div className="min-w-0 space-y-0.5">
-                      <h4 className="text-base font-black text-slate-900 group-hover:text-amber-800 transition-colors">
-                        {director.nameBn}
-                      </h4>
-                      <p className="text-xs font-semibold text-slate-500 truncate">
-                        {director.nameEn}
-                      </p>
-                      {director.designationBn && (
-                        <p className="text-[10.5px] text-amber-950 font-bold truncate">
-                          {director.designationBn}
-                        </p>
-                      )}
-                      {director.professionBn && (
-                        <p className="text-[11px] text-slate-600 font-medium truncate pt-0.5">
-                          {director.professionBn}
-                        </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {directorsList
+                .filter((d) => !d.isChairman && !d.isManagingDirector)
+                .map((director) => (
+                  <div
+                    key={director.id}
+                    onClick={() => setViewingDirector(director)}
+                    className="rounded-2xl border border-slate-200 p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md hover:border-amber-300 cursor-pointer group bg-gradient-to-b from-slate-50/40 to-white"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg border ${
+                            director.roleBn?.includes('সদস্য সচিব')
+                              ? 'bg-blue-100 text-blue-900 border-blue-300'
+                              : 'bg-slate-100 text-slate-800 border-slate-200'
+                          }`}
+                        >
+                          {director.roleBn}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3.5">
+                        <img
+                          src={director.photoUrl || logoUrl}
+                          alt={director.nameBn}
+                          referrerPolicy="no-referrer"
+                          className="w-16 h-20 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0 bg-slate-100"
+                        />
+                        <div className="min-w-0 space-y-0.5">
+                          <h4 className="text-base font-black text-slate-900 group-hover:text-amber-800 transition-colors">
+                            {director.nameBn}
+                          </h4>
+                          <p className="text-xs font-semibold text-slate-500 truncate">
+                            {director.nameEn}
+                          </p>
+                          {director.professionBn && (
+                            <p className="text-[11px] text-slate-600 font-medium truncate pt-0.5">
+                              {director.professionBn}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {director.messageBn && (
+                        <div className="text-xs text-slate-600 bg-amber-50/40 p-3 rounded-xl border border-amber-100/80 leading-relaxed line-clamp-3">
+                          “{director.messageBn}”
+                        </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Director Message Preview */}
-                  {director.messageBn && (
-                    <div className="text-xs text-slate-600 bg-amber-50/40 p-3 rounded-xl border border-amber-100/80 leading-relaxed line-clamp-3">
-                      “{director.messageBn}”
-                    </div>
-                  )}
-                </div>
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-3 text-slate-500">
+                        {director.phone && (
+                          <span className="text-[11px] font-semibold flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-amber-600" />
+                            <span>{director.phone}</span>
+                          </span>
+                        )}
+                      </div>
 
-                {/* Footer Action Strip */}
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-3 text-slate-500">
-                    {director.phone && (
-                      <span className="text-[11px] font-semibold flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-amber-600" />
-                        <span>{director.phone}</span>
+                      <span className="text-amber-700 font-bold group-hover:underline inline-flex items-center gap-0.5 shrink-0">
+                        <span>বাণী পড়ুন</span>
+                        <ArrowRight className="w-3 h-3" />
                       </span>
-                    )}
+                    </div>
                   </div>
-
-                  <span className="text-amber-700 font-bold group-hover:underline inline-flex items-center gap-0.5 shrink-0">
-                    <span>বাণী পড়ুন</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </span>
-                </div>
-              </div>
-            ))}
+                ))}
+            </div>
           </div>
         </div>
       </section>
