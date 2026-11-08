@@ -84,7 +84,7 @@ export function generateAttendancePdfHtml(
       print-color-adjust: exact !important;
     }
     body {
-      font-family: 'SolaimanLipi', 'Kalpurush', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Ruhul Amin', 'Ruhul Amin Unicode', 'SolaimanLipi', 'Kalpurush', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #0f172a;
       background: #ffffff;
       margin: 0;

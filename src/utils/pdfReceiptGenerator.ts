@@ -155,7 +155,7 @@ export async function generateOfficialReceiptPdf(
   const feeConfig =
     customFeeConfig || (student ? getStudentFeeConfig(student) : null);
 
-  const fontStack = `'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
+  const fontStack = `'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
 
   // 1. Page Background
   ctx.fillStyle = '#FFFFFF';
@@ -1186,7 +1186,7 @@ export async function downloadCurrentMonthSummaryPdf(
     throw new Error('Canvas 2D context not available');
   }
 
-  const fontStack = `'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
+  const fontStack = `'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
 
   // 1. Background & Outer Border
   ctx.fillStyle = '#FFFFFF';
@@ -1698,7 +1698,7 @@ export async function downloadFeeHistoryReportPdf(
     throw new Error('Canvas 2D context not available');
   }
 
-  const fontStack = `'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
+  const fontStack = `'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', 'Segoe UI', sans-serif`;
 
   // 1. White Page Background & Border
   ctx.fillStyle = '#FFFFFF';

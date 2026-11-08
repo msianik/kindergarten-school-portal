@@ -386,7 +386,7 @@ export const StudentProgressCardModal: React.FC<StudentProgressCardModalProps> =
             id="student-progress-card-canvas"
             className="bg-white rounded-2xl border-4 border-double border-amber-400 p-5 sm:p-7 space-y-5 shadow-sm print:border-2 print:border-amber-600 print:shadow-none print:p-6 print:m-0 print:rounded-none print:w-full break-inside-avoid print-avoid-break"
             style={{
-              fontFamily: "'Hind Siliguri', 'Noto Sans Bengali', sans-serif",
+              fontFamily: "'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', sans-serif",
             }}
           >
             {/* ===================================================================== */}
