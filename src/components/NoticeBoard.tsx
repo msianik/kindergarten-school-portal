@@ -472,85 +472,187 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
 
       {/* Filter Tabs Bar (Category Pills) & Search */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        {/* Category Buttons - Fully scrollable and never overlapped */}
+        {/* Category Buttons - Compact width, taller height, two-line text (Top on top, Bottom on bottom) */}
         <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth pb-1">
-          <div className="flex items-center gap-1.5 w-max">
+          <div className="flex items-center gap-2 w-max">
+            {/* ১. সকল নোটিশ */}
             <button
               type="button"
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'all'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                  : 'bg-slate-100/90 text-slate-800 hover:bg-slate-200 border-slate-200'
               }`}
             >
-              <span>📌 সকল নোটিশ</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">{counts.all}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">📌</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {counts.all}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">সকল</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'all' ? 'text-white/80' : 'text-slate-500'
+                }`}
+              >
+                নোটিশ
+              </span>
             </button>
 
+            {/* ২. জরুরি নোটিশ */}
             <button
               type="button"
               onClick={() => setSelectedCategory('urgent')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'urgent'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                  ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                  : 'bg-rose-50/90 text-rose-800 hover:bg-rose-100 border-rose-200'
               }`}
             >
-              <span>🚨 জরুরি নোটিশ</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-200/60 text-rose-900">{counts.urgent}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">🚨</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'urgent' ? 'bg-white/25 text-white' : 'bg-rose-200/70 text-rose-900'
+                  }`}
+                >
+                  {counts.urgent}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">জরুরি</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'urgent' ? 'text-white/80' : 'text-rose-600'
+                }`}
+              >
+                নোটিশ
+              </span>
             </button>
 
+            {/* ৩. ভর্তি বিজ্ঞপ্তি */}
             <button
               type="button"
               onClick={() => setSelectedCategory('admission')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'admission'
-                  ? 'bg-teal-700 text-white shadow-xs'
-                  : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200'
+                  ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
+                  : 'bg-teal-50/90 text-teal-800 hover:bg-teal-100 border-teal-200'
               }`}
             >
-              <span>🎓 ভর্তি বিজ্ঞপ্তি</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-teal-200/60 text-teal-900">{counts.admission}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">🎓</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'admission' ? 'bg-white/25 text-white' : 'bg-teal-200/70 text-teal-900'
+                  }`}
+                >
+                  {counts.admission}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">ভর্তি</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'admission' ? 'text-white/80' : 'text-teal-600'
+                }`}
+              >
+                বিজ্ঞপ্তি
+              </span>
             </button>
 
+            {/* ৪. আপকামিং নোটিশ */}
             <button
               type="button"
               onClick={() => setSelectedCategory('event')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'event'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                  : 'bg-amber-50/90 text-amber-900 hover:bg-amber-100 border-amber-200'
               }`}
             >
-              <span>🎈 আপকামিং নোটিশ</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200/60 text-amber-900">{counts.event}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">🎈</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'event' ? 'bg-white/25 text-white' : 'bg-amber-200/70 text-amber-900'
+                  }`}
+                >
+                  {counts.event}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">আপকামিং</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'event' ? 'text-white/80' : 'text-amber-700'
+                }`}
+              >
+                নোটিশ
+              </span>
             </button>
 
+            {/* ৫. পরীক্ষা */}
             <button
               type="button"
               onClick={() => setSelectedCategory('exam')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'exam'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                  : 'bg-indigo-50/90 text-indigo-800 hover:bg-indigo-100 border-indigo-200'
               }`}
             >
-              <span>📝 পরীক্ষা</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-200/60 text-indigo-900">{counts.exam}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">📝</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'exam' ? 'bg-white/25 text-white' : 'bg-indigo-200/70 text-indigo-900'
+                  }`}
+                >
+                  {counts.exam}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">পরীক্ষা</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'exam' ? 'text-white/80' : 'text-indigo-600'
+                }`}
+              >
+                নোটিশ
+              </span>
             </button>
 
+            {/* ৬. স্কুল ছুটি */}
             <button
               type="button"
               onClick={() => setSelectedCategory('holiday')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`flex flex-col items-center justify-center px-3 py-2 rounded-2xl border text-center transition-all duration-150 shrink-0 cursor-pointer min-w-[72px] sm:min-w-[78px] h-[68px] sm:h-[72px] active:scale-95 shadow-2xs ${
                 selectedCategory === 'holiday'
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                  ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                  : 'bg-emerald-50/90 text-emerald-800 hover:bg-emerald-100 border-emerald-200'
               }`}
             >
-              <span>🏖️ স্কুল ছুটি</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-200/60 text-emerald-900">{counts.holiday}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs">🏖️</span>
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === 'holiday' ? 'bg-white/25 text-white' : 'bg-emerald-200/70 text-emerald-900'
+                  }`}
+                >
+                  {counts.holiday}
+                </span>
+              </div>
+              <span className="text-xs font-black tracking-tight leading-tight block">স্কুল</span>
+              <span
+                className={`text-[10px] font-bold leading-tight block ${
+                  selectedCategory === 'holiday' ? 'text-white/80' : 'text-emerald-700'
+                }`}
+              >
+                ছুটি
+              </span>
             </button>
           </div>
         </div>
@@ -714,42 +816,31 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    {notice.actionLink && (
-                      <a
-                        href={notice.actionLink}
-                        className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition"
-                      >
-                        <span>{notice.actionTextBn || 'প্রবেশ করুন'}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-
-                    {isAdmin && (
-                      <div className="flex items-center gap-1">
-                        {onEditNotice && (
-                          <button
-                            type="button"
-                            onClick={() => onEditNotice(notice)}
-                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer transition-colors"
-                            title="নোটিশ সম্পাদনা করুন"
-                          >
-                            এডিট
-                          </button>
-                        )}
-                        {onDeleteNotice && (
-                          <button
-                            type="button"
-                            onClick={() => onDeleteNotice(notice.id)}
-                            className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold cursor-pointer transition-colors"
-                            title="নোটিশ মুছে ফেলুন"
-                          >
-                            মুছুন
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  {/* Admin controls only (Edit / Delete) */}
+                  {isAdmin && (
+                    <div className="flex items-center gap-1">
+                      {onEditNotice && (
+                        <button
+                          type="button"
+                          onClick={() => onEditNotice(notice)}
+                          className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer transition-colors"
+                          title="নোটিশ সম্পাদনা করুন"
+                        >
+                          এডিট
+                        </button>
+                      )}
+                      {onDeleteNotice && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteNotice(notice.id)}
+                          className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold cursor-pointer transition-colors"
+                          title="নোটিশ মুছে ফেলুন"
+                        >
+                          মুছুন
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -8,8 +8,6 @@ import {
   UserRole,
   FacebookGalleryItem,
   FcmNotification,
-  AcademicCalendarEvent,
-  AcademicEventCategory,
   Achievement,
   TeacherMember,
   CommitteeDirector,
@@ -67,25 +65,14 @@ import {
   Palette,
   Megaphone,
 } from 'lucide-react';
-import {
-  getStoredAcademicEvents,
-  saveAcademicEvents,
-  ACADEMIC_EVENTS_UPDATED_EVENT,
-  ACADEMIC_EVENTS_STORAGE_KEY,
-} from '../utils/calendarStorage';
 import { EditSchoolProfileModal } from './EditSchoolProfileModal';
 import { GlobalDashboardSearch } from './GlobalDashboardSearch';
 import { NoticeBoard } from './NoticeBoard';
-import { ClassRoutineModule } from './ClassRoutineModule';
 
 // Modular Dashboard Subcomponents & Modals
 import { SuperAdminAccessPanel } from './dashboard/SuperAdminAccessPanel';
 import { MediaManagerDrawer } from './dashboard/MediaManagerDrawer';
 import { PhotoLightboxModal } from './dashboard/PhotoLightboxModal';
-import { PrintableAcademicCalendarDocument } from './dashboard/PrintableAcademicCalendarDocument';
-import { AcademicCalendarPrintModal } from './dashboard/AcademicCalendarPrintModal';
-import { AddAcademicEventModal } from './dashboard/AddAcademicEventModal';
-import { AcademicEventDetailModal } from './dashboard/AcademicEventDetailModal';
 import { AddAchievementModal } from './dashboard/AddAchievementModal';
 import { AchievementDetailModal } from './dashboard/AchievementDetailModal';
 import { BroadcastFcmModal } from './dashboard/BroadcastFcmModal';
@@ -95,7 +82,6 @@ import { EditDirectorModal } from './dashboard/EditDirectorModal';
 import { StudentInspectModal } from './dashboard/StudentInspectModal';
 import { AddEditNoticeModal } from './dashboard/AddEditNoticeModal';
 import { BoardOfDirectorsSection } from './dashboard/BoardOfDirectorsSection';
-import { AcademicCalendarSection } from './dashboard/AcademicCalendarSection';
 import { AchievementsSection } from './dashboard/AchievementsSection';
 import { TeachersDirectorySection } from './dashboard/TeachersDirectorySection';
 import { FacebookGallerySection } from './dashboard/FacebookGallerySection';
@@ -170,106 +156,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     return `${day} ${month} ${year}`;
   };
 
-  // Academic Calendar States
-  const [academicEvents, setAcademicEvents] = useState<AcademicCalendarEvent[]>(() =>
-    getStoredAcademicEvents()
-  );
 
-  useEffect(() => {
-    const handleEventsSync = (e: any) => {
-      const updated = e.detail?.events || getStoredAcademicEvents();
-      setAcademicEvents(updated);
-    };
-    window.addEventListener(ACADEMIC_EVENTS_UPDATED_EVENT, handleEventsSync);
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === ACADEMIC_EVENTS_STORAGE_KEY && e.newValue) {
-        try {
-          setAcademicEvents(JSON.parse(e.newValue));
-        } catch {}
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener(ACADEMIC_EVENTS_UPDATED_EVENT, handleEventsSync);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
-  const [remindedEventIds, setRemindedEventIds] = useState<Record<string, boolean>>({});
-  const [showAddEventModal, setShowAddEventModal] = useState(false);
-  const [selectedDetailEvent, setSelectedDetailEvent] = useState<AcademicCalendarEvent | null>(null);
-  const [reminderToastMessage, setReminderToastMessage] = useState<string | null>(null);
-  const [showPrintPreview, setShowPrintPreview] = useState(false);
-  const [printScope, setPrintScope] = useState<'all' | 'filtered'>('all');
-
-  const handlePrintCalendar = (scope: 'all' | 'filtered' = 'all') => {
-    setPrintScope(scope);
-    setTimeout(() => {
-      window.print();
-    }, 120);
-  };
-
-  const handleDownloadPdf = (scope: 'all' | 'filtered' = 'all') => {
-    setPrintScope(scope);
-    const originalTitle = document.title;
-    const dateStr = new Date().toISOString().slice(0, 10);
-    document.title = `Ananda-Pathshala-Academic-Calendar-2026-2027-${dateStr}`;
-
-    setReminderToastMessage(
-      "ব্রাউজার প্রিন্ট ডায়ালগ চালু হচ্ছে... 'Destination' অপশন থেকে 'Save as PDF' নির্বাচন করে সেভ করুন।"
-    );
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1500);
-    }, 150);
-  };
-
-  const toggleEventReminder = (event: AcademicCalendarEvent) => {
-    const isAlreadyReminded = !!remindedEventIds[event.id];
-    setRemindedEventIds((prev) => ({
-      ...prev,
-      [event.id]: !isAlreadyReminded,
-    }));
-    const message = !isAlreadyReminded
-      ? `"${event.titleBn}" এর জন্য রিমাইন্ডার সক্রিয় করা হয়েছে। আপনাকে সময়মতো অবহিত করা হবে।`
-      : `"${event.titleBn}" এর রিমাইন্ডার বন্ধ করা হয়েছে।`;
-    setReminderToastMessage(message);
-    setTimeout(() => {
-      setReminderToastMessage(null);
-    }, 4500);
-  };
-
-  const handleAddEventSubmit = (newEvent: AcademicCalendarEvent) => {
-    const updated = [newEvent, ...academicEvents];
-    saveAcademicEvents(updated);
-    setAcademicEvents(updated);
-    setShowAddEventModal(false);
-    setReminderToastMessage(`"${newEvent.titleBn}" একাডেমিক ক্যালেন্ডারে যুক্ত করা হয়েছে!`);
-    setTimeout(() => setReminderToastMessage(null), 4500);
-  };
-
-  const createGoogleCalendarLink = (event: AcademicCalendarEvent) => {
-    const title = encodeURIComponent(`${event.titleBn} - আনন্দ পাঠশালা`);
-    const details = encodeURIComponent(
-      `${event.descriptionBn}\n\nধরন: ${
-        event.category === 'holiday'
-          ? 'স্কুল ছুটি'
-          : event.category === 'exam'
-          ? 'পরীক্ষা ও মূল্যায়ন'
-          : 'অভিভাবক সমাবেশ'
-      }\nপ্রযোজ্য শ্রেণি: ${event.targetClassesBn}\nসময়: ${event.timeBn || 'নির্ধারিত সময়ে'}\nস্থান: ${
-        event.venueBn
-      }`
-    );
-    const location = encodeURIComponent(event.venueBn || 'আনন্দ পাঠশালা, কোর্টপাড়া, কুষ্টিয়া');
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
-  };
-
-  const holidayCount = academicEvents.filter((e) => e.category === 'holiday').length;
-  const examCount = academicEvents.filter((e) => e.category === 'exam').length;
-  const meetingCount = academicEvents.filter((e) => e.category === 'meeting').length;
 
   // Super Admin & Director Access Permissions State
   const [directorPermissions, setDirectorPermissions] = useState<DirectorAccessPermission[]>(() =>
@@ -1078,9 +965,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           {/* Quick Account Info & Settings */}
           <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-xs shrink-0 space-y-3">
             <div className="flex items-center justify-between gap-2.5">
-              <span className="font-bold text-white/90">
-                {isSuperAdmin ? 'সিস্টেম রোল ভিউয়ার:' : 'লগইনকৃত অ্যাকাউন্ট:'}
-              </span>
+              <span className="font-bold text-white/90">লগইনকৃত অ্যাকাউন্ট:</span>
               <div className="flex items-center gap-1.5">
                 {isPrincipal && (
                   <button
@@ -1096,17 +981,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 {isPrincipal && (
                   <button
                     type="button"
-                    onClick={() => openEditProfileModal('theme')}
-                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg flex items-center gap-1 transition-colors border border-white/30 cursor-pointer shadow-2xs"
-                    title="স্কুলের ব্র্যান্ড ও থিম কালার সেটিংস"
-                  >
-                    <Palette className="w-3.5 h-3.5 text-pink-300" />
-                    <span>স্কুল থিম</span>
-                  </button>
-                )}
-                {isPrincipal && (
-                  <button
-                    type="button"
                     onClick={() => setShowMediaManager(!showMediaManager)}
                     className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                   >
@@ -1116,65 +990,34 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 )}
               </div>
             </div>
-            {isSuperAdmin ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                <button
-                  onClick={() => onSelectRole('super_admin')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-bold transition-all cursor-pointer bg-amber-400 text-slate-950 shadow-xs"
-                >
-                  👑 সুপার অ্যাডমিন
-                </button>
-                <button
-                  onClick={() => onSelectRole('director')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
-                >
-                  🏛️ পরিচালক ভিউ
-                </button>
-                <button
-                  onClick={() => onSelectRole('principal')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
-                >
-                  🎓 প্রিন্সিপাল ভিউ
-                </button>
-                <button
-                  onClick={() => onSelectRole('teacher')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
-                >
-                  👩‍🏫 শিক্ষক ভিউ
-                </button>
-                <button
-                  onClick={() => onSelectRole('parent')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
-                >
-                  👨‍👧 অভিভাবক ভিউ
-                </button>
-                <button
-                  onClick={() => onSelectRole('gate_security')}
-                  className="px-3 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
-                >
-                  🛡️ গেট সিকিউরিটি
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-2.5 border border-white/15">
-                {loggedInAccount?.avatarUrl && (
-                  <img
-                    src={loggedInAccount.avatarUrl}
-                    alt={loggedInAccount.nameBn}
-                    referrerPolicy="no-referrer"
-                    className="w-10 h-10 rounded-xl object-cover border border-amber-300 shrink-0 bg-white"
-                  />
-                )}
-                <div className="min-w-0">
-                  <div className="font-black text-white text-xs sm:text-sm truncate">
-                    {loggedInAccount?.nameBn || 'সম্মানিত ব্যবহারকারী'}
-                  </div>
-                  <div className="text-[11px] text-amber-200 font-semibold truncate">
-                    {loggedInAccount?.roleTitleBn || 'আনন্দ পাঠশালা পোর্টাল'}
-                  </div>
+            
+            <div className="flex items-center gap-3 bg-white/10 rounded-xl p-2.5 border border-white/15">
+              {loggedInAccount?.avatarUrl ? (
+                <img
+                  src={loggedInAccount.avatarUrl}
+                  alt={loggedInAccount.nameBn}
+                  referrerPolicy="no-referrer"
+                  className="w-10 h-10 rounded-xl object-cover border border-amber-300 shrink-0 bg-white"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-black">
+                  👑
+                </div>
+              )}
+              <div className="min-w-0">
+                <div className="font-black text-white text-xs sm:text-sm truncate flex items-center gap-1.5">
+                  <span>{loggedInAccount?.nameBn || (isSuperAdmin ? 'মোস্তফা আল মামুন' : 'সম্মানিত ব্যবহারকারী')}</span>
+                  {isSuperAdmin && (
+                    <span className="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[9px] uppercase">
+                      সুপার অ্যাডমিন
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-amber-200 font-semibold truncate">
+                  {loggedInAccount?.roleTitleBn || (isSuperAdmin ? 'পরিচালক ও সদস্য সচিব (Secretary)' : 'আনন্দ পাঠশালা পোর্টাল')}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -1377,12 +1220,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         onOpenEditTeacher={openEditTeacherModal}
       />
 
-      {/* Class-wise Routine & Timetable Manager Section */}
-      <div id="class-routine-section">
-        <ClassRoutineModule
-          currentRole={currentRole}
-        />
-      </div>
 
       {/* Dedicated Institution Governing Body & Board of Directors */}
       <BoardOfDirectorsSection
@@ -1406,14 +1243,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       />
 
       {/* Toast Notification Alert for Reminders / Status Updates */}
-      {(reminderToastMessage || achievementToast) && (
+      {achievementToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-500/40 animate-fade-in text-xs max-w-md print:hidden">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <p className="flex-1">{reminderToastMessage || achievementToast}</p>
+          <p className="flex-1">{achievementToast}</p>
           <button
             type="button"
             onClick={() => {
-              setReminderToastMessage(null);
               setAchievementToast(null);
             }}
             className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
@@ -1483,22 +1319,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         />
       </section>
 
-      {/* Academic Calendar Section */}
-      <AcademicCalendarSection
-        academicEvents={academicEvents}
-        currentRole={currentRole}
-        onNavigateTab={onNavigateTab}
-        onOpenAddEvent={() => setShowAddEventModal(true)}
-        onOpenPrintPreview={() => setShowPrintPreview(true)}
-        onSelectEventDetail={(e) => setSelectedDetailEvent(e)}
-        onPrint={handlePrintCalendar}
-        onDownloadPdf={handleDownloadPdf}
-        createGoogleCalendarLink={createGoogleCalendarLink}
-        logoUrl={logoUrl}
-        currentDateBn={getBengaliCurrentDate()}
-        printScope={printScope}
-        onToastMessage={(msg) => setReminderToastMessage(msg)}
-      />
 
       {/* Achievements & Milestones Showcase Section */}
       <AchievementsSection

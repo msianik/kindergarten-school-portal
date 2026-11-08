@@ -36,14 +36,19 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
   if (!isSuperAdmin) return null;
 
   const moduleLabels: { id: string; label: string }[] = [
-    { id: 'overview', label: 'ড্যাশবোর্ড' },
+    { id: 'overview', label: 'হোম' },
     { id: 'students', label: 'শিক্ষার্থী' },
+    { id: 'idcards', label: 'আইডি কার্ড' },
+    { id: 'routine', label: 'রুটিন' },
+    { id: 'calendar', label: 'ক্যালেন্ডার' },
     { id: 'pickup', label: 'গেট-পাস' },
     { id: 'diary', label: 'ডায়েরি' },
+    { id: 'messages', label: 'চ্যাট' },
     { id: 'skills', label: 'স্কিল কার্ড' },
     { id: 'attendance', label: 'হাজিরা' },
     { id: 'fees', label: 'বেতন/ফি' },
     { id: 'workspace', label: 'ড্রাইভ' },
+    { id: 'inventory', label: 'অ্যাসেট' },
   ];
 
   return (
@@ -246,7 +251,7 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
                     {/* Allowed View Modules Strip */}
                     <div className="space-y-1 pt-1">
                       <span className="text-[10px] font-bold text-slate-500 block">
-                        মডিউল ভিউ অ্যাক্সেস ({perm.allowedModules.length}/৮টি সক্রিয়):
+                        মডিউল ভিউ অ্যাক্সেস ({perm.allowedModules.length}/{moduleLabels.length}টি সক্রিয়):
                       </span>
                       <div className="flex flex-wrap gap-1">
                         {moduleLabels.map((mod) => {
