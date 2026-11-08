@@ -14,8 +14,6 @@ import {
   markStudentMessagesAsRead,
   createDirectMessageFcmPayload,
   MESSAGE_CATEGORIES_META,
-  QUICK_PARENT_TEMPLATES,
-  QUICK_TEACHER_TEMPLATES,
   DIRECT_CHAT_STORAGE_EVENT,
 } from '../utils/directChatLogic';
 import {
@@ -39,7 +37,6 @@ import {
   Phone,
   Paperclip,
   Image as ImageIcon,
-  Sparkles,
   Users,
   ChevronLeft,
   X,
@@ -274,13 +271,6 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
       : `${activeStudent.nameBn}-এর অভিভাবক`;
     setToastBanner(`✓ ${targetLabel}-এর কাছে বার্তা সফলভাবে পৌঁছে দেওয়া হয়েছে!`);
     setTimeout(() => setToastBanner(null), 4000);
-  };
-
-  // Quick template selection
-  const handleApplyTemplate = (tplText: string, tplCategory: MessageCategory) => {
-    setInputText(tplText);
-    setSelectedCategory(tplCategory);
-    textareaRef.current?.focus();
   };
 
   // Handle image upload
@@ -660,25 +650,6 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
                 );
               })
             )}
-          </div>
-
-          {/* Quick Suggestions Chips Strip */}
-          <div className="px-3 py-2 bg-slate-50 border-t border-slate-200/80 overflow-x-auto flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap flex items-center gap-1 mr-1">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              কুইক টেমপ্লেট:
-            </span>
-            {(isParent ? QUICK_PARENT_TEMPLATES : QUICK_TEACHER_TEMPLATES).map((tpl, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleApplyTemplate(tpl.text, tpl.category)}
-                className="px-2.5 py-1 bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-900 border border-slate-200 hover:border-teal-300 rounded-lg text-[10.5px] font-medium whitespace-nowrap transition cursor-pointer shrink-0 shadow-2xs"
-                title="ক্লিক করে মেসেজ বক্সে নিন"
-              >
-                {tpl.text.slice(0, 32)}...
-              </button>
-            ))}
           </div>
 
           {/* Message Input & Action Toolbar (Fixed at bottom of chat card) */}
