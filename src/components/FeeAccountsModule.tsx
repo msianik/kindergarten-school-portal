@@ -24,6 +24,7 @@ import {
 } from '../utils/pdfReceiptGenerator';
 import { ChildFeeHistoryBarChart } from './ChildFeeHistoryBarChart';
 import { CurrentMonthCashFlowBarChart } from './CurrentMonthCashFlowBarChart';
+import { ThreePartMoneyReceiptModal } from './ThreePartMoneyReceiptModal';
 import {
   CreditCard,
   CheckCircle2,
@@ -77,6 +78,7 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
   const [pinCode, setPinCode] = useState('•••••');
   const [generatedTrxId, setGeneratedTrxId] = useState('');
   const [receiptInvoice, setReceiptInvoice] = useState<FeeInvoice | null>(null);
+  const [threePartReceiptInvoice, setThreePartReceiptInvoice] = useState<FeeInvoice | null>(null);
 
   // Admin Payment Confirmation & Receipt Generation Modal State
   const [adminConfirmInvoice, setAdminConfirmInvoice] = useState<FeeInvoice | null>(null);
@@ -1298,6 +1300,15 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                             <Printer className="w-3.5 h-3.5 text-emerald-400" />
                             <span>রসিদ দেখুন</span>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setThreePartReceiptInvoice(inv)}
+                            className="px-3 py-2 text-xs font-black text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            title="অভিভাবক কপি, অফিস কপি ও ব্যাংক কপিসহ ৩-পার্ট মানি রিসিট প্রিন্ট করুন"
+                          >
+                            <Receipt className="w-3.5 h-3.5 text-slate-950" />
+                            <span>৩-পার্ট ভাউচার</span>
+                          </button>
                         </>
                       ) : (
                         <button
@@ -2010,6 +2021,15 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                             <Printer className="w-3.5 h-3.5 text-emerald-400" />
                             <span>রসিদ প্রিভিউ</span>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setThreePartReceiptInvoice(inv)}
+                            className="px-3 py-2 text-xs font-black text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            title="৩-পার্ট অফিসিয়াল ভাউচার প্রিন্ট করুন"
+                          >
+                            <Receipt className="w-3.5 h-3.5 text-slate-950" />
+                            <span>৩-পার্ট ভাউচার</span>
+                          </button>
                         </>
                       ) : (
                         <>
@@ -2677,6 +2697,18 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => {
+                        setThreePartReceiptInvoice(receiptInvoice);
+                        setReceiptInvoice(null);
+                      }}
+                      className="py-2.5 px-3.5 text-xs font-black text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition"
+                      title="৩-পার্ট অফিসিয়াল মানি রিসিট ও ক্যাশ ভাউচার প্রিন্ট করুন"
+                    >
+                      <Receipt className="w-4 h-4 text-slate-950" />
+                      <span>৩-পার্ট ভাউচার</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => window.print()}
                       className="py-2.5 px-3.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
                     >
@@ -3123,6 +3155,21 @@ export const FeeAccountsModule: React.FC<FeeAccountsModuleProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================
+          6. 3-PART OFFICIAL MONEY RECEIPT & CASH VOUCHER MODAL
+         ======================================================================== */}
+      {threePartReceiptInvoice && (
+        <ThreePartMoneyReceiptModal
+          isOpen={Boolean(threePartReceiptInvoice)}
+          invoice={threePartReceiptInvoice}
+          student={students.find((s) => s.id === threePartReceiptInvoice.studentId)}
+          feeConfig={getStudentFeeConfig(
+            students.find((s) => s.id === threePartReceiptInvoice.studentId) || students[0]
+          )}
+          onClose={() => setThreePartReceiptInvoice(null)}
+        />
       )}
     </div>
   );

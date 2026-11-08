@@ -196,16 +196,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const [achievementToast, setAchievementToast] = useState<string | null>(null);
 
-  const handleToggleDirectorAccess = (directorId: string) => {
+  const handleToggleDirectorViewAll = (directorId: string) => {
     const updated = directorPermissions.map((perm) => {
       if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
       const willEnable = !perm.viewAllModules;
       return {
         ...perm,
         viewAllModules: willEnable,
-        allowedModules: willEnable ? [...ALL_PORTAL_MODULE_IDS] : [],
+        allowedModules: willEnable ? [...ALL_PORTAL_MODULE_IDS] : ['overview'],
         lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
-        lastUpdatedAtBn: willEnable ? 'ভিউ অ্যাক্সেস চালু' : 'অ্যাক্সেস বন্ধ',
+        lastUpdatedAtBn: willEnable ? 'সকল ভিউ সক্রিয়' : 'কাস্টম ভিউ মোড',
       };
     });
     setDirectorPermissions(updated);
@@ -214,10 +214,79 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     if (targetDir) {
       setAchievementToast(
         targetDir.viewAllModules
-          ? `✅ পরিচালক "${targetDir.nameBn}"-এর ভিউ ও অ্যাক্সেস চালু করা হয়েছে!`
-          : `🔒 পরিচালক "${targetDir.nameBn}"-এর ভিউ ও অ্যাক্সেস বন্ধ করা হয়েছে।`
+          ? `👁️ পরিচালক "${targetDir.nameBn}"-এর সকল ভিউ চালু করা হয়েছে!`
+          : `🔒 পরিচালক "${targetDir.nameBn}"-এর সব ভিউ বন্ধ করে কাস্টম করা হয়েছে।`
       );
-      setTimeout(() => setAchievementToast(null), 3500);
+      setTimeout(() => setAchievementToast(null), 3000);
+    }
+  };
+
+  const handleToggleDirectorEditAccess = (directorId: string) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      const isFull = Boolean(
+        perm.canEditSchoolAndBoard &&
+          perm.canManageNoticesAndEvents &&
+          perm.canManageStudentsAndAdmissions &&
+          perm.canManageFeesAndAccounts &&
+          perm.canApproveGatePassAndDiary
+      );
+      const willEnable = !isFull;
+      return {
+        ...perm,
+        canEditSchoolAndBoard: willEnable,
+        canManageNoticesAndEvents: willEnable,
+        canManageStudentsAndAdmissions: willEnable,
+        canManageFeesAndAccounts: willEnable,
+        canApproveGatePassAndDiary: willEnable,
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+        lastUpdatedAtBn: willEnable ? 'এডিট অ্যাক্সেস চালু' : 'এডিট অ্যাক্সেস বন্ধ',
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    const targetDir = updated.find((d) => d.directorId === directorId);
+    if (targetDir) {
+      const isNowFull = targetDir.canEditSchoolAndBoard;
+      setAchievementToast(
+        isNowFull
+          ? `✏️ পরিচালক "${targetDir.nameBn}"-কে এডিট ও পরিচালনা অ্যাক্সেস দেওয়া হয়েছে!`
+          : `👁️ পরিচালক "${targetDir.nameBn}"-এর এডিট অ্যাক্সেস বন্ধ (শুধু ভিউ) করা হয়েছে।`
+      );
+      setTimeout(() => setAchievementToast(null), 3000);
+    }
+  };
+
+  const handleToggleDirectorModule = (directorId: string, moduleId: string) => {
+    const updated = directorPermissions.map((perm) => {
+      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
+      const baseModules = perm.viewAllModules
+        ? [...ALL_PORTAL_MODULE_IDS]
+        : perm.allowedModules || ['overview'];
+      const exists = baseModules.includes(moduleId);
+      const nextModules = exists
+        ? baseModules.filter((m) => m !== moduleId)
+        : Array.from(new Set([...baseModules, moduleId]));
+      const allSelected = ALL_PORTAL_MODULE_IDS.every((id) => nextModules.includes(id));
+      return {
+        ...perm,
+        viewAllModules: allSelected,
+        allowedModules: nextModules,
+        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন · সদস্য সচিব)',
+        lastUpdatedAtBn: 'মডিউল ভিউ আপডেটকৃত',
+      };
+    });
+    setDirectorPermissions(updated);
+    saveDirectorPermissions(updated);
+    const targetDir = updated.find((d) => d.directorId === directorId);
+    if (targetDir) {
+      const isNowAllowed = targetDir.viewAllModules || targetDir.allowedModules.includes(moduleId);
+      setAchievementToast(
+        isNowAllowed
+          ? `✅ পরিচালক "${targetDir.nameBn}"-কে এই অপশন দেখার অনুমতি দেওয়া হয়েছে!`
+          : `🔒 পরিচালক "${targetDir.nameBn}"-এর এই অপশন দেখার অনুমতি বন্ধ করা হয়েছে।`
+      );
+      setTimeout(() => setAchievementToast(null), 2500);
     }
   };
 
@@ -305,26 +374,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     }
   };
 
-  const handleToggleDirectorModule = (directorId: string, moduleId: string) => {
-    const updated = directorPermissions.map((perm) => {
-      if (perm.directorId !== directorId || perm.isSuperAdmin) return perm;
-      const baseModules = perm.viewAllModules ? [...ALL_PORTAL_MODULE_IDS] : perm.allowedModules;
-      const exists = baseModules.includes(moduleId);
-      const nextModules = exists
-        ? baseModules.filter((m) => m !== moduleId)
-        : Array.from(new Set([...baseModules, moduleId]));
-      const allSelected = ALL_PORTAL_MODULE_IDS.every((id) => nextModules.includes(id));
-      return {
-        ...perm,
-        viewAllModules: allSelected,
-        allowedModules: nextModules,
-        lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন · সদস্য সচিব)',
-        lastUpdatedAtBn: `মডিউল সুইচ আপডেটকৃত`,
-      };
-    });
-    setDirectorPermissions(updated);
-    saveDirectorPermissions(updated);
-  };
+
 
   const handleResetDirectorPermissions = () => {
     setDirectorPermissions(INITIAL_DIRECTOR_PERMISSIONS);
@@ -1073,7 +1123,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <SuperAdminAccessPanel
         isSuperAdmin={isSuperAdmin}
         directorPermissions={directorPermissions}
-        onToggleDirectorAccess={handleToggleDirectorAccess}
+        onToggleViewAll={handleToggleDirectorViewAll}
+        onToggleEditAccess={handleToggleDirectorEditAccess}
+        onToggleModule={handleToggleDirectorModule}
         onSetAllAccess={handleSetAllDirectorsAccess}
         logoUrl={logoUrl}
       />
@@ -1365,6 +1417,29 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           onEditNotice={openEditNoticeModal}
           onDeleteNotice={handleDeleteNotice}
           onNavigateApply={() => onNavigateTab('public')}
+          onSendBroadcastNotification={(title, body) => {
+            const notif = {
+              id: `notif-broadcast-${Date.now()}`,
+              type: 'broadcast_announcement',
+              priority: 'high',
+              titleBn: title,
+              bodyBn: body,
+              targetRole: 'parent',
+              studentOrApplicantNameBn: 'সকল শিক্ষার্থী ও অভিভাবক',
+              className: 'HateKhori',
+              guardianNameBn: loggedInAccount?.nameBn || 'অধ্যক্ষ',
+              guardianPhone: '01914057512',
+              timestamp: 'এইমাত্র',
+              read: false,
+              actionTab: 'overview',
+              fcmMessageId: `projects/gen-lang-client-0036381817/messages/notice-${Date.now()}`,
+            };
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(
+                new CustomEvent('ananda-new-fcm-notification', { detail: { notification: notif } })
+              );
+            }
+          }}
         />
       </section>
 

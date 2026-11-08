@@ -32,7 +32,10 @@ import {
   Globe,
   RefreshCw,
   CheckCheck,
+  Megaphone,
 } from 'lucide-react';
+import { EmergencyNoticeBroadcastModal } from './EmergencyNoticeBroadcastModal';
+import { OfficialCircularPrintModal } from './OfficialCircularPrintModal';
 
 // =========================================================================
 // 1. TOP SCROLLING ANNOUNCEMENT TICKER COMPONENT
@@ -176,6 +179,7 @@ interface NoticeBoardProps {
   onAddNotice?: () => void;
   onEditNotice?: (notice: SchoolNotice) => void;
   onDeleteNotice?: (noticeId: string) => void;
+  onSendBroadcastNotification?: (title: string, body: string) => void;
 }
 
 export const NoticeBoard: React.FC<NoticeBoardProps> = ({
@@ -186,12 +190,15 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
   onAddNotice,
   onEditNotice,
   onDeleteNotice,
+  onSendBroadcastNotification,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<SchoolNoticeCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalNotice, setActiveModalNotice] = useState<SchoolNotice | null>(null);
   const [sharingNotice, setSharingNotice] = useState<SchoolNotice | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showEmergencyBroadcastModal, setShowEmergencyBroadcastModal] = useState<boolean>(false);
+  const [printCircularNotice, setPrintCircularNotice] = useState<SchoolNotice | null>(null);
 
   // Social Media Connect: Facebook Page URL & automated link generator state
   const [facebookPageUrl, setFacebookPageUrl] = useState<string>(() => {
@@ -273,6 +280,26 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
     } catch {}
     setToastMessage('🔄 অফিসিয়াল ফেসবুক পেজ URL ডিফল্টে রিসেট করা হয়েছে!');
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleBroadcastNotice = (newNoticeData: Omit<SchoolNotice, 'id'>, targetAudience: string) => {
+    const newNotice: SchoolNotice = {
+      ...newNoticeData,
+      id: `notice-${Date.now()}`,
+    };
+    try {
+      const stored = localStorage.getItem('ananda_school_notices_v1');
+      const currentList: SchoolNotice[] = stored ? JSON.parse(stored) : notices;
+      const updatedList = [newNotice, ...currentList];
+      localStorage.setItem('ananda_school_notices_v1', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('ananda-notices-updated', { detail: { notices: updatedList } }));
+    } catch {}
+
+    if (onSendBroadcastNotification) {
+      onSendBroadcastNotification(newNotice.titleBn, newNotice.contentBn);
+    }
+    setToastMessage('🚨 জরুরি নোটিশ সফলভাবে ব্রডকাস্ট হয়েছে!');
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   // Category Counts
@@ -456,16 +483,27 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
         </div>
 
         {/* Right Header Controls (Admin Only - No Redundant Public Apply Buttons) */}
-        {isAdmin && onAddNotice && (
+        {isAdmin && (
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
             <button
               type="button"
-              onClick={onAddNotice}
-              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setShowEmergencyBroadcastModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="সকল অভিভাবক ও শিক্ষকের মোবাইলে জরুরি নোটিশ ও তাৎক্ষণিক পুশ অ্যালার্ট পাঠান"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ নতুন নোটিশ যুক্ত করুন</span>
+              <Megaphone className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>জরুরি পুশ ব্রডকাস্ট</span>
             </button>
+            {onAddNotice && (
+              <button
+                type="button"
+                onClick={onAddNotice}
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>+ নতুন নোটিশ যুক্ত করুন</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -813,6 +851,20 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
                     >
                       <Copy className="w-3 h-3 text-slate-500" />
                       <span>কপি</span>
+                    </button>
+
+                    {/* Official Circular Print Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPrintCircularNotice(notice);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200 transition cursor-pointer"
+                      title="অফিসিয়াল লেটারহেড সংবলিত সার্কুলার প্রিন্ট বা PDF ডাউনলোড করুন"
+                    >
+                      <Printer className="w-3 h-3 text-emerald-600" />
+                      <span>সার্কুলার</span>
                     </button>
                   </div>
 
@@ -1223,6 +1275,19 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
           </div>
         </div>
       )}
+      {/* Emergency Notice Broadcast Modal */}
+      <EmergencyNoticeBroadcastModal
+        isOpen={showEmergencyBroadcastModal}
+        onClose={() => setShowEmergencyBroadcastModal(false)}
+        onBroadcast={handleBroadcastNotice}
+      />
+
+      {/* Official Circular Print-ready Modal */}
+      <OfficialCircularPrintModal
+        isOpen={Boolean(printCircularNotice)}
+        onClose={() => setPrintCircularNotice(null)}
+        notice={printCircularNotice}
+      />
     </section>
   );
 };
