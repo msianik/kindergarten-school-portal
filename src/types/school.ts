@@ -396,6 +396,13 @@ export interface AdmissionApplication {
   addressBn: string;
   submittedAt: string;
   status: 'pending' | 'interview_scheduled' | 'admitted';
+  fatherNameBn?: string;
+  motherNameBn?: string;
+  guardianRelationBn?: string;
+  bloodGroup?: string;
+  sessionYear?: string;
+  previousSchoolBn?: string;
+  specialNotesBn?: string;
 }
 
 export type FcmNotificationType =

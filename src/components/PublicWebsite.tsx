@@ -233,12 +233,19 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
   const [applicantNameBn, setApplicantNameBn] = useState('');
   const [applicantNameEn, setApplicantNameEn] = useState('');
-  const [dob, setDob] = useState('2022-05-15');
-  const [gender] = useState<'male' | 'female'>('male');
+  const [dob, setDob] = useState('2023-01-01');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [applyingClass, setApplyingClass] = useState<SchoolClass>('HateKhori');
+  const [bloodGroup, setBloodGroup] = useState<string>('');
+  const [fatherNameBn, setFatherNameBn] = useState('');
+  const [motherNameBn, setMotherNameBn] = useState('');
   const [guardianNameBn, setGuardianNameBn] = useState('');
+  const [guardianRelationBn, setGuardianRelationBn] = useState('পিতা');
   const [guardianPhone, setGuardianPhone] = useState('');
+  const [guardianEmail, setGuardianEmail] = useState('');
   const [addressBn, setAddressBn] = useState('');
+  const [previousSchoolBn, setPreviousSchoolBn] = useState('');
+  const [specialNotesBn, setSpecialNotesBn] = useState('');
   const [submittedApp, setSubmittedApp] = useState<AdmissionApplication | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
@@ -266,23 +273,53 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
   const handleSubmitAdmission = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applicantNameBn.trim() || !guardianNameBn.trim() || !guardianPhone.trim()) {
-      setFormError('অনুগ্রহ করে শিশুর নাম, অভিভাবকের নাম ও মোবাইল নম্বর পূরণ করুন।');
+    if (!applicantNameBn.trim()) {
+      setFormError('অনুগ্রহ করে শিশুর পূর্ণ নাম (বাংলায়) লিখুন।');
+      return;
+    }
+    if (!fatherNameBn.trim()) {
+      setFormError('অনুগ্রহ করে শিশুর বাবার নাম লিখুন।');
+      return;
+    }
+    if (!motherNameBn.trim()) {
+      setFormError('অনুগ্রহ করে শিশুর মায়ের নাম লিখুন।');
+      return;
+    }
+    const finalGuardian = guardianNameBn.trim() || fatherNameBn.trim() || motherNameBn.trim();
+    if (!finalGuardian) {
+      setFormError('অনুগ্রহ করে অভিভাবকের নাম লিখুন।');
+      return;
+    }
+    if (!guardianPhone.trim()) {
+      setFormError('অনুগ্রহ করে অভিভাবকের সক্রিয় মোবাইল নম্বর লিখুন।');
+      return;
+    }
+    if (!addressBn.trim()) {
+      setFormError('অনুগ্রহ করে বর্তমান বাসস্থান/ঠিকানা লিখুন।');
       return;
     }
     setFormError(null);
 
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
     const newApp: AdmissionApplication = {
-      id: `adm-${Date.now()}`,
+      id: `AP-2027-${randomNum}`,
       applicantNameBn: applicantNameBn.trim(),
       applicantNameEn: applicantNameEn.trim() || applicantNameBn.trim(),
       dateOfBirth: dob,
       gender,
       applyingClass,
-      guardianNameBn: guardianNameBn.trim(),
+      fatherNameBn: fatherNameBn.trim(),
+      motherNameBn: motherNameBn.trim(),
+      guardianNameBn: finalGuardian,
+      guardianRelationBn: guardianRelationBn.trim() || 'পিতা',
       guardianPhone: guardianPhone.trim(),
-      addressBn: addressBn.trim() || 'গোশালা, কোর্টপাড়া, কুষ্টিয়া',
-      submittedAt: 'আজ, ৩১ অক্টোবর ২০২৬',
+      email: guardianEmail.trim() || undefined,
+      addressBn: addressBn.trim(),
+      bloodGroup: bloodGroup.trim() || undefined,
+      sessionYear: '২০২৭',
+      previousSchoolBn: previousSchoolBn.trim() || undefined,
+      specialNotesBn: specialNotesBn.trim() || undefined,
+      submittedAt: 'আজ, ০৮ নভেম্বর ২০২৬',
       status: 'pending',
     };
 
@@ -446,7 +483,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold border border-white/25">
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>ভর্তি চলছে: হাতেখড়ি থেকে ২য় শ্রেণি (২.৫+ বছর থেকে)</span>
+                  <span>২০২৭ শিক্ষাবর্ষে ভর্তি চলছে: হাতেখড়ি থেকে ২য় শ্রেণি (২.৫+ বছর থেকে)</span>
                 </div>
               </div>
 
@@ -1159,139 +1196,459 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       </section>
 
       {/* Online Admission Section */}
-      <section id="apply" className="scroll-mt-24 bg-gradient-to-br from-slate-900 to-emerald-950 text-white p-8 sm:p-12 rounded-3xl shadow-xl space-y-8">
-        <div className="max-w-2xl space-y-2">
-          <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-3 py-1 rounded-full text-xs font-semibold">
-            অনলাইন অ্যাডমিশন পোর্টাল ২০২৬ · আনন্দ পাঠশালা কুষ্টিয়া
+      <section id="apply" className="scroll-mt-24 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 text-slate-900 p-6 sm:p-10 lg:p-12 rounded-3xl shadow-xl border-2 border-emerald-100/90 space-y-8 relative overflow-hidden">
+        {/* Subtle Ambient Decorative Blooms */}
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-200/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <span>অনলাইন অ্যাডমিশন পোর্টাল ২০২৭ · আনন্দ পাঠশালা কুষ্টিয়া</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-            আপনার সন্তানের ভর্তি আবেদনপত্র জমা দিন
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            ২০২৭ শিক্ষাবর্ষে আপনার সন্তানের ভর্তি আবেদনপত্র জমা দিন
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300">
-            ঘরে বসেই আবেদন করুন। আবেদন জমা দেওয়ার ২৪ ঘণ্টার মধ্যে আমাদের কুষ্টিয়া ক্যাম্পাস থেকে ফোনে যোগাযোগ করা হবে।
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+            আনন্দময় ও শিশুবান্ধব শিক্ষায় আপনার সন্তানকে ভর্তি করতে ঘরে বসেই মাত্র ২ মিনিটে আবেদন ফরমটি পূরণ করুন। আবেদন যাচাই শেষে ২৪ ঘণ্টার মধ্যে আমাদের কুষ্টিয়া ক্যাম্পাস থেকে অভিভাবকের নম্বরে ফোনে যোগাযোগ করা হবে।
           </p>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> ২০২৭ শিক্ষাবর্ষে সীমিত আসন
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200/60 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" /> ২ মিনিটে সহজ আবেদন
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200/60 shadow-2xs">
+              <Phone className="w-3.5 h-3.5 text-cyan-600" /> ২৪ ঘণ্টার মধ্যে নিশ্চিতকরণ কল
+            </span>
+          </div>
         </div>
 
         {submittedApp ? (
-          <div className="bg-emerald-950/80 border border-emerald-500/60 p-6 rounded-2xl text-center space-y-3 max-w-xl mx-auto">
-            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <CheckCircle2 className="w-7 h-7" />
+          <div className="relative z-10 bg-white border-2 border-emerald-200 p-6 sm:p-8 rounded-3xl shadow-lg space-y-6 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">ভর্তি আবেদন সফলভাবে গৃহীত হয়েছে!</h3>
+                <p className="text-xs text-slate-500">আনন্দ পাঠশালা কুষ্টিয়া · শিক্ষাবর্ষ ২০২৭</p>
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-emerald-200">আবেদন সফলভাবে গৃহীত হয়েছে!</h3>
-            <p className="text-xs text-slate-300">
-              শিক্ষার্থী <span className="font-bold text-white">{submittedApp.applicantNameBn}</span>-এর আবেদন আইডি:
-              <span className="font-mono font-bold text-emerald-400 ml-1">{submittedApp.id}</span>
-            </p>
-            <p className="text-xs text-slate-400">
-              অভিভাবক ({submittedApp.guardianPhone}) নম্বরে কনফার্মেশন এসএমএস পাঠানো হয়েছে।
-            </p>
-            <button
-              onClick={() => setSubmittedApp(null)}
-              className="mt-2 px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-600 rounded-xl"
-            >
-              আরেকটি নতুন আবেদন করুন
-            </button>
+
+            <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <span className="text-slate-500 block text-[11px]">আবেদন ট্র্যাকিং আইডি:</span>
+                <span className="font-mono font-bold text-emerald-700 text-sm">{submittedApp.id}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[11px]">ভর্তি ইচ্ছুক শ্রেণি:</span>
+                <span className="font-bold text-slate-800">{submittedApp.applyingClass} (২০২৭)</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[11px]">শিক্ষার্থীর নাম:</span>
+                <span className="font-bold text-slate-900">
+                  {submittedApp.applicantNameBn} {submittedApp.applicantNameEn && `(${submittedApp.applicantNameEn})`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[11px]">পিতার নাম:</span>
+                <span className="font-semibold text-slate-800">{submittedApp.fatherNameBn || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[11px]">মাতার নাম:</span>
+                <span className="font-semibold text-slate-800">{submittedApp.motherNameBn || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[11px]">যোগাযোগ নম্বর:</span>
+                <span className="font-bold text-slate-900">{submittedApp.guardianPhone}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-slate-500">
+                ২৪ ঘণ্টার মধ্যে অভিভাবকের নম্বরে ফোনে যোগাযোগ করা হবে।
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" /> প্রিন্ট / সেভ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedApp(null);
+                    setApplicantNameBn('');
+                    setApplicantNameEn('');
+                    setFatherNameBn('');
+                    setMotherNameBn('');
+                    setGuardianNameBn('');
+                    setGuardianPhone('');
+                    setGuardianEmail('');
+                    setAddressBn('');
+                    setPreviousSchoolBn('');
+                    setSpecialNotesBn('');
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors cursor-pointer"
+                >
+                  আরেকটি নতুন আবেদন করুন
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmitAdmission} className="bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-white/20 space-y-4">
+          <form onSubmit={handleSubmitAdmission} className="relative z-10 space-y-6">
             {formError && (
-              <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-400 text-xs text-rose-100">
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 flex items-center gap-2 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                 {formError}
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">শিশুর পূর্ণ নাম (বাংলায়):</label>
-                <input
-                  type="text"
-                  required
-                  value={applicantNameBn}
-                  onChange={(e) => setApplicantNameBn(e.target.value)}
-                  placeholder="যেমন: অন্বেষা মজুমদার"
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                />
+
+            {/* কার্ড ১: শিক্ষার্থীর ব্যক্তিগত ও শ্রেণি তথ্য */}
+            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-emerald-100/90 shadow-2xs space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                  ১
+                </div>
+                <h3 className="font-bold text-sm text-slate-900">শিশুর ব্যক্তিগত ও শিক্ষাগত তথ্য</h3>
+                <span className="text-[11px] text-slate-400 font-normal ml-auto">(* চিহ্নিত ঘরগুলো পূরণ বাধ্যতামূলক)</span>
               </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">শিশুর নাম (ইংরেজিতে):</label>
-                <input
-                  type="text"
-                  value={applicantNameEn}
-                  onChange={(e) => setApplicantNameEn(e.target.value)}
-                  placeholder="e.g. Anwesha Mazumder"
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* শিশুর নাম বাংলায় */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    শিশুর পূর্ণ নাম (বাংলায়): <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={applicantNameBn}
+                    onChange={(e) => setApplicantNameBn(e.target.value)}
+                    placeholder="যেমন: অন্বেষা মজুমদার"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">জন্ম তারিখ:</label>
-                <input
-                  type="date"
-                  required
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                />
-              </div>
+                {/* শিশুর নাম ইংরেজিতে */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    শিশুর নাম (ইংরেজিতে): <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={applicantNameEn}
+                    onChange={(e) => setApplicantNameEn(e.target.value)}
+                    placeholder="e.g. Anwesha Mazumder"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">ভর্তি ইচ্ছুক শ্রেণি:</label>
-                <select
-                  value={applyingClass}
-                  onChange={(e) => setApplyingClass(e.target.value as SchoolClass)}
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                >
-                  {ALL_SCHOOL_CLASSES.map((cls, idx) => (
-                    <option key={cls.id} value={cls.id}>
-                      {idx + 1}. {cls.fullNameBn} ({cls.ageRangeBn})
-                    </option>
-                  ))}
-                </select>
-              </div>
+                {/* জন্ম তারিখ */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    জন্ম তারিখ: <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">পিতা / মাতার নাম:</label>
-                <input
-                  type="text"
-                  required
-                  value={guardianNameBn}
-                  onChange={(e) => setGuardianNameBn(e.target.value)}
-                  placeholder="যেমন: মো. রফিকুল ইসলাম"
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                />
-              </div>
+                {/* লিঙ্গ */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    লিঙ্গ: <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGender('male')}
+                      className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === 'male'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      👦 ছেলে
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGender('female')}
+                      className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === 'female'
+                          ? 'bg-pink-600 text-white border-pink-600 shadow-2xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      👧 মেয়ে
+                    </button>
+                  </div>
+                </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-200 block mb-1">অভিভাবকের মোবাইল নম্বর:</label>
-                <input
-                  type="text"
-                  required
-                  value={guardianPhone}
-                  onChange={(e) => setGuardianPhone(e.target.value)}
-                  placeholder="যেমন: ০১৯১৪-০৫৭৫১১"
-                  className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-                />
+                {/* ভর্তি ইচ্ছুক শ্রেণি */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    ভর্তি ইচ্ছুক শ্রেণি (২০২৭): <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={applyingClass}
+                    onChange={(e) => setApplyingClass(e.target.value as SchoolClass)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
+                  >
+                    {ALL_SCHOOL_CLASSES.map((cls, idx) => (
+                      <option key={cls.id} value={cls.id}>
+                        {idx + 1}. {cls.fullNameBn} ({cls.ageRangeBn})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* রক্তের গ্রুপ */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    রক্তের গ্রুপ: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                  </label>
+                  <select
+                    value={bloodGroup}
+                    onChange={(e) => setBloodGroup(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium cursor-pointer"
+                  >
+                    <option value="">নির্বাচন করুন (যদি জানা থাকে)</option>
+                    <option value="A+">A+ (এ পজিটিভ)</option>
+                    <option value="A-">A- (এ নেগেটিভ)</option>
+                    <option value="B+">B+ (বি পজিটিভ)</option>
+                    <option value="B-">B- (বি নেগেটিভ)</option>
+                    <option value="O+">O+ (ও পজিটিভ)</option>
+                    <option value="O-">O- (ও নেগেটিভ)</option>
+                    <option value="AB+">AB+ (এবি পজিটিভ)</option>
+                    <option value="AB-">AB- (এবি নেগেটিভ)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-slate-200 block mb-1">বর্তমান বাসস্থান ঠিকানা:</label>
-              <input
-                type="text"
-                value={addressBn}
-                onChange={(e) => setAddressBn(e.target.value)}
-                placeholder="যেমন: গোশালা / কোর্টপাড়া / মজমপুর, কুষ্টিয়া"
-                className="w-full px-3.5 py-2 text-xs bg-white text-slate-900 rounded-xl focus:outline-none"
-              />
+            {/* কার্ড ২: পিতা, মাতা ও অভিভাবকের তথ্য */}
+            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-emerald-100/90 shadow-2xs space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <div className="w-7 h-7 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">
+                  ২
+                </div>
+                <h3 className="font-bold text-sm text-slate-900">পিতামাতা ও অভিভাবকের বিবরণ</h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* শিশুর বাবার নাম */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    শিশুর বাবার নাম: <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={fatherNameBn}
+                    onChange={(e) => {
+                      setFatherNameBn(e.target.value);
+                      if (guardianRelationBn === 'পিতা' && !guardianNameBn) {
+                        setGuardianNameBn(e.target.value);
+                      }
+                    }}
+                    placeholder="যেমন: মো. রফিকুল ইসলাম"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* শিশুর মায়ের নাম */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    শিশুর মায়ের নাম: <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={motherNameBn}
+                    onChange={(e) => {
+                      setMotherNameBn(e.target.value);
+                      if (guardianRelationBn === 'মাতা' && !guardianNameBn) {
+                        setGuardianNameBn(e.target.value);
+                      }
+                    }}
+                    placeholder="যেমন: মোছা. নাসরিন সুলতানা"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* অভিভাবকের সাথে সম্পর্ক */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    অভিভাবকের সাথে সম্পর্ক: <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={guardianRelationBn}
+                    onChange={(e) => {
+                      const rel = e.target.value;
+                      setGuardianRelationBn(rel);
+                      if (rel === 'পিতা' && fatherNameBn) {
+                        setGuardianNameBn(fatherNameBn);
+                      } else if (rel === 'মাতা' && motherNameBn) {
+                        setGuardianNameBn(motherNameBn);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
+                  >
+                    <option value="পিতা">পিতা (Father)</option>
+                    <option value="মাতা">মাতা (Mother)</option>
+                    <option value="দাদা/দাদি">দাদা / দাদি</option>
+                    <option value="নানা/নানি">নানা / নানি</option>
+                    <option value="চাচা/মামা">চাচা / মামা</option>
+                    <option value="অন্যান্য অভিভাবক">অন্যান্য অভিভাবক</option>
+                  </select>
+                </div>
+
+                {/* অভিভাবকের নাম */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-700">
+                      অভিভাবকের নাম: <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex gap-1 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fatherNameBn) setGuardianNameBn(fatherNameBn);
+                          setGuardianRelationBn('পিতা');
+                        }}
+                        className="text-emerald-700 hover:underline font-semibold cursor-pointer"
+                      >
+                        [বাবার নাম]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (motherNameBn) setGuardianNameBn(motherNameBn);
+                          setGuardianRelationBn('মাতা');
+                        }}
+                        className="text-emerald-700 hover:underline font-semibold cursor-pointer"
+                      >
+                        [মায়ের নাম]
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={guardianNameBn}
+                    onChange={(e) => setGuardianNameBn(e.target.value)}
+                    placeholder="অভিভাবকের পুরো নাম"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* অভিভাবকের মোবাইল নম্বর */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    অভিভাবকের সক্রিয় মোবাইল নম্বর: <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={guardianPhone}
+                    onChange={(e) => setGuardianPhone(e.target.value)}
+                    placeholder="যেমন: ০১৭১২-৩৪৫৬৭৮"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* অভিভাবকের ইমেইল */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    ইমেইল অ্যাড্রেস: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={guardianEmail}
+                    onChange={(e) => setGuardianEmail(e.target.value)}
+                    placeholder="guardian@example.com"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            {/* কার্ড ৩: বাসস্থান ও অন্যান্য তথ্য */}
+            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-emerald-100/90 shadow-2xs space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <div className="w-7 h-7 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center text-xs font-bold">
+                  ৩
+                </div>
+                <h3 className="font-bold text-sm text-slate-900">বর্তমান বাসস্থান ও অতিরিক্ত বিবরণ</h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    বর্তমান বাসস্থান / সম্পূর্ণ ঠিকানা: <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={addressBn}
+                    onChange={(e) => setAddressBn(e.target.value)}
+                    placeholder="যেমন: বাসা নং ১২, রোড নং ৩, গোশালা / কোর্টপাড়া / মজমপুর, কুষ্টিয়া সদর"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    পূর্ববর্তী বিদ্যালয় / শিক্ষার অভিজ্ঞতা: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={previousSchoolBn}
+                    onChange={(e) => setPreviousSchoolBn(e.target.value)}
+                    placeholder="পূর্বে কোনো স্কুলে পড়ে থাকলে নাম ও শ্রেণি লিখুন"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    বিশেষ যত্ন বা স্বাস্থ্য সংক্রান্ত নোট: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={specialNotesBn}
+                    onChange={(e) => setSpecialNotesBn(e.target.value)}
+                    placeholder="যেমন: কোনো অ্যালার্জি বা বিশেষ যত্ন প্রয়োজন হলে লিখুন"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* সাবমিট বাটন বার */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 bg-emerald-50/70 p-4 rounded-2xl border border-emerald-100/90">
+              <div className="flex items-center gap-2 text-xs text-slate-600 font-medium text-center sm:text-left">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>আপনার প্রদানকৃত সকল তথ্য আনন্দ পাঠশালা কুষ্টিয়ায় সম্পূর্ণ সুরক্ষিত থাকবে।</span>
+              </div>
+
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-500 hover:to-rose-600 text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.99] text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-700/20 hover:shadow-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer border border-emerald-500"
               >
-                <Send className="w-4 h-4" />
-                আবেদনপত্র জমা দিন (Submit Application)
+                <Send className="w-4 h-4 text-emerald-100" />
+                <span>ভর্তি আবেদনপত্র জমা দিন (২০২৭ শিক্ষাবর্ষ)</span>
               </button>
             </div>
           </form>
