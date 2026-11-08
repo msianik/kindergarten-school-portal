@@ -1743,38 +1743,25 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </div>
 
-        {/* Footer Bottom Bar with Up Arrow Button */}
+        {/* Footer Bottom Bar */}
         <div className="pt-4 border-t border-emerald-100/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
           <p className="text-center sm:text-left">
             © ২০২৬ <span className="font-bold text-slate-700">আনন্দ পাঠশালা কুষ্টিয়া</span> · সর্বস্বত্ব সংরক্ষিত · শিশুর আনন্দময় আগামীর অঙ্গীকার
           </p>
-
-          <button
-            type="button"
-            onClick={handleScrollToTop}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-700 text-slate-700 hover:text-white border border-slate-200 hover:border-emerald-700 shadow-2xs font-bold transition-all duration-200 group cursor-pointer"
-            title="পেজের শুরুতে ফিরে যান"
-            aria-label="পেজের শুরুতে ফিরে যান"
-          >
-            <span>উপরে যান</span>
-            <div className="w-5 h-5 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/50 flex items-center justify-center transition-colors">
-              <ArrowUp className="w-3.5 h-3.5 text-emerald-700 group-hover:text-white group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </button>
         </div>
       </footer>
       </div>
 
-      {/* Floating Scroll-to-Top Button */}
+      {/* Floating Scroll-to-Top Button (Elevated above bottom nav on mobile) */}
       {showScrollTop && (
         <button
           type="button"
           onClick={handleScrollToTop}
-          className="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white shadow-xl shadow-emerald-900/20 border border-emerald-600/50 flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer"
+          className="fixed bottom-20 md:bottom-8 right-4 sm:right-6 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white shadow-xl shadow-emerald-950/25 border-2 border-white/70 flex items-center justify-center transition-all duration-300 hover:-translate-y-1 group cursor-pointer"
           title="পৃষ্ঠার শুরুতে যান"
           aria-label="পৃষ্ঠার শুরুতে যান"
         >
-          <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+          <ArrowUp className="w-5 h-5 sm:w-5 sm:h-5 group-hover:-translate-y-1 transition-transform" />
         </button>
       )}
 
