@@ -470,8 +470,8 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
         )}
       </div>
 
-      {/* Filter Tabs Bar (Category Pills) & Search */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      {/* Filter Tabs Bar (Category Pills) & Search - Side by Side on Right */}
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Category Buttons - Compact width, taller height, two-line text (Top on top, Bottom on bottom) */}
         <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth pb-1">
           <div className="flex items-center gap-2 w-max">
@@ -657,15 +657,15 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
           </div>
         </div>
 
-        {/* Search Bar - Sits cleanly without overlapping categories */}
-        <div className="relative w-full sm:w-64 lg:w-56 shrink-0">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        {/* Search Bar - Positioned Permanently on the Right Side */}
+        <div className="relative w-36 sm:w-52 md:w-60 shrink-0">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="নোটিশ খুঁজুন..."
-            className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all"
+            className="w-full pl-9 pr-7 py-2.5 sm:py-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs"
           />
           {searchQuery && (
             <button
