@@ -45,6 +45,8 @@ import {
   MessageSquareQuote,
   Building2,
   Briefcase,
+  ArrowUp,
+  Globe,
 } from 'lucide-react';
 import { PWAInstallButton } from './MobileAppShell';
 import { HomeCarousel } from './HomeCarousel';
@@ -239,6 +241,19 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [addressBn, setAddressBn] = useState('');
   const [submittedApp, setSubmittedApp] = useState<AdmissionApplication | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 250);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Filter out the Principal and Head Teacher from the faculty roster grid, as they are already prominently highlighted in the leadership section right above
   const generalFacultyList = teachersList.filter(
@@ -1243,42 +1258,127 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       </section>
 
       {/* Authentic Kushtia Campus Info & Contacts */}
-      <footer className="border-t border-slate-200 pt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-600">
-        <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-sm">আনন্দ পাঠশালা কুষ্টিয়া ক্যাম্পাস</h4>
-          <p className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>{schoolProfile.addressBn}</span>
-          </p>
+      <footer className="bg-gradient-to-b from-slate-50 to-emerald-50/40 border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-2xs text-xs text-slate-600 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          {/* ১. ক্যাম্পাস ঠিকানা */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-slate-900 text-sm">ক্যাম্পাস ঠিকানা</h4>
+            </div>
+            <p className="font-semibold text-slate-800 leading-relaxed pl-9">
+              {schoolProfile.addressBn}
+            </p>
+            <p className="text-[11px] text-slate-500 pl-9">
+              গোশালা মোড়, কোর্টপাড়া, কুষ্টিয়া সদর, কুষ্টিয়া-৭০০০
+            </p>
+          </div>
+
+          {/* ২. যোগাযোগ ও হেল্পলাইন */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                <Phone className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-slate-900 text-sm">যোগাযোগ ও হেল্পলাইন</h4>
+            </div>
+            <div className="space-y-1.5 pl-9">
+              <a
+                href={`tel:${schoolProfile.phoneRaw || '01712000000'}`}
+                className="flex items-center gap-2 text-slate-800 hover:text-emerald-700 font-bold transition-colors"
+                title="সরাসরি কল করুন"
+              >
+                <span>{schoolProfile.phoneBn}</span>
+              </a>
+              <a
+                href={`mailto:${schoolProfile.email}`}
+                className="flex items-center gap-1.5 text-slate-600 hover:text-indigo-700 font-medium transition-colors"
+                title="ইমেইল পাঠান"
+              >
+                <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span>{schoolProfile.email}</span>
+              </a>
+            </div>
+          </div>
+
+          {/* ৩. অফিসিয়াল সোশ্যাল ও ওয়েবসাইট */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+                <Globe className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-slate-900 text-sm">অফিসিয়াল ওয়েবসাইট ও সোশ্যাল</h4>
+            </div>
+            <div className="space-y-1.5 pl-9">
+              <div>
+                <a
+                  href="https://msianik-bd.github.io/kindergarten-school-portal/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-800 hover:text-emerald-950 font-bold inline-flex items-center gap-1.5 transition-colors"
+                  title="আনন্দ পাঠশালা অফিসিয়াল ওয়েব পোর্টাল"
+                >
+                  <span className="truncate">msianik-bd.github.io/kindergarten-school-portal</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-600 shrink-0" />
+                </a>
+              </div>
+
+              <div>
+                <a
+                  href={schoolProfile.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline font-semibold inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <Facebook className="w-3.5 h-3.5 text-[#1877F2] shrink-0" />
+                  <span>facebook.com/AnandaPathshalaKushtia</span>
+                  <ExternalLink className="w-3 h-3 text-blue-500 shrink-0" />
+                </a>
+              </div>
+
+              <p className="text-[11px] text-slate-500 pt-0.5">
+                অফিস সময়: রবিবার — বৃহস্পতিবার (সকাল ০৮:০০ — দুপুর ০১:৩০)
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-sm">যোগাযোগ ও হেল্পলাইন</h4>
-          <p className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{schoolProfile.phoneBn}</span>
+        {/* Footer Bottom Bar with Up Arrow Button */}
+        <div className="pt-4 border-t border-emerald-100/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+          <p className="text-center sm:text-left">
+            © ২০২৬ <span className="font-bold text-slate-700">আনন্দ পাঠশালা কুষ্টিয়া</span> · সর্বস্বত্ব সংরক্ষিত · শিশুর আনন্দময় আগামীর অঙ্গীকার
           </p>
-          <p className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span>{schoolProfile.email}</span>
-          </p>
-        </div>
 
-        <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-sm">অফিশিয়াল সোশ্যাল ও ওয়েব</h4>
-          <p>রবিবার — বৃহস্পতিবার: সকাল ০৮:০০ — দুপুর ০১:৩০</p>
-          <a
-            href={schoolProfile.facebookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline font-semibold inline-flex items-center gap-1"
+          <button
+            type="button"
+            onClick={handleScrollToTop}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-700 text-slate-700 hover:text-white border border-slate-200 hover:border-emerald-700 shadow-2xs font-bold transition-all duration-200 group cursor-pointer"
+            title="পেজের শুরুতে ফিরে যান"
+            aria-label="পেজের শুরুতে ফিরে যান"
           >
-            <span>facebook.com/AnandaPathshalaKushtia</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            <span>উপরে যান</span>
+            <div className="w-5 h-5 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/50 flex items-center justify-center transition-colors">
+              <ArrowUp className="w-3.5 h-3.5 text-emerald-700 group-hover:text-white group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          </button>
         </div>
       </footer>
       </div>
+
+      {/* Floating Scroll-to-Top Button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={handleScrollToTop}
+          className="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white shadow-xl shadow-emerald-900/20 border border-emerald-600/50 flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer"
+          title="পৃষ্ঠার শুরুতে যান"
+          aria-label="পৃষ্ঠার শুরুতে যান"
+        >
+          <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+        </button>
+      )}
 
       {/* Global Notice Detail Modal (Triggered by Ticker or Direct Link) */}
       {selectedNoticeForModal && (
