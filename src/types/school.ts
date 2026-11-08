@@ -869,6 +869,60 @@ export interface SubjectMark {
   remarksBn?: string;
 }
 
+export interface ChildGrowthEntry {
+  date: string; // e.g. '2026-10-15'
+  dateBn: string; // e.g. '১৫ অক্টোবর ২০২৬'
+  heightCm: number;
+  weightKg: number;
+  bmi: number;
+  bmiStatusBn: string;
+  notesBn?: string;
+}
+
+export interface VaccinationRecord {
+  id: string;
+  nameBn: string; // e.g. 'বিসিজি (BCG)', 'পেন্টাভ্যালেন্ট (Pentavalent)', 'পোলিও (OPV)', 'এমআর (MR)'
+  doseLabelBn: string;
+  isCompleted: boolean;
+  administeredDateBn?: string;
+  nextDueDateBn?: string;
+  notesBn?: string;
+}
+
+export type AllergySeverity = 'critical' | 'moderate' | 'mild' | 'none';
+
+export interface StudentAllergyItem {
+  allergenBn: string;
+  severity: AllergySeverity;
+  reactionBn: string;
+  actionGuideBn: string;
+}
+
+export interface StudentHealthProfile {
+  studentId: string;
+  studentNameBn: string;
+  studentNameEn?: string;
+  rollNo: string;
+  className: SchoolClass;
+  sectionBn: string;
+  bloodGroup: string;
+  heightCm: number;
+  weightKg: number;
+  bmi: number;
+  bmiStatusBn: string;
+  growthMilestoneBn: string;
+  allergiesList: StudentAllergyItem[];
+  criticalHealthAlertBn?: string;
+  regularMedicationsBn?: string;
+  emergencyDoctorNameBn?: string;
+  emergencyDoctorPhone?: string;
+  vaccinations: VaccinationRecord[];
+  growthHistory: ChildGrowthEntry[];
+  lastCheckedDateBn: string;
+  updatedByTeacherBn: string;
+  updatedAt: string;
+}
+
 export interface StudentExamResult {
   id: string;
   studentId: string;

@@ -32,6 +32,7 @@ export const ALL_PORTAL_MODULE_IDS = [
   'routine',
   'calendar',
   'results',
+  'health',
   'pickup',
   'diary',
   'messages',
@@ -1283,6 +1284,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       descriptionBn: 'টার্ম পরীক্ষা, নম্বর এন্ট্রি ও প্রিন্ট-রেডি কালারফুল রিপোর্ট কার্ড',
     },
     {
+      id: 'health',
+      labelBn: 'স্বাস্থ্য ও অ্যালার্জি',
+      shortLabelBn: 'স্বাস্থ্য',
+      descriptionBn: 'শিশুর উচ্চতা, ওজন, BMI, রক্তের গ্রুপ, অ্যালার্জি ও টিকাদান ট্র্যাকার',
+    },
+    {
       id: 'pickup',
       labelBn: 'গেট-পাস',
       shortLabelBn: 'গেট-পাস',
@@ -1372,6 +1379,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         descriptionBn: 'ক্লাসের বিষয়ভিত্তিক নম্বর এন্ট্রি ও রিপোর্ট কার্ড',
       },
       {
+        id: 'health',
+        labelBn: 'স্বাস্থ্য ও অ্যালার্জি',
+        shortLabelBn: 'স্বাস্থ্য',
+        descriptionBn: 'ক্লাসের শিক্ষার্থীদের স্বাস্থ্য, অ্যালার্জি ও গ্রোথ মনিটরিং',
+      },
+      {
         id: 'students',
         labelBn: 'শিক্ষার্থী',
         shortLabelBn: 'শিক্ষার্থী',
@@ -1453,6 +1466,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         labelBn: 'পরীক্ষার ফলাফল',
         shortLabelBn: 'ফলাফল',
         descriptionBn: 'সন্তানের একাডেমিক মার্কশিট ও কালারফুল প্রগ্রেস রিপোর্ট কার্ড',
+      },
+      {
+        id: 'health',
+        labelBn: 'স্বাস্থ্য ও গ্রোথ কার্ড',
+        shortLabelBn: 'স্বাস্থ্য',
+        descriptionBn: 'সন্তানের স্বাস্থ্য, BMI বৃদ্ধি ও অ্যালার্জি সতর্কতা কার্ড',
       },
       {
         id: 'diary',

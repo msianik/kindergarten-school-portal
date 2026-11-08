@@ -55,6 +55,7 @@ import { StudentIdCardModule } from './components/StudentIdCardModule';
 import { ClassRoutineModule } from './components/ClassRoutineModule';
 import { AcademicCalendarModule } from './components/AcademicCalendarModule';
 import { ExamResultsModule } from './components/ExamResultsModule';
+import { ChildHealthModule } from './components/ChildHealthModule';
 import { FcmNotificationCenter } from './components/FcmNotificationCenter';
 import { LoginModal } from './components/LoginModal';
 import {
@@ -889,6 +890,20 @@ export default function App() {
 
                   {currentTab === 'results' && (
                     <ExamResultsModule
+                      students={students}
+                      currentRole={currentRole}
+                      schoolProfile={schoolProfile}
+                      initialClass={
+                        loggedInAccount?.assignedClass
+                          ? (loggedInAccount.assignedClass as any)
+                          : 'Nursery'
+                      }
+                      loggedInStudentId={loggedInAccount?.studentId}
+                    />
+                  )}
+
+                  {currentTab === 'health' && (
+                    <ChildHealthModule
                       students={students}
                       currentRole={currentRole}
                       schoolProfile={schoolProfile}

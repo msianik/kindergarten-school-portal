@@ -68,6 +68,7 @@ import {
 import { EditSchoolProfileModal } from './EditSchoolProfileModal';
 import { GlobalDashboardSearch } from './GlobalDashboardSearch';
 import { NoticeBoard } from './NoticeBoard';
+import { BirthdayCelebrationWidget } from './BirthdayCelebrationWidget';
 
 // Modular Dashboard Subcomponents & Modals
 import { SuperAdminAccessPanel } from './dashboard/SuperAdminAccessPanel';
@@ -1084,6 +1085,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         logoUrl={logoUrl}
         onUpdateLogo={onUpdateLogo}
         onAddGalleryPhoto={onAddGalleryPhoto}
+      />
+
+      {/* Birthday Celebration & Greeting Card Widget */}
+      <BirthdayCelebrationWidget
+        students={students}
+        schoolProfile={schoolProfile}
       />
 
       {/* Global Interactive Search Bar */}

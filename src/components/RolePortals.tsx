@@ -46,6 +46,7 @@ import {
   getStudentsWithBirthdayThisWeek,
   StudentBirthdayMatch,
 } from '../utils/birthdayLogic';
+import { BirthdayCelebrationWidget } from './BirthdayCelebrationWidget';
 import { SCHOOL_TEACHERS } from '../data/mockData';
 import { ClassroomAttendanceOverviewChart } from './ClassroomAttendanceOverviewChart';
 import {
@@ -245,12 +246,12 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
             <span>শিক্ষক কমনরুম ও স্টাফ চ্যাট</span>
           </button>
           <button
-            onClick={() => onNavigateTab('results')}
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            title="পরীক্ষার বিষয়ভিত্তিক নম্বর এন্ট্রি ও শিক্ষার্থীদের রঙিন রিপোর্ট কার্ড তৈরি করুন"
+            onClick={() => onNavigateTab('health')}
+            className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            title="শিশুদের উচ্চতা, ওজন, BMI ও জরুরি অ্যালার্জি রেকর্ড মনিটর করুন"
           >
-            <Award className="w-4 h-4 text-amber-300" />
-            <span>ফলাফল ও মার্ক এন্ট্রি</span>
+            <Heart className="w-4 h-4 text-amber-300" />
+            <span>শিশু স্বাস্থ্য ও অ্যালার্জি</span>
           </button>
           <button
             onClick={() => onNavigateTab('attendance')}
@@ -290,6 +291,9 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Classroom Birthday Celebration Widget */}
+      <BirthdayCelebrationWidget students={students} />
 
       {/* Teacher Classroom KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -1864,6 +1868,9 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Birthday Celebration Widget for Parent */}
+      <BirthdayCelebrationWidget students={students} />
 
       {/* Parent 1-Click Urgent Pickup Request to Class Teacher via FCM */}
       <div className="bg-white rounded-3xl border-2 border-amber-300 p-6 shadow-2xs space-y-4">
