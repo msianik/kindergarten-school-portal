@@ -470,98 +470,106 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
         )}
       </div>
 
-      {/* Filter Tabs Bar (Category Pills) */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Category Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('all')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            📌 সকল নোটিশ ({counts.all})
-          </button>
+      {/* Filter Tabs Bar (Category Pills) & Search */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        {/* Category Buttons - Fully scrollable and never overlapped */}
+        <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth pb-1">
+          <div className="flex items-center gap-1.5 w-max">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'all'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
+              }`}
+            >
+              <span>📌 সকল নোটিশ</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">{counts.all}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('urgent')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'urgent'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-            }`}
-          >
-            🚨 জরুরি নোটিশ ({counts.urgent})
-          </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('urgent')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'urgent'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+              }`}
+            >
+              <span>🚨 জরুরি নোটিশ</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-200/60 text-rose-900">{counts.urgent}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('admission')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'admission'
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200'
-            }`}
-          >
-            🎓 ভর্তি ও ফি নোটিশ ({counts.admission})
-          </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('admission')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'admission'
+                  ? 'bg-teal-700 text-white shadow-xs'
+                  : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200'
+              }`}
+            >
+              <span>🎓 ভর্তি বিজ্ঞপ্তি</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-teal-200/60 text-teal-900">{counts.admission}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('event')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'event'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
-            }`}
-          >
-            🎈 আপকামিং ইভেন্টস ({counts.event})
-          </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('event')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'event'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+              }`}
+            >
+              <span>🎈 আপকামিং নোটিশ</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200/60 text-amber-900">{counts.event}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('exam')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'exam'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
-            }`}
-          >
-            📝 পরীক্ষার সময়সূচি ({counts.exam})
-          </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('exam')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'exam'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
+              }`}
+            >
+              <span>📝 পরীক্ষা</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-200/60 text-indigo-900">{counts.exam}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('holiday')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
-              selectedCategory === 'holiday'
-                ? 'bg-emerald-700 text-white shadow-xs'
-                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
-            }`}
-          >
-            🏖️ স্কুল ছুটি ({counts.holiday})
-          </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('holiday')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                selectedCategory === 'holiday'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              <span>🏖️ স্কুল ছুটি</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-200/60 text-emerald-900">{counts.holiday}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative w-full sm:w-64 shrink-0">
+        {/* Search Bar - Sits cleanly without overlapping categories */}
+        <div className="relative w-full sm:w-64 lg:w-56 shrink-0">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="নোটিশ খুঁজুন..."
-            className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -569,7 +577,7 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
         </div>
       </div>
 
-      {/* Notices Grid */}
+      {/* Notices Grid with Reduced Height and Right-side Scrollbar */}
       {filteredNotices.length === 0 ? (
         <div className="text-center py-12 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 space-y-2">
           <AlertCircle className="w-8 h-8 text-slate-400 mx-auto" />
@@ -587,8 +595,9 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredNotices.map((notice) => {
+        <div className="notice-board-scroll max-h-[500px] sm:max-h-[540px] overflow-y-auto pr-1 sm:pr-2.5 pb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredNotices.map((notice) => {
             const isUrgent = notice.priority === 'urgent';
             const isPinned = notice.isPinned;
 
@@ -658,8 +667,8 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
                     </div>
                   </div>
 
-                  {/* Description Snippet */}
-                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                  {/* Description Snippet (Strictly 2 lines) */}
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                     {notice.descriptionBn}
                   </p>
                 </div>
@@ -746,7 +755,8 @@ export const NoticeBoard: React.FC<NoticeBoardProps> = ({
             );
           })}
         </div>
-      )}
+      </div>
+    )}
 
 
 

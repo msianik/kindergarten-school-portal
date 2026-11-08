@@ -115,6 +115,35 @@ textarea {
   background-color: var(--theme-color-hover) !important;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom visible sleek scrollbar for Notice Board */
+.notice-board-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+.notice-board-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+.notice-board-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+.notice-board-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.notice-board-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Smooth continuous marquee scroll for Notice Board ticker */
 @keyframes marquee-scroll {
   0% {

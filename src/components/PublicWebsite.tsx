@@ -334,37 +334,41 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       {/* Standalone Public Website Header (Open to Everyone) */}
       <header className="bg-white/95 backdrop-blur-md border-b border-amber-200/80 sticky top-0 z-40 shadow-2xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Left: School Logo & Title */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <img
               src={logoUrl}
               alt="আনন্দ পাঠশালা কুষ্টিয়া লোগো"
               referrerPolicy="no-referrer"
               className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl object-cover border-2 border-emerald-500 bg-white p-0.5 shadow-2xs shrink-0"
             />
-            <div className="min-w-0 truncate">
-              <span className="text-sm sm:text-lg font-black tracking-tight text-slate-900 block leading-none truncate">
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-slate-900 block leading-none whitespace-nowrap">
                 {schoolProfile.nameBn}
               </span>
-              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block mt-0.5 truncate">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block mt-0.5 whitespace-nowrap">
                 Ananda Pathshala · কুষ্টিয়া
               </span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links (Centrally aligned, side by side, colorful pills) */}
-          <nav className="hidden lg:flex items-center justify-center gap-1.5 xl:gap-2">
-            {publicNavLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`px-2.5 xl:px-3 py-1.5 rounded-xl border text-[11.5px] xl:text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 group active:scale-95 ${item.colorClass}`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </a>
-            ))}
-          </nav>
+          {/* Middle: Centered Navigation Menubar (Between Anand Pathshala & Facebook Page) */}
+          <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth px-2 sm:px-4">
+            <nav className="flex items-center gap-1.5 lg:gap-2 whitespace-nowrap py-1 w-max mx-auto">
+              {publicNavLinks.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 group active:scale-95 shrink-0 ${item.colorClass}`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </nav>
+          </div>
 
+          {/* Right: Actions (Facebook, App, Portal, Login) */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Facebook Page Button (Square box matching logo) */}
             <a
@@ -421,22 +425,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </span>
             </button>
           </div>
-        </div>
-
-        {/* Mobile & Tablet Responsive Navigation Bar (Side by side, horizontally scrollable swipe strip) */}
-        <div className="lg:hidden border-t border-amber-100/70 bg-gradient-to-r from-amber-50/40 via-white to-emerald-50/40 py-2 px-3 overflow-x-auto no-scrollbar scroll-smooth">
-          <nav className="flex items-center gap-1.5 min-w-max">
-            {publicNavLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 ${item.colorClass}`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </a>
-            ))}
-          </nav>
         </div>
       </header>
 
