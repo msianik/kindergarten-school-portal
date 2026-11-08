@@ -1,20 +1,15 @@
-import { StaffInternalMessage, StaffRoomType, StaffActionType, StaffSubstituteRequest, SchoolClass } from '../types/school';
+import { StaffInternalMessage, StaffRoomType, StaffActionType, StaffSubstituteRequest, SchoolClass, StaffChannelMeta } from '../types/school';
 import { SCHOOL_TEACHERS } from '../data/mockData';
 
 export const STAFF_CHAT_STORAGE_KEY = 'ananda_staff_internal_messages_v1';
 export const STAFF_CHAT_STORAGE_EVENT = 'ananda-staff-chat-updated';
 
-export interface StaffChannelMeta {
-  id: string;
-  titleBn: string;
-  subtitleBn: string;
-  iconType: string;
-  badgeBg: string;
-  textColor: string;
-  memberCount: number;
-}
+export const STAFF_CHANNELS_STORAGE_KEY = 'ananda_staff_channels_v1';
+export const STAFF_CHANNELS_STORAGE_EVENT = 'ananda-staff-channels-updated';
 
-export const STAFF_CHANNELS: StaffChannelMeta[] = [
+export type { StaffChannelMeta };
+
+export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
   {
     id: 'all_staff',
     titleBn: 'শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ',
@@ -23,6 +18,7 @@ export const STAFF_CHANNELS: StaffChannelMeta[] = [
     badgeBg: 'bg-emerald-100',
     textColor: 'text-emerald-800',
     memberCount: 8,
+    isDefault: true,
   },
   {
     id: 'preschool_wing',
@@ -32,6 +28,7 @@ export const STAFF_CHANNELS: StaffChannelMeta[] = [
     badgeBg: 'bg-amber-100',
     textColor: 'text-amber-800',
     memberCount: 4,
+    isDefault: true,
   },
   {
     id: 'activity_lab',
@@ -41,8 +38,11 @@ export const STAFF_CHANNELS: StaffChannelMeta[] = [
     badgeBg: 'bg-purple-100',
     textColor: 'text-purple-800',
     memberCount: 3,
+    isDefault: true,
   },
 ];
+
+export const STAFF_CHANNELS: StaffChannelMeta[] = DEFAULT_STAFF_CHANNELS;
 
 export function getDirectRoomId(idA: string, idB: string): string {
   const sorted = [idA, idB].sort();
@@ -293,4 +293,97 @@ export function acceptStaffSubstituteRequest(
   }
 
   return found;
+}
+
+// ==========================================
+// CHANNEL / ROOM MANAGEMENT LOGIC
+// ==========================================
+
+export function getStoredStaffChannels(): StaffChannelMeta[] {
+  try {
+    const raw = localStorage.getItem(STAFF_CHANNELS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to read staff channels from localStorage:', err);
+  }
+  return DEFAULT_STAFF_CHANNELS;
+}
+
+export function saveStaffChannels(channels: StaffChannelMeta[]): void {
+  try {
+    localStorage.setItem(STAFF_CHANNELS_STORAGE_KEY, JSON.stringify(channels));
+    window.dispatchEvent(new CustomEvent(STAFF_CHANNELS_STORAGE_EVENT, { detail: channels }));
+  } catch (err) {
+    console.error('Failed to save staff channels to localStorage:', err);
+  }
+}
+
+export function createStaffChannel(channel: Omit<StaffChannelMeta, 'id'>): StaffChannelMeta {
+  const currentList = getStoredStaffChannels();
+  const newChan: StaffChannelMeta = {
+    ...channel,
+    id: `chan_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    createdAt: Date.now(),
+  };
+
+  const updatedList = [...currentList, newChan];
+  saveStaffChannels(updatedList);
+  return newChan;
+}
+
+export function updateStaffChannel(
+  id: string,
+  updates: Partial<Omit<StaffChannelMeta, 'id'>>
+): boolean {
+  const currentList = getStoredStaffChannels();
+  let found = false;
+  let oldTitle = '';
+
+  const updatedList = currentList.map((ch) => {
+    if (ch.id === id) {
+      found = true;
+      oldTitle = ch.titleBn;
+      return { ...ch, ...updates };
+    }
+    return ch;
+  });
+
+  if (found) {
+    saveStaffChannels(updatedList);
+
+    // If title was updated, also update any stored messages in this room to keep roomNameBn in sync
+    if (updates.titleBn && updates.titleBn !== oldTitle) {
+      try {
+        const msgs = getStoredStaffMessages();
+        const updatedMsgs = msgs.map((m) =>
+          m.roomId === id ? { ...m, roomNameBn: updates.titleBn! } : m
+        );
+        localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedMsgs));
+        window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { roomId: id } }));
+      } catch (e) {
+        console.error('Failed to update roomNameBn in messages:', e);
+      }
+    }
+  }
+
+  return found;
+}
+
+export function deleteStaffChannel(id: string): boolean {
+  const currentList = getStoredStaffChannels();
+  const updatedList = currentList.filter((ch) => ch.id !== id);
+  if (updatedList.length === currentList.length) return false;
+
+  saveStaffChannels(updatedList);
+  return true;
+}
+
+export function resetStaffChannelsToDefault(): StaffChannelMeta[] {
+  saveStaffChannels(DEFAULT_STAFF_CHANNELS);
+  return DEFAULT_STAFF_CHANNELS;
 }

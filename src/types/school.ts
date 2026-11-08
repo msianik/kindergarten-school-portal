@@ -505,6 +505,19 @@ export interface StaffSubstituteRequest {
   timestamp: string;
 }
 
+export interface StaffChannelMeta {
+  id: string;
+  titleBn: string;
+  subtitleBn: string;
+  iconType: string;
+  badgeBg: string;
+  textColor: string;
+  memberCount: number;
+  isDefault?: boolean;
+  createdBy?: string;
+  createdAt?: number;
+}
+
 export interface StaffInternalMessage {
   id: string;
   roomId: string;

@@ -13,9 +13,16 @@ import {
   saveStaffInternalMessage,
   acceptStaffSubstituteRequest,
   STAFF_CHANNELS,
+  DEFAULT_STAFF_CHANNELS,
   getDirectRoomId,
   STAFF_CHAT_STORAGE_EVENT,
   StaffChannelMeta,
+  getStoredStaffChannels,
+  createStaffChannel,
+  updateStaffChannel,
+  deleteStaffChannel,
+  resetStaffChannelsToDefault,
+  STAFF_CHANNELS_STORAGE_EVENT,
 } from '../utils/staffChatLogic';
 import { SCHOOL_TEACHERS } from '../data/mockData';
 import { ALL_SCHOOL_CLASSES, getSchoolClassNameBn, toBengaliNumber } from '../utils/schoolLogic';
@@ -42,6 +49,12 @@ import {
   PlusCircle,
   Briefcase,
   ShieldAlert,
+  Edit3,
+  Trash2,
+  RotateCcw,
+  ShieldCheck,
+  Settings,
+  FolderPlus,
 } from 'lucide-react';
 
 interface StaffRoomChatModuleProps {
@@ -50,11 +63,82 @@ interface StaffRoomChatModuleProps {
   onSendNotification?: (notif: FcmNotification) => void;
 }
 
+const COLOR_PRESETS = [
+  { key: 'emerald', label: 'সবুজ (ইমারাল্ড)', badgeBg: 'bg-emerald-100', textColor: 'text-emerald-800', dot: 'bg-emerald-500' },
+  { key: 'indigo', label: 'নীল (ইন্ডিগো)', badgeBg: 'bg-indigo-100', textColor: 'text-indigo-800', dot: 'bg-indigo-500' },
+  { key: 'amber', label: 'হলুদ (অ্যাম্বার)', badgeBg: 'bg-amber-100', textColor: 'text-amber-800', dot: 'bg-amber-500' },
+  { key: 'purple', label: 'বেগুনি (পার্পল)', badgeBg: 'bg-purple-100', textColor: 'text-purple-800', dot: 'bg-purple-500' },
+  { key: 'rose', label: 'গোলাপি/লাল (রোজ)', badgeBg: 'bg-rose-100', textColor: 'text-rose-800', dot: 'bg-rose-500' },
+  { key: 'cyan', label: 'আকাশি (সায়ান)', badgeBg: 'bg-cyan-100', textColor: 'text-cyan-800', dot: 'bg-cyan-500' },
+];
+
+const ICON_OPTIONS = [
+  { id: 'Building2', label: 'কমনরুম' },
+  { id: 'Smile', label: 'প্রি-স্কুল' },
+  { id: 'Palette', label: 'আর্ট/ল্যাব' },
+  { id: 'Users', label: 'টিম পরিষদ' },
+  { id: 'Sparkles', label: 'ইভেন্ট' },
+  { id: 'Briefcase', label: 'অফিসিয়াল' },
+  { id: 'ShieldAlert', label: 'নিরাপত্তা' },
+  { id: 'MessageSquare', label: 'ফোরাম' },
+];
+
+const renderChannelIcon = (iconType: string, className = 'w-4 h-4') => {
+  switch (iconType) {
+    case 'Building2':
+      return <Building2 className={className} />;
+    case 'Smile':
+      return <Smile className={className} />;
+    case 'Palette':
+      return <Palette className={className} />;
+    case 'Users':
+      return <Users className={className} />;
+    case 'Sparkles':
+      return <Sparkles className={className} />;
+    case 'Briefcase':
+      return <Briefcase className={className} />;
+    case 'ShieldAlert':
+      return <ShieldAlert className={className} />;
+    case 'MessageSquare':
+      return <MessageSquare className={className} />;
+    default:
+      return <span className="font-bold text-xs">#</span>;
+  }
+};
+
 export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   currentRole,
   loggedInAccount,
   onSendNotification,
 }) => {
+  // Super Admin Control Permission Check
+  const isSuperAdmin =
+    currentRole === 'super_admin' ||
+    currentRole === 'director' ||
+    loggedInAccount?.role === 'super_admin';
+
+  // Dynamic Channels State (stored in localStorage)
+  const [channels, setChannels] = useState<StaffChannelMeta[]>(() =>
+    getStoredStaffChannels()
+  );
+
+  useEffect(() => {
+    const handleChannelSync = () => {
+      setChannels(getStoredStaffChannels());
+    };
+    window.addEventListener(STAFF_CHANNELS_STORAGE_EVENT, handleChannelSync);
+    return () => window.removeEventListener(STAFF_CHANNELS_STORAGE_EVENT, handleChannelSync);
+  }, []);
+
+  // Super Admin Channel Management Modal State
+  const [showChannelModal, setShowChannelModal] = useState<boolean>(false);
+  const [editingChannel, setEditingChannel] = useState<StaffChannelMeta | null>(null);
+  const [channelTitleInput, setChannelTitleInput] = useState<string>('');
+  const [channelSubtitleInput, setChannelSubtitleInput] = useState<string>('');
+  const [channelIconInput, setChannelIconInput] = useState<string>('Building2');
+  const [channelColorInput, setChannelColorInput] = useState<string>('emerald');
+  const [channelMemberCountInput, setChannelMemberCountInput] = useState<number>(8);
+
   // Current logged in teacher identity
   const currentTeacher = useMemo(() => {
     if (loggedInAccount?.nameBn) {
@@ -94,12 +178,13 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   // Compute active Room ID and Title
   const activeRoomMeta = useMemo(() => {
     if (selectedRoomType === 'channel') {
-      const chan = STAFF_CHANNELS.find((c) => c.id === selectedChannelId) || STAFF_CHANNELS[0];
+      const chan = channels.find((c) => c.id === selectedChannelId) || channels[0] || DEFAULT_STAFF_CHANNELS[0];
       return {
         roomId: chan.id,
         roomNameBn: chan.titleBn,
         subtitleBn: chan.subtitleBn,
         memberCount: chan.memberCount,
+        channel: chan,
         isDirect: false,
       };
     } else {
@@ -114,7 +199,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         colleague,
       };
     }
-  }, [selectedRoomType, selectedChannelId, selectedColleagueId, currentTeacher]);
+  }, [selectedRoomType, selectedChannelId, selectedColleagueId, currentTeacher, channels]);
 
   // Messages for active room
   const activeRoomMessages = useMemo(() => {
@@ -386,6 +471,101 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     setTimeout(() => setToastBanner(null), 4000);
   };
 
+  // Super Admin Channel Handlers
+  const handleOpenCreateChannelModal = () => {
+    setEditingChannel(null);
+    setChannelTitleInput('');
+    setChannelSubtitleInput('');
+    setChannelIconInput('Building2');
+    setChannelColorInput('emerald');
+    setChannelMemberCountInput(8);
+    setShowChannelModal(true);
+  };
+
+  const handleOpenEditChannelModal = (chan: StaffChannelMeta) => {
+    setEditingChannel(chan);
+    setChannelTitleInput(chan.titleBn);
+    setChannelSubtitleInput(chan.subtitleBn);
+    setChannelIconInput(chan.iconType || 'Building2');
+    const matchedColor = COLOR_PRESETS.find((p) => p.badgeBg === chan.badgeBg)?.key || 'emerald';
+    setChannelColorInput(matchedColor);
+    setChannelMemberCountInput(chan.memberCount || 8);
+    setShowChannelModal(true);
+  };
+
+  const handleSaveChannel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!channelTitleInput.trim()) {
+      alert('অনুগ্রহ করে গ্রুপ রুমের একটি শিরোনাম / নাম লিখুন।');
+      return;
+    }
+
+    const selectedColor =
+      COLOR_PRESETS.find((p) => p.key === channelColorInput) || COLOR_PRESETS[0];
+
+    if (editingChannel) {
+      updateStaffChannel(editingChannel.id, {
+        titleBn: channelTitleInput.trim(),
+        subtitleBn: channelSubtitleInput.trim() || 'স্কুলের অভ্যন্তরীণ কার্যক্রম ও নোটিশ সমন্বয়',
+        iconType: channelIconInput,
+        badgeBg: selectedColor.badgeBg,
+        textColor: selectedColor.textColor,
+        memberCount: Number(channelMemberCountInput) || 8,
+      });
+      setToastBanner(`✓ গ্রুপ রুম "${channelTitleInput.trim()}" এর হেডিং ও বিবরণ সফলভাবে আপডেট হয়েছে!`);
+    } else {
+      const created = createStaffChannel({
+        titleBn: channelTitleInput.trim(),
+        subtitleBn: channelSubtitleInput.trim() || 'স্কুলের অভ্যন্তরীণ কার্যক্রম ও নোটিশ সমন্বয়',
+        iconType: channelIconInput,
+        badgeBg: selectedColor.badgeBg,
+        textColor: selectedColor.textColor,
+        memberCount: Number(channelMemberCountInput) || 8,
+        createdBy: currentTeacher.nameBn,
+      });
+      setSelectedChannelId(created.id);
+      setSelectedRoomType('channel');
+      setToastBanner(`✓ নতুন গ্রুপ রুম "${created.titleBn}" সফলভাবে তৈরি করা হয়েছে!`);
+    }
+
+    setShowChannelModal(false);
+    setEditingChannel(null);
+    setTimeout(() => setToastBanner(null), 3500);
+  };
+
+  const handleDeleteChannel = (chan: StaffChannelMeta) => {
+    if (channels.length <= 1) {
+      alert('কমপক্ষে একটি গ্রুপ রুম সক্রিয় থাকতে হবে। এটি মুছে ফেলা যাবে না।');
+      return;
+    }
+    const confirmDelete = window.confirm(
+      `সুপার অ্যাডমিন নিশ্চিতকরণ:\n\nআপনি কি নিশ্চিতভাবে "${chan.titleBn}" গ্রুপ রুমটি মুছে ফেলতে চান?`
+    );
+    if (!confirmDelete) return;
+
+    deleteStaffChannel(chan.id);
+    if (selectedChannelId === chan.id) {
+      const remaining = channels.filter((c) => c.id !== chan.id);
+      if (remaining.length > 0) {
+        setSelectedChannelId(remaining[0].id);
+      }
+    }
+    setToastBanner(`✓ গ্রুপ রুম "${chan.titleBn}" সফলভাবে বাদ দেওয়া হয়েছে!`);
+    setTimeout(() => setToastBanner(null), 3000);
+  };
+
+  const handleResetChannelsToDefault = () => {
+    const confirmReset = window.confirm(
+      'সুপার অ্যাডমিন সতর্কতা:\n\nআপনি কি সকল গ্রুপ রুম ও হেডিং পূর্বনির্ধারিত ডিফল্ট তালিকায় ফিরিয়ে নিতে চান?'
+    );
+    if (!confirmReset) return;
+    const defs = resetStaffChannelsToDefault();
+    setChannels(defs);
+    setSelectedChannelId(defs[0].id);
+    setToastBanner('✓ গ্রুপ রুম তালিকা সফলভাবে ডিফল্ট অবস্থায় রিসেট করা হয়েছে!');
+    setTimeout(() => setToastBanner(null), 3000);
+  };
+
   // Filtered colleagues for Direct Messaging list
   const filteredColleagues = useMemo(() => {
     return SCHOOL_TEACHERS.filter((t) => {
@@ -460,7 +640,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>গ্রুপ রুম ({STAFF_CHANNELS.length})</span>
+                <span>গ্রুপ রুম ({toBengaliNumber(channels.length)})</span>
               </button>
               <button
                 type="button"
@@ -472,7 +652,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 }`}
               >
                 <Users className="w-3.5 h-3.5 text-teal-600" />
-                <span>১-অন-১ চ্যাট ({filteredColleagues.length})</span>
+                <span>১-অন-১ চ্যাট ({toBengaliNumber(filteredColleagues.length)})</span>
               </button>
             </div>
           </div>
@@ -480,48 +660,110 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
           {/* Directory Feed */}
           <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-100">
             {selectedRoomType === 'channel' ? (
-              // Departmental Channels List
-              STAFF_CHANNELS.map((chan) => {
-                const isSelected = selectedChannelId === chan.id;
-                const lastMsg = messages
-                  .filter((m) => m.roomId === chan.id)
-                  .slice(-1)[0];
+              <div className="space-y-1.5">
+                {/* Super Admin Group Room Management Header */}
+                {isSuperAdmin && (
+                  <div className="p-2 mb-1.5 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-2xl border border-indigo-200/90 shadow-2xs flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <ShieldCheck className="w-4 h-4 text-indigo-700 shrink-0" />
+                      <span className="text-[11px] font-black text-indigo-950 truncate">
+                        সুপার অ্যাডমিন রুম কন্ট্রোল
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateChannelModal}
+                        className="px-2.5 py-1 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                        title="নতুন গ্রুপ রুম তৈরি করুন"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>নতুন রুম</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetChannelsToDefault}
+                        className="p-1 text-slate-500 hover:text-indigo-800 hover:bg-white/80 rounded-lg transition-colors cursor-pointer"
+                        title="ডিফল্ট গ্রুপ তালিকায় রিসেট করুন"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                return (
-                  <button
-                    key={chan.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedChannelId(chan.id);
-                      setShowMobileChatView(true);
-                    }}
-                    className={`w-full p-3 rounded-2xl text-left transition flex items-start gap-3 cursor-pointer ${
-                      isSelected
-                        ? 'bg-indigo-50 border border-indigo-200/90 shadow-2xs'
-                        : 'bg-white hover:bg-slate-100/80 border border-slate-100'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${chan.badgeBg} ${chan.textColor}`}
-                    >
-                      #
+                {/* Departmental Channels List */}
+                {channels.map((chan) => {
+                  const isSelected = selectedChannelId === chan.id;
+                  const lastMsg = messages
+                    .filter((m) => m.roomId === chan.id)
+                    .slice(-1)[0];
+
+                  return (
+                    <div key={chan.id} className="relative group">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedChannelId(chan.id);
+                          setShowMobileChatView(true);
+                        }}
+                        className={`w-full p-3 rounded-2xl text-left transition flex items-start gap-3 cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-50 border border-indigo-200/90 shadow-2xs'
+                            : 'bg-white hover:bg-slate-100/80 border border-slate-100'
+                        }`}
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${chan.badgeBg} ${chan.textColor}`}
+                        >
+                          {renderChannelIcon(chan.iconType)}
+                        </div>
+                        <div className={`flex-1 min-w-0 ${isSuperAdmin ? 'pr-14' : ''}`}>
+                          <div className="flex items-center justify-between gap-1">
+                            <h4 className="text-xs font-extrabold text-slate-900 truncate">
+                              {chan.titleBn}
+                            </h4>
+                            <span className="text-[9px] text-slate-400 shrink-0 font-medium">
+                              {toBengaliNumber(chan.memberCount)} সদস্য
+                            </span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                            {lastMsg ? `${lastMsg.senderNameBn}: ${lastMsg.text}` : chan.subtitleBn}
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* Super Admin Quick Actions on this channel */}
+                      {isSuperAdmin && (
+                        <div className="absolute right-2 top-2.5 flex items-center gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditChannelModal(chan);
+                            }}
+                            className="p-1.5 rounded-lg bg-white/95 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 shadow-2xs border border-slate-200 transition-colors cursor-pointer"
+                            title="রুমের হেডিং ও তথ্য পরিবর্তন করুন"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteChannel(chan);
+                            }}
+                            className="p-1.5 rounded-lg bg-white/95 hover:bg-rose-100 text-slate-600 hover:text-rose-800 shadow-2xs border border-slate-200 transition-colors cursor-pointer"
+                            title="এই গ্রুপ রুম বাদ দিন"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <h4 className="text-xs font-extrabold text-slate-900 truncate">
-                          {chan.titleBn}
-                        </h4>
-                        <span className="text-[9px] text-slate-400 shrink-0 font-medium">
-                          {chan.memberCount} সদস্য
-                        </span>
-                      </div>
-                      <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
-                        {lastMsg ? `${lastMsg.senderNameBn}: ${lastMsg.text}` : chan.subtitleBn}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })
+                  );
+                })}
+              </div>
             ) : (
               // 1-on-1 Direct Colleague List
               <>
@@ -608,7 +850,9 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
               </button>
 
               <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-900 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                {activeRoomMeta.isDirect ? '💬' : '#'}
+                {activeRoomMeta.isDirect
+                  ? '💬'
+                  : renderChannelIcon(activeRoomMeta.channel?.iconType || 'Building2', 'w-5 h-5 text-indigo-800')}
               </div>
 
               <div className="min-w-0">
@@ -619,6 +863,18 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200">
                     {activeRoomMeta.isDirect ? '১-অন-১ ব্যক্তিগত চ্যাট' : 'অফিসিয়াল ফোরাম'}
                   </span>
+                  {/* Super Admin Direct Edit Button for Room Heading & Subtitle */}
+                  {isSuperAdmin && !activeRoomMeta.isDirect && activeRoomMeta.channel && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditChannelModal(activeRoomMeta.channel!)}
+                      className="px-2 py-0.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                      title="এই কমন রুমের হেডিং ও তথ্য পরিবর্তন করুন (সুপার অ্যাডমিন)"
+                    >
+                      <Edit3 className="w-3 h-3 text-indigo-700" />
+                      <span>হেডিং এডিট</span>
+                    </button>
+                  )}
                 </div>
                 <p className="text-[11px] text-slate-500 truncate">
                   {activeRoomMeta.subtitleBn}
@@ -1090,6 +1346,176 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 >
                   রিকুইজিশন পাঠান
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: SUPER ADMIN CREATE / EDIT GROUP ROOM MODAL                       */}
+      {/* ========================================================================= */}
+      {showChannelModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-indigo-300 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">
+                    {editingChannel ? 'গ্রুপ রুমের হেডিং ও তথ্য পরিবর্তন' : 'নতুন শিক্ষক গ্রুপ রুম তৈরি করুন'}
+                  </h3>
+                  <p className="text-xs text-indigo-100">
+                    {editingChannel
+                      ? 'রুমের নাম, হেডিং ও বিবরণ কাস্টমাইজ করুন'
+                      : 'শিক্ষক ও স্টাফদের জন্য নতুন বিষয়ভিত্তিক চ্যাটরুম'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowChannelModal(false);
+                  setEditingChannel(null);
+                }}
+                className="text-white hover:bg-white/20 p-1.5 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveChannel} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>গ্রুপ রুমের নাম / প্রধান হেডিং:</span>
+                  <span className="text-[10px] text-indigo-600 font-medium">প্রয়োজনীয়</span>
+                </label>
+                <input
+                  type="text"
+                  value={channelTitleInput}
+                  onChange={(e) => setChannelTitleInput(e.target.value)}
+                  placeholder="যেমন: শিক্ষক কমনরুম ও স্টাফ লাউঞ্জ / খেলার মাঠ ও ক্রীড়া কমিটি"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-hidden focus:bg-white focus:border-indigo-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>উপ-শিরোনাম / বিবরণ:</span>
+                  <span className="text-[10px] text-slate-400">সংক্ষিপ্ত বর্ণনা</span>
+                </label>
+                <textarea
+                  value={channelSubtitleInput}
+                  onChange={(e) => setChannelSubtitleInput(e.target.value)}
+                  rows={2}
+                  placeholder="যেমন: স্কুলের সকল শিক্ষক, প্রিন্সিপাল ও স্টাফদের মূল অফিসিয়াল ফোরাম"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:bg-white focus:border-indigo-500"
+                  required
+                />
+              </div>
+
+              {/* Icon Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">আইকন নির্বাচন করুন:</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {ICON_OPTIONS.map((ico) => {
+                    const isSelected = channelIconInput === ico.id;
+                    return (
+                      <button
+                        key={ico.id}
+                        type="button"
+                        onClick={() => setChannelIconInput(ico.id)}
+                        className={`p-2 rounded-xl text-center flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border ${
+                          isSelected
+                            ? 'bg-indigo-50 border-indigo-500 text-indigo-900 shadow-2xs scale-102 ring-1 ring-indigo-500'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {renderChannelIcon(ico.id, 'w-4 h-4')}
+                        <span className="text-[10px] font-medium">{ico.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Color Theme Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">থিম কালার নির্বাচন করুন:</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {COLOR_PRESETS.map((col) => {
+                    const isSelected = channelColorInput === col.key;
+                    return (
+                      <button
+                        key={col.key}
+                        type="button"
+                        onClick={() => setChannelColorInput(col.key)}
+                        className={`p-2 rounded-xl flex items-center gap-2 transition-all cursor-pointer border ${
+                          isSelected
+                            ? 'bg-white border-indigo-600 shadow-xs ring-1 ring-indigo-600'
+                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className={`w-3.5 h-3.5 rounded-full ${col.dot} shrink-0`} />
+                        <span className="text-[11px] font-semibold text-slate-800 truncate">
+                          {col.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Member Count */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">আনুমানিক সদস্য সংখ্যা:</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={channelMemberCountInput}
+                  onChange={(e) => setChannelMemberCountInput(Number(e.target.value))}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-hidden focus:bg-white focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+                {editingChannel ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteChannel(editingChannel)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>রুম মুছে ফেলুন</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowChannelModal(false);
+                      setEditingChannel(null);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{editingChannel ? 'পরিবর্তন সংরক্ষণ' : 'গ্রুপ রুম তৈরি করুন'}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
