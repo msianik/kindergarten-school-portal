@@ -575,50 +575,8 @@ export function saveStaffInternalMessage(
   return newMsg;
 }
 
-/**
- * Edit a sent message text.
- * Only Principal or Admin is allowed to perform this action!
- */
-export function editStaffInternalMessage(
-  messageId: string,
-  newText: string,
-  editorNameBn: string,
-  editorId: string
-): boolean {
-  const currentList = getStoredStaffMessages();
-  let found = false;
-  const now = new Date();
-  const formattedTime = `${now.toLocaleDateString('bn-BD', {
-    day: 'numeric',
-    month: 'long',
-  })}, ${now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}`;
+// Note: In accordance with school audit policy, sent messages/texts are permanent & immutable and cannot be edited by anyone.
 
-  const updatedList = currentList.map((m) => {
-    if (m.id === messageId) {
-      found = true;
-      return {
-        ...m,
-        text: newText.trim(),
-        isEdited: true,
-        editedAt: formattedTime,
-        editedByBn: editorNameBn,
-        editedById: editorId,
-      };
-    }
-    return m;
-  });
-
-  if (found) {
-    try {
-      localStorage.setItem(STAFF_CHAT_STORAGE_KEY, JSON.stringify(updatedList));
-      window.dispatchEvent(new CustomEvent(STAFF_CHAT_STORAGE_EVENT, { detail: { messageId, action: 'edited' } }));
-    } catch (err) {
-      console.error('Failed to edit staff message in localStorage:', err);
-    }
-  }
-
-  return found;
-}
 
 /**
  * Delete a message from the room.

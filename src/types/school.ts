@@ -559,10 +559,6 @@ export interface StaffInternalMessage {
   timestamp: string;
   createdAt: number;
   isPinned?: boolean;
-  isEdited?: boolean;
-  editedAt?: string;
-  editedByBn?: string;
-  editedById?: string;
   replyTo?: {
     id: string;
     senderNameBn: string;

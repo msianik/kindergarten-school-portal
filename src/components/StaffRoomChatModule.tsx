@@ -13,7 +13,6 @@ import {
 import {
   getStoredStaffMessages,
   saveStaffInternalMessage,
-  editStaffInternalMessage,
   deleteStaffInternalMessage,
   togglePinStaffMessage,
   toggleStaffMessageReaction,
@@ -294,10 +293,6 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const [photoLightboxUrl, setPhotoLightboxUrl] = useState<string | null>(null);
 
-  // Message Editing Modal State (Principal / Admin only)
-  const [editingMessage, setEditingMessage] = useState<StaffInternalMessage | null>(null);
-  const [editMessageInputText, setEditMessageInputText] = useState<string>('');
-
   // Message Deletion Confirmation Modal (Principal / Admin only)
   const [deletingMessage, setDeletingMessage] = useState<StaffInternalMessage | null>(null);
 
@@ -438,43 +433,6 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         fcmMessageId: `fcm-staff-${Date.now()}`,
       });
     }
-  };
-
-  // Edit Message Handler (Principal or Admin ONLY)
-  const handleOpenEditMessageModal = (msg: StaffInternalMessage) => {
-    if (!canEdit) {
-      alert('বার্তা সম্পাদনার ক্ষমতা শুধুমাত্র প্রিন্সিপাল অথবা অ্যাডমিনের জন্য সংরক্ষিত।');
-      return;
-    }
-    setEditingMessage(msg);
-    setEditMessageInputText(msg.text);
-  };
-
-  const handleSaveEditedMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingMessage || !editMessageInputText.trim()) return;
-
-    if (!canEdit) {
-      alert('বার্তা সম্পাদনার ক্ষমতা শুধুমাত্র প্রিন্সিপাল অথবা অ্যাডমিনের জন্য সংরক্ষিত।');
-      return;
-    }
-
-    const editorRoleLabel = currentRole === 'principal' ? 'প্রিন্সিপাল' : 'অ্যাডমিন';
-    const editorName = `${currentUser.nameBn} (${editorRoleLabel})`;
-
-    const success = editStaffInternalMessage(
-      editingMessage.id,
-      editMessageInputText.trim(),
-      editorName,
-      currentUser.id
-    );
-
-    if (success) {
-      setMessages(getStoredStaffMessages());
-      setToastBanner('✓ বার্তা সফলভাবে সম্পাদিত ও আপডেট করা হয়েছে!');
-      setTimeout(() => setToastBanner(null), 4000);
-    }
-    setEditingMessage(null);
   };
 
   // Delete Message Handler (Principal or Admin ONLY)
@@ -1348,15 +1306,16 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 <Search className="w-4 h-4" />
               </button>
 
-              {/* Principal / Admin: Room Edit Shortcut if on custom channel */}
+              {/* Principal / Admin: Room Title, Topic & Member Editing */}
               {canEdit && !activeRoomMeta.isDirect && activeRoomMeta.channel && (
                 <button
                   type="button"
                   onClick={() => handleOpenEditChannelModal(activeRoomMeta.channel!)}
-                  className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer"
-                  title="রুম এডিট ও সদস্য সেটিংস (প্রিন্সিপাল/অ্যাডমিন)"
+                  className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition cursor-pointer text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                  title="চ্যাট রুমের শিরোনাম, বিষয় ও সদস্য তালিকা এডিট করুন (প্রিন্সিপাল/অ্যাডমিন)"
                 >
-                  <Settings className="w-4 h-4 text-slate-600" />
+                  <Edit3 className="w-3.5 h-3.5 text-indigo-700" />
+                  <span className="hidden sm:inline">রুম ও সদস্য এডিট</span>
                 </button>
               )}
             </div>
@@ -1594,20 +1553,6 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                         <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
                           {msg.text}
                         </p>
-
-                        {/* Edited Label */}
-                        {msg.isEdited && (
-                          <div
-                            className={`text-[9.5px] font-medium flex items-center gap-1 pt-1 ${
-                              isOutgoing ? 'text-indigo-200' : 'text-slate-400'
-                            }`}
-                          >
-                            <Edit3 className="w-2.5 h-2.5" />
-                            <span>
-                              সম্পাদিত ({msg.editedByBn || 'প্রিন্সিপাল/অ্যাডমিন'} কর্তৃক) · {msg.editedAt}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -1684,20 +1629,10 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                         <Copy className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Principal / Admin ONLY Controls */}
+                      {/* Principal / Admin ONLY Controls (Pin & Moderation) */}
                       {canEdit && (
                         <>
                           <div className="w-px h-3 bg-slate-200 mx-0.5" />
-
-                          {/* Edit Message Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditMessageModal(msg)}
-                            className="p-1 rounded-lg text-indigo-700 hover:bg-indigo-50 transition cursor-pointer"
-                            title="বার্তা সম্পাদনা করুন (প্রিন্সিপাল/অ্যাডমিন)"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
 
                           {/* Pin Message Button */}
                           <button

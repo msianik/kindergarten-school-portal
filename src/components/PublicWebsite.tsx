@@ -1008,9 +1008,29 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
       {/* Curriculum Levels */}
       <section id="curriculum" className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xs space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-1">
-          <h2 className="text-2xl font-black text-slate-900">আমাদের শ্রেণি ও পাঠক্রম ({schoolProfile.classesBn})</h2>
-          <p className="text-xs text-slate-500">শিশুর সঠিক বয়সের সাথে সামঞ্জস্যপূর্ণ আনন্দময় পাঠক্রম</p>
+        <div className="text-center max-w-3xl mx-auto space-y-2">
+          <span className="inline-block text-[11px] font-bold tracking-wider text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full uppercase">
+            একাডেমিক কার্যক্রম
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            আমাদের শ্রেণি কার্যক্রম
+          </h2>
+          <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-sm sm:text-base font-bold text-emerald-800 pt-1">
+            <span>হাতেখড়ি (Pre-Play)</span>
+            <span className="text-slate-300 select-none">·</span>
+            <span>প্লে (Play)</span>
+            <span className="text-slate-300 select-none">·</span>
+            <span>নার্সারি (Nursery)</span>
+            <span className="text-slate-300 select-none">·</span>
+            <span>কেজি (KG)</span>
+            <span className="text-slate-300 select-none">·</span>
+            <span>ওয়ান (Class 1)</span>
+            <span className="text-slate-300 select-none">·</span>
+            <span>টু (Class 2)</span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500">
+            শিশুর সঠিক বয়সের সাথে সামঞ্জস্যপূর্ণ আনন্দময় মন্টেসরি ও আধুনিক পাঠক্রম
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
