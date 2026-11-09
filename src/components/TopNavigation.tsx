@@ -211,8 +211,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 {portalLabelBn}
               </span>
               {loggedInAccount && (
-                <span className="hidden md:inline text-amber-200 text-[11px] font-semibold truncate">
-                  · {loggedInAccount.nameBn} ({loggedInAccount.roleTitleBn})
+                <span className="text-amber-200 text-[10px] sm:text-[11px] font-semibold truncate">
+                  · {loggedInAccount.nameBn} <span className="hidden sm:inline">({loggedInAccount.roleTitleBn})</span>
                 </span>
               )}
             </div>

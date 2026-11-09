@@ -86,6 +86,7 @@ import {
   IdCard,
   MessageSquare,
   Building2,
+  LayoutGrid,
 } from 'lucide-react';
 
 interface TeacherPortalDashboardProps {
@@ -191,104 +192,237 @@ export const TeacherPortalDashboard: React.FC<TeacherPortalDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Dedicated Teacher Classroom Banner (Indigo-Violet Academic Theme) */}
-      <div className="rounded-3xl bg-gradient-to-r from-indigo-900 via-violet-800 to-teal-800 text-white p-6 sm:p-8 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <img
-            src={account.avatarUrl || '/assets/fb/photo-2.jpg'}
-            alt={account.nameBn}
-            referrerPolicy="no-referrer"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-300 bg-white p-0.5 shrink-0"
-          />
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 bg-white/15 px-3 py-0.5 rounded-full text-xs font-bold text-amber-200">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>👩‍🏫 শিক্ষক ডেডিকেটেড ওয়েবসাইট ও ক্লাসরুম পোর্টাল</span>
+      <div className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white p-5 sm:p-7 shadow-lg border border-indigo-800/60 space-y-5">
+        {/* Top Row: Teacher Profile Header (Clean, Responsive, No Horizontal Squeeze) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/15">
+          <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
+            <div className="relative shrink-0">
+              <img
+                src={account.avatarUrl || '/assets/fb/photo-2.jpg'}
+                alt={account.nameBn}
+                referrerPolicy="no-referrer"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-300 bg-white p-0.5 shadow-md"
+              />
+              <span
+                className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full"
+                title="সক্রিয় ও অনলাইন"
+              />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              স্বাগতম, {account.nameBn}
-            </h2>
-            <p className="text-xs sm:text-sm text-indigo-100 font-medium">
-              {account.roleTitleBn} · দায়িত্বপ্রাপ্ত শ্রেণি: প্লে-গ্রুপ ও নার্সারি (আনন্দ পাঠশালা, কুষ্টিয়া)
-            </p>
+
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>শিক্ষক ক্লাসরুম পোর্টাল</span>
+                </span>
+                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>সক্রিয় শিক্ষাবর্ষ ২০২৬</span>
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white truncate">
+                স্বাগতম, {account.nameBn}
+              </h2>
+
+              <p className="text-xs sm:text-sm text-indigo-200/90 font-medium flex flex-wrap items-center gap-1.5">
+                <span className="font-semibold text-white">{account.roleTitleBn}</span>
+                <span>·</span>
+                <span>
+                  দায়িত্বপ্রাপ্ত শ্রেণি:{' '}
+                  <strong className="text-amber-300 font-bold">
+                    {getSchoolClassNameBn(teacherAssignedClass)}
+                  </strong>
+                </span>
+                <span>·</span>
+                <span className="text-indigo-300">আনন্দ পাঠশালা, কুষ্টিয়া</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Classroom Snapshot Stats on the Right */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start md:self-center">
+            <div className="px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+              <div className="text-[10px] uppercase font-bold text-indigo-200">শ্রেণির শিক্ষার্থী</div>
+              <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">
+                {toBengaliNumber(teacherClassStudents.length)} জন
+              </div>
+            </div>
+            <div className="px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+              <div className="text-[10px] uppercase font-bold text-emerald-200">আজ উপস্থিত</div>
+              <div className="text-lg sm:text-xl font-black text-emerald-300 font-mono">
+                {toBengaliNumber(inClassStudents.length)} জন
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Teacher Quick Classroom Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <button
-            onClick={() => onNavigateTab('results')}
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            title="পরীক্ষার বিষয়ভিত্তিক নম্বর এন্ট্রি ও শিক্ষার্থীদের রঙিন রিপোর্ট কার্ড তৈরি করুন"
-          >
-            <Award className="w-4 h-4 text-amber-300" />
-            <span>ফলাফল ও মার্ক এন্ট্রি</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('attendance')}
-            className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-          >
-            <CalendarCheck className="w-4 h-4" />
-            <span>ক্লাসরুম হাজিরা নিন</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('messages')}
-            className="px-4 py-2.5 bg-teal-400 hover:bg-teal-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>চ্যাট ও মেসেজ</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('messages')}
-            className="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            title="সহকর্মী শিক্ষক ও স্টাফদের অভ্যন্তরীণ কমনরুম ও প্রক্সি সমন্বয়"
-          >
-            <Building2 className="w-4 h-4" />
-            <span>শিক্ষক কমনরুম ও স্টাফ চ্যাট</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('health')}
-            className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            title="শিশুদের উচ্চতা, ওজন, BMI ও জরুরি অ্যালার্জি রেকর্ড মনিটর করুন"
-          >
-            <Heart className="w-4 h-4 text-amber-300" />
-            <span>শিশু স্বাস্থ্য ও অ্যালার্জি</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('attendance')}
-            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            title="মাসিক হাজিরা সামারি রিপোর্ট ও CSV এক্সপোর্ট করুন"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>মাসিক হাজিরা CSV</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('diary')}
-            className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>ডিজিটাল ডায়েরিতে ছবি পোস্ট</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('fees')}
-            className="px-4 py-2.5 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>ক্লাসের ডিউ তথ্য (৳{toBengaliNumber(totalClassDueAmount.toLocaleString())})</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('skills')}
-            className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Award className="w-4 h-4" />
-            <span>স্কিল প্রগ্রেস মূল্যায়ন</span>
-          </button>
-          <button
-            onClick={() => onNavigateTab('idcards')}
-            className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <IdCard className="w-4 h-4 text-amber-300" />
-            <span>আইডি কার্ড প্রিন্ট</span>
-          </button>
+        {/* Bottom Row: Dedicated Responsive Menus Underneath */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-bold text-indigo-200 px-0.5">
+            <div className="flex items-center gap-1.5">
+              <LayoutGrid className="w-4 h-4 text-amber-400" />
+              <span className="text-white font-black text-xs sm:text-sm">শিক্ষক ক্লাসরুম অ্যাকশন মেনু</span>
+            </div>
+            <span className="text-[11px] text-indigo-300 hidden sm:inline">
+              সরাসরি প্রয়োজনীয় মডিউলে কাজ করুন
+            </span>
+          </div>
+
+          {/* 10 Action Buttons Arranged into a Beautiful 2/3/5 Responsive Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+            <button
+              type="button"
+              onClick={() => onNavigateTab('results')}
+              className="p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-emerald-500/40"
+              title="পরীক্ষার বিষয়ভিত্তিক নম্বর এন্ট্রি ও শিক্ষার্থীদের রঙিন রিপোর্ট কার্ড তৈরি করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">ফলাফল ও মার্ক</div>
+                <div className="text-[10px] text-emerald-100 truncate">নম্বর এন্ট্রি ও রিপোর্ট</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('attendance')}
+              className="p-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-amber-300"
+              title="দৈনিক ক্লাসরুম হাজিরা নিন ও এসএমএস নিশ্চিত করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-slate-950/15 flex items-center justify-center shrink-0">
+                <CalendarCheck className="w-4 h-4 text-slate-950" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">ক্লাসরুম হাজিরা</div>
+                <div className="text-[10px] text-slate-800 truncate">রোল কল ও এসএমএস</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('messages')}
+              className="p-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-teal-400"
+              title="অভিভাবকদের সাথে চ্যাট ও সরাসরি বার্তা বিনিময়"
+            >
+              <div className="w-8 h-8 rounded-xl bg-slate-950/15 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-4 h-4 text-slate-950" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">অভিভাবক চ্যাট</div>
+                <div className="text-[10px] text-slate-800 truncate">সরাসরি বার্তা বিনিময়</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('messages')}
+              className="p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-indigo-400/40"
+              title="সহকর্মী শিক্ষক ও স্টাফদের অভ্যন্তরীণ কমনরুম ও প্রক্সি সমন্বয়"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">শিক্ষক কমনরুম</div>
+                <div className="text-[10px] text-indigo-200 truncate">সহকর্মী ও স্টাফ চ্যাট</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('health')}
+              className="p-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-rose-500/40"
+              title="শিশুদের উচ্চতা, ওজন, BMI ও জরুরি অ্যালার্জি রেকর্ড মনিটর করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Heart className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">স্বাস্থ্য ও অ্যালার্জি</div>
+                <div className="text-[10px] text-rose-100 truncate">BMI ও পুষ্টি প্রোফাইল</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('attendance')}
+              className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-emerald-400/40"
+              title="মাসিক হাজিরা সামারি রিপোর্ট ও CSV এক্সপোর্ট করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <FileSpreadsheet className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">মাসিক হাজিরা CSV</div>
+                <div className="text-[10px] text-emerald-100 truncate">মাসিক রিপোর্ট ডাউনলোড</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('diary')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2.5 text-left transition-all cursor-pointer hover:scale-[1.02] border border-white/20 backdrop-blur-xs"
+              title="ডিজিটাল ডায়েরিতে ছবি ও ক্লাসরুম আপডেট পোস্ট করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">ডিজিটাল ডায়েরি</div>
+                <div className="text-[10px] text-indigo-200 truncate">ছবি ও ক্লাস অ্যাক্টিভিটি</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('fees')}
+              className="p-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-2.5 text-left shadow-sm transition-all cursor-pointer hover:scale-[1.02] border border-rose-400/40"
+              title="শ্রেণির ছাত্র-ছাত্রীদের বেতন বকেয়া স্ট্যাটাস দেখুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <CreditCard className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">ক্লাস ফি বকেয়া</div>
+                <div className="text-[10px] text-rose-200 truncate font-mono">
+                  ৳{toBengaliNumber(totalClassDueAmount.toLocaleString())}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('skills')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2.5 text-left transition-all cursor-pointer hover:scale-[1.02] border border-white/20 backdrop-blur-xs"
+              title="শিশুদের সামাজিক ও সৃজনশীল স্কিল মূল্যায়ন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">স্কিল মূল্যায়ন</div>
+                <div className="text-[10px] text-indigo-200 truncate">আচরণ ও মেধা রিপোর্ট</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('idcards')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2.5 text-left transition-all cursor-pointer hover:scale-[1.02] border border-white/20 backdrop-blur-xs"
+              title="শিক্ষার্থীদের স্মার্ট আইডি কার্ড ও কিউআর কোড প্রিন্ট করুন"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <IdCard className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black truncate">আইডি কার্ড প্রিন্ট</div>
+                <div className="text-[10px] text-indigo-200 truncate">স্মার্ট কিউআর কার্ড</div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
