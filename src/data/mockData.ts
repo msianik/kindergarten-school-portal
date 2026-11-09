@@ -279,7 +279,7 @@ export const MANAGEMENT_COMMITTEE: CommitteeDirector[] = [
     designationBn: 'সম্মানিত পরিচালক ও আইটি হেড',
     designationEn: 'Honorable Director & IT Head',
     isManagingDirector: false,
-    photoUrl: '/assets/fb/photo-5.jpg',
+    photoUrl: '/assets/fb/msi_anik.webp',
     professionBn: 'প্রযুক্তি উদ্যোক্তা ও আইটি বিশেষজ্ঞ',
     phone: '০১৯১৪-০৫৭৫১১',
     email: 'msianik.bd@gmail.com',

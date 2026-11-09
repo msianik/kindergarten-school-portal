@@ -318,7 +318,7 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     senderId: 'dir-5',
     senderNameBn: 'এম এস আই অনিক',
     senderRoleTitleBn: 'সম্মানিত পরিচালক (Director)',
-    senderAvatarUrl: '/assets/fb/photo-5.jpg',
+    senderAvatarUrl: '/assets/fb/msi_anik.webp',
     text: 'ধন্যবাদ প্রিন্সিপাল মহোদয়। শিশুদের ক্লাসরুম নিরাপত্তা নিশ্চিতকরণে আধুনিক সিসিটিভি ক্যামেরা বৃদ্ধি, সাউন্ডপ্রুফ সিলিং ও শীতকালীন শিশু উৎসবের ফান্ড বরাদ্দ রাখা হয়েছে। ইনশাআল্লাহ দ্রুত বাস্তবায়ন হবে।',
     actionType: 'chat',
     timestamp: '০৮ নভেম্বর ২০২৬, সকাল ০৯:২৫',
