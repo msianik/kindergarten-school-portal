@@ -55,7 +55,6 @@ import { NoticeBoard, NoticeTicker } from './NoticeBoard';
 import { PublicStatsBar } from './PublicStatsBar';
 import { AdmissionAgeCalculator } from './AdmissionAgeCalculator';
 import { ParentTestimonials } from './ParentTestimonials';
-import { FloatingHelpdesk } from './FloatingHelpdesk';
 
 interface PublicWebsiteProps {
   onEnterPortal: (tab?: string) => void;
@@ -599,6 +598,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <NoticeTicker
         notices={notices}
         onSelectNotice={(notice) => setSelectedNoticeForModal(notice)}
+        helplinePhone={schoolProfile.phone}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12 pb-12">
@@ -1909,13 +1909,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <ArrowUp className="w-5 h-5 sm:w-5 sm:h-5 group-hover:-translate-y-1 transition-transform" />
         </button>
       )}
-
-      {/* Floating Admission Helpline Widget (Left bottom) */}
-      <FloatingHelpdesk
-        phone1={schoolProfile.phone}
-        phone2={schoolProfile.altPhone}
-        addressBn={schoolProfile.addressBn}
-      />
 
       {/* Global Notice Detail Modal (Triggered by Ticker or Direct Link) */}
       {selectedNoticeForModal && (

@@ -33,6 +33,7 @@ import {
   RefreshCw,
   CheckCheck,
   Megaphone,
+  Phone,
 } from 'lucide-react';
 import { EmergencyNoticeBroadcastModal } from './EmergencyNoticeBroadcastModal';
 import { OfficialCircularPrintModal } from './OfficialCircularPrintModal';
@@ -44,12 +45,14 @@ interface NoticeTickerProps {
   notices: SchoolNotice[];
   onSelectNotice: (notice: SchoolNotice) => void;
   onNavigateApply?: () => void;
+  helplinePhone?: string;
 }
 
 export const NoticeTicker: React.FC<NoticeTickerProps> = ({
   notices,
   onSelectNotice,
   onNavigateApply,
+  helplinePhone,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
 
@@ -74,21 +77,15 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
   return (
     <div className="w-full bg-gradient-to-r from-slate-950 via-rose-950 to-slate-950 text-white border-y border-rose-800/40 shadow-sm relative z-30 select-none overflow-hidden">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 py-1.5 sm:py-2 flex items-center justify-between gap-1.5 sm:gap-3 text-xs">
-        {/* Left Live Badge: Ultra-compact vertical 2-row layout on mobile, horizontal pill on desktop */}
-        <div className="notice-ticker-header flex items-center shrink-0 bg-slate-950/95 pr-1 sm:pr-2.5 z-20 border-r border-rose-800/40">
+        {/* Left Live Badge: Ultra-compact, clean text without red dot or exclamation mark */}
+        <div className="notice-ticker-header flex items-center shrink-0 bg-slate-950/95 pr-1.5 sm:pr-2.5 z-20 border-r border-rose-800/40">
           <div
-            className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs"
-            title="লাইভ জরুরি নোটিশ (Urgent Notices Only)"
+            className="flex items-center px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs"
+            title="লাইভ জরুরি নোটিশ"
           >
-            <span className="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-rose-500"></span>
+            <span className="text-[10px] sm:text-[11px] font-black tracking-tight whitespace-nowrap text-rose-200">
+              জরুরি নোটিশ
             </span>
-            <AlertCircle className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-rose-300 animate-bounce shrink-0" />
-            <div className="notice-ticker-label flex flex-col sm:flex-row sm:items-center sm:gap-1 text-[8px] sm:text-[11px] font-extrabold tracking-tight uppercase leading-[1.0] sm:leading-normal text-center sm:text-left">
-              <span>জরুরি</span>
-              <span className="text-[7.5px] sm:text-[11px] text-rose-200 sm:text-rose-300">নোটিশ</span>
-            </div>
           </div>
         </div>
 
@@ -141,8 +138,18 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
           </div>
         </div>
 
-        {/* Right Action Controls: Ultra-compact icon on mobile */}
+        {/* Right Action Controls: Admission Helpline + Pause Button */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-20 pl-1.5 sm:pl-2.5 bg-slate-950/95 border-l border-rose-800/40">
+          {/* Admission Helpline Button (পজ বাটনের পাশে) */}
+          <a
+            href={`tel:${helplinePhone || '01914057511'}`}
+            className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-md bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 transition-colors text-[10px] sm:text-[11px] font-bold cursor-pointer shrink-0"
+            title={`ভর্তি হেল্পলাইনে কল করুন: ${helplinePhone || '০১৯১৪-০৫৭৫১১'}`}
+          >
+            <Phone className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-300" />
+            <span className="whitespace-nowrap">ভর্তি হেল্পলাইন</span>
+          </a>
+
           {/* Pause / Resume Button with Tooltip */}
           <button
             type="button"
