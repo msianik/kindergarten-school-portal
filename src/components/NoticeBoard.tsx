@@ -142,17 +142,24 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
           </div>
         </div>
 
-        {/* Right Action Controls: Ultra-compact 2-line Admission Helpline (No Pause Button) */}
+        {/* Right Action Controls: High-Contrast Vibrant Admission Helpline */}
         <div className="flex items-center shrink-0 z-20 pl-1.5 sm:pl-2 bg-slate-950/95 border-l border-rose-800/40">
           <a
             href={`tel:${helplinePhone || '01914057511'}`}
-            className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 transition-colors cursor-pointer shrink-0"
+            className="group relative inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-md shadow-emerald-950/50 ring-1 ring-emerald-400/60 hover:ring-emerald-300 transition-all transform hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             title={`ভর্তি হেল্পলাইনে কল করুন: ${helplinePhone || '০১৯১৪-০৫৭৫১১'}`}
           >
-            <Phone className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-300 shrink-0" />
-            <div className="flex flex-col text-[8.5px] sm:text-[9.5px] font-black leading-[1.05] text-center sm:text-left">
-              <span>ভর্তি</span>
-              <span className="text-[7.5px] sm:text-[8.5px] text-emerald-200">হেল্পলাইন</span>
+            {/* Phone Icon with ringing animation effect */}
+            <span className="relative flex items-center justify-center w-5 h-5 rounded-full bg-emerald-700/80 group-hover:bg-emerald-600 text-white shrink-0 shadow-inner">
+              <Phone className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-white transition-transform group-hover:rotate-12 animate-pulse" />
+            </span>
+            <div className="flex flex-col text-left leading-[1.05]">
+              <span className="text-[10px] sm:text-[11px] font-black text-white tracking-tight drop-shadow-xs">
+                ভর্তি
+              </span>
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-100 tracking-tight">
+                হেল্পলাইন
+              </span>
             </div>
           </a>
         </div>
