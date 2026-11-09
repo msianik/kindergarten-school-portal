@@ -77,12 +77,16 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
   return (
     <div className="w-full bg-gradient-to-r from-slate-950 via-rose-950 to-slate-950 text-white border-y border-rose-800/40 shadow-sm relative z-30 select-none overflow-hidden">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 py-1.5 sm:py-2 flex items-center justify-between gap-1.5 sm:gap-3 text-xs">
-        {/* Left Live Badge: Ultra-compact, clean text without red dot or exclamation mark */}
+        {/* Left Live Badge: Pulsing red indicator dot + Clean text (No exclamation icon) */}
         <div className="notice-ticker-header flex items-center shrink-0 bg-slate-950/95 pr-1.5 sm:pr-2.5 z-20 border-r border-rose-800/40">
           <div
-            className="flex items-center px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs"
+            className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs"
             title="লাইভ জরুরি নোটিশ"
           >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
             <span className="text-[10px] sm:text-[11px] font-black tracking-tight whitespace-nowrap text-rose-200">
               জরুরি নোটিশ
             </span>
@@ -138,37 +142,19 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({
           </div>
         </div>
 
-        {/* Right Action Controls: Admission Helpline + Pause Button */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-20 pl-1.5 sm:pl-2.5 bg-slate-950/95 border-l border-rose-800/40">
-          {/* Admission Helpline Button (পজ বাটনের পাশে) */}
+        {/* Right Action Controls: Ultra-compact 2-line Admission Helpline (No Pause Button) */}
+        <div className="flex items-center shrink-0 z-20 pl-1.5 sm:pl-2 bg-slate-950/95 border-l border-rose-800/40">
           <a
             href={`tel:${helplinePhone || '01914057511'}`}
-            className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-md bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 transition-colors text-[10px] sm:text-[11px] font-bold cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 transition-colors cursor-pointer shrink-0"
             title={`ভর্তি হেল্পলাইনে কল করুন: ${helplinePhone || '০১৯১৪-০৫৭৫১১'}`}
           >
-            <Phone className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-300" />
-            <span className="whitespace-nowrap">ভর্তি হেল্পলাইন</span>
+            <Phone className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-300 shrink-0" />
+            <div className="flex flex-col text-[8.5px] sm:text-[9.5px] font-black leading-[1.05] text-center sm:text-left">
+              <span>ভর্তি</span>
+              <span className="text-[7.5px] sm:text-[8.5px] text-emerald-200">হেল্পলাইন</span>
+            </div>
           </a>
-
-          {/* Pause / Resume Button with Tooltip */}
-          <button
-            type="button"
-            onClick={() => setIsPaused((prev) => !prev)}
-            className="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-[11px]"
-            title={isPaused ? 'স্ক্রলিং পুনরায় চালু করুন (Resume)' : 'স্ক্রলিং সাময়িক থামান (Pause)'}
-          >
-            {isPaused ? (
-              <>
-                <Play className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden md:inline font-semibold text-[10px] text-amber-300">চালু</span>
-              </>
-            ) : (
-              <>
-                <Pause className="w-3.5 h-3.5 text-slate-300" />
-                <span className="hidden md:inline font-semibold text-[10px] text-slate-300">পজ</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
     </div>
