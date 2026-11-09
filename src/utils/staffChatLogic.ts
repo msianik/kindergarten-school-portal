@@ -317,7 +317,7 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     roomNameBn: 'পরিচালনা পর্ষদ ফোরাম (Directors Lounge)',
     senderId: 'dir-5',
     senderNameBn: 'এম এস আই অনিক',
-    senderRoleTitleBn: 'ব্যবস্থাপনা পরিচালক (Managing Director)',
+    senderRoleTitleBn: 'সম্মানিত পরিচালক (Director)',
     senderAvatarUrl: '/assets/fb/photo-5.jpg',
     text: 'ধন্যবাদ প্রিন্সিপাল মহোদয়। শিশুদের ক্লাসরুম নিরাপত্তা নিশ্চিতকরণে আধুনিক সিসিটিভি ক্যামেরা বৃদ্ধি, সাউন্ডপ্রুফ সিলিং ও শীতকালীন শিশু উৎসবের ফান্ড বরাদ্দ রাখা হয়েছে। ইনশাআল্লাহ দ্রুত বাস্তবায়ন হবে।',
     actionType: 'chat',

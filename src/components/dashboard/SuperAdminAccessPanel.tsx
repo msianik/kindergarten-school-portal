@@ -232,15 +232,15 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
         </div>
       </div>
 
-      {/* Role Category Selector Tabs */}
-      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {/* Role Category Selector Tabs (Unified Dock) */}
+      <div className="inline-flex items-center gap-1 sm:gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-2xs overflow-x-auto max-w-full scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab('directors')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'directors'
               ? 'bg-slate-900 text-white shadow-xs'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'hover:bg-white text-slate-700'
           }`}
         >
           <Building2 className={`w-3.5 h-3.5 ${activeTab === 'directors' ? 'text-amber-400' : 'text-slate-500'}`} />
@@ -250,10 +250,10 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('teachers')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'teachers'
               ? 'bg-indigo-700 text-white shadow-xs'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'hover:bg-white text-slate-700'
           }`}
         >
           <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'teachers' ? 'text-indigo-200' : 'text-slate-500'}`} />
@@ -263,10 +263,10 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('parents')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'parents'
               ? 'bg-amber-600 text-white shadow-xs'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'hover:bg-white text-slate-700'
           }`}
         >
           <Users className={`w-3.5 h-3.5 ${activeTab === 'parents' ? 'text-amber-200' : 'text-slate-500'}`} />
@@ -276,10 +276,10 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('staff')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'staff'
               ? 'bg-emerald-700 text-white shadow-xs'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'hover:bg-white text-slate-700'
           }`}
         >
           <DollarSign className={`w-3.5 h-3.5 ${activeTab === 'staff' ? 'text-emerald-200' : 'text-slate-500'}`} />
@@ -289,10 +289,10 @@ export const SuperAdminAccessPanel: React.FC<SuperAdminAccessPanelProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('principal')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'principal'
               ? 'bg-teal-700 text-white shadow-xs'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'hover:bg-white text-slate-700'
           }`}
         >
           <UserCheck className={`w-3.5 h-3.5 ${activeTab === 'principal' ? 'text-teal-200' : 'text-slate-500'}`} />

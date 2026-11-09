@@ -203,111 +203,111 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
         className="bg-white border-b border-amber-200/80 sticky top-0 z-40 shadow-xs w-full print:hidden no-print"
       >
         {/* Role Portal Banner & Instant Role Switcher (Compact) */}
-        <div
-          className={`${topStripBg} text-white text-xs px-2 sm:px-4 py-1 flex flex-wrap items-center justify-between gap-1.5`}
-        >
-          <div className="flex items-center gap-1.5 min-w-0 max-w-full">
-            <span className="font-bold tracking-wide bg-white/15 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] truncate">
-              {portalLabelBn}
-            </span>
-            {loggedInAccount && (
-              <span className="hidden md:inline text-amber-200 text-[11px] font-semibold truncate">
-                · {loggedInAccount.nameBn} ({loggedInAccount.roleTitleBn})
+        <div className={`${topStripBg} text-white text-xs py-1 border-b border-black/10`}>
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5 min-w-0 shrink">
+              <span className="font-bold tracking-wide bg-white/15 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] truncate shrink-0">
+                {portalLabelBn}
               </span>
-            )}
-          </div>
+              {loggedInAccount && (
+                <span className="hidden md:inline text-amber-200 text-[11px] font-semibold truncate">
+                  · {loggedInAccount.nameBn} ({loggedInAccount.roleTitleBn})
+                </span>
+              )}
+            </div>
 
-          <div className="flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded-xl shrink-0">
-            {isSuperAdmin && (
-              <span className="hidden sm:inline text-[10px] font-medium opacity-80 mr-0.5 whitespace-nowrap">
-                রোল পরিবর্তন:
-              </span>
-            )}
-            {isSuperAdmin && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('super_admin')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    isSuperAdmin
-                      ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  সুপার অ্যাডমিন
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('principal')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    isPrincipal
-                      ? 'bg-white text-emerald-950 font-bold shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  প্রিন্সিপাল
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('teacher')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    isTeacher
-                      ? 'bg-white text-indigo-950 font-bold shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  শিক্ষক
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('parent')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    isParent
-                      ? 'bg-white text-amber-950 font-bold shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  অভিভাবক
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('accountant')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    currentRole === 'accountant'
-                      ? 'bg-white text-emerald-950 font-bold shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  হিসাবরক্ষক
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectRole('gate_security')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    currentRole === 'gate_security'
-                      ? 'bg-white text-teal-950 font-bold shadow-xs'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
-                  }`}
-                >
-                  সিকিউরিটি
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => onSelectTab('public')}
-              className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-amber-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap"
-            >
-              <Globe className="w-2.5 h-2.5 text-amber-300" />
-              <span>পাবলিক সাইট</span>
-            </button>
+            <div className="flex items-center gap-1 bg-black/25 px-2 py-0.5 rounded-xl border border-white/10 shrink-0">
+              {isSuperAdmin && (
+                <span className="hidden sm:inline text-[10px] font-bold opacity-80 mr-0.5 whitespace-nowrap">
+                  রোল:
+                </span>
+              )}
+              {isSuperAdmin && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('super_admin')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      isSuperAdmin
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    সুপার অ্যাডমিন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('principal')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      isPrincipal
+                        ? 'bg-white text-emerald-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    প্রিন্সিপাল
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('teacher')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      isTeacher
+                        ? 'bg-white text-indigo-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    শিক্ষক
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('parent')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      isParent
+                        ? 'bg-white text-amber-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    অভিভাবক
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('accountant')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      currentRole === 'accountant'
+                        ? 'bg-white text-emerald-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    হিসাবরক্ষক
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectRole('gate_security')}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] transition-all whitespace-nowrap cursor-pointer ${
+                      currentRole === 'gate_security'
+                        ? 'bg-white text-teal-950 font-black shadow-xs'
+                        : 'bg-white/15 hover:bg-white/25 text-white font-medium'
+                    }`}
+                  >
+                    সিকিউরিটি
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => onSelectTab('public')}
+                className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-amber-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap ml-1"
+              >
+                <Globe className="w-2.5 h-2.5 text-amber-300" />
+                <span>পাবলিক সাইট</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Main Clean Top Bar */}
-        <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 flex items-center justify-between gap-2 relative">
-          {/* Brand & Logo */}
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2.5 sm:gap-4 relative">
+          {/* Brand & Logo with Safe Right Boundary */}
+          <div className="flex items-center gap-2.5 shrink-0 pr-3 lg:pr-5 border-r border-slate-200/80">
             {/* Hamburger Trigger for Mobile */}
             <button
               type="button"
@@ -343,7 +343,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               >
                 আনন্দ পাঠশালা
               </a>
-              <span className="text-[9px] sm:text-[10px] text-emerald-800 font-bold block tracking-wider uppercase whitespace-nowrap leading-none">
+              <span className="text-[9px] sm:text-[10px] text-emerald-800 font-bold block tracking-wider uppercase whitespace-nowrap leading-none mt-0.5">
                 {isSuperAdmin
                   ? 'সুপার অ্যাডমিন · কুষ্টিয়া'
                   : isDirector
@@ -357,41 +357,38 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             </div>
           </div>
 
-          {/* Desktop Clean Pillar Navigation (6 Pillars with Instant 1-Click Access & Smart Dropdowns) */}
+          {/* Desktop Clean Pillar Navigation Dock (Unified, Responsive, Breathing Room on Both Sides) */}
           <nav
             aria-label="ডেস্কটপ পোর্টাল মেনু"
             className={`${
               isMobilePreview ? 'hidden' : 'hidden lg:flex'
-            } flex-1 min-w-0 items-center justify-center gap-1.5 text-xs font-semibold px-2`}
+            } flex-1 min-w-0 items-center justify-center px-1 sm:px-2`}
           >
-            {pillars.map((pillar) => {
-              const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
-              const isPillarActive = pillar.itemIds.includes(currentTab);
-              const isDropdownOpen = activeDropdownPillarId === pillar.id;
-              const hasSubItems = pillar.items.length > 1;
-              const hasChatAlert =
-                (pillar.id === 'pillar_chat' || pillar.defaultTab === 'messages') && directChatUnreadCount > 0;
+            <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-2xs gap-0.5 xl:gap-1 max-w-full overflow-x-auto scrollbar-none">
+              {pillars.map((pillar) => {
+                const PillarIcon = PILLAR_ICON_MAP[pillar.id] || UserCheck;
+                const isPillarActive = pillar.itemIds.includes(currentTab);
+                const isDropdownOpen = activeDropdownPillarId === pillar.id;
+                const hasSubItems = pillar.items.length > 1;
+                const hasChatAlert =
+                  (pillar.id === 'pillar_chat' || pillar.defaultTab === 'messages') && directChatUnreadCount > 0;
 
-              return (
-                <div
-                  key={pillar.id}
-                  className="relative"
-                  onMouseEnter={() => hasSubItems && setActiveDropdownPillarId(pillar.id)}
-                  onMouseLeave={() => setActiveDropdownPillarId(null)}
-                >
+                return (
                   <div
-                    className={`inline-flex items-center rounded-xl transition-all ${
-                      isPillarActive
-                        ? 'bg-slate-900 text-white font-extrabold shadow-xs'
-                        : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100 border border-transparent'
-                    }`}
+                    key={pillar.id}
+                    className="relative shrink-0"
+                    onMouseEnter={() => hasSubItems && setActiveDropdownPillarId(pillar.id)}
+                    onMouseLeave={() => setActiveDropdownPillarId(null)}
                   >
-                    {/* Primary 1-Click Action to Default Tab */}
                     <button
                       type="button"
                       onClick={() => handleSelectTab(pillar.defaultTab)}
-                      className="px-3 py-1.5 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                      title={`${pillar.labelBn} মডিউল খুলুন`}
+                      className={`inline-flex items-center gap-1 xl:gap-1.5 px-2.5 py-1.5 xl:px-3 rounded-xl text-[11px] xl:text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none ${
+                        isPillarActive
+                          ? 'bg-slate-900 text-white shadow-xs font-black'
+                          : 'text-slate-700 hover:text-slate-950 hover:bg-white/90'
+                      }`}
+                      title={`${pillar.labelBn} বিভাগ খুলুন`}
                     >
                       <PillarIcon
                         className={`w-3.5 h-3.5 ${
@@ -404,84 +401,84 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                           {directChatUnreadCount}
                         </span>
                       )}
+                      {hasSubItems && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownPillarId(isDropdownOpen ? null : pillar.id);
+                          }}
+                          className={`p-0.5 rounded transition ${
+                            isPillarActive ? 'text-amber-300' : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                          title="উপ-অপশনসমূহ দেখুন"
+                        >
+                          <ChevronDown
+                            className={`w-3 h-3 transition-transform duration-200 ${
+                              isDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                            }`}
+                          />
+                        </span>
+                      )}
                     </button>
 
-                    {/* Chevron Trigger for Sub-Item Dropdown */}
-                    {hasSubItems && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveDropdownPillarId(isDropdownOpen ? null : pillar.id);
-                        }}
-                        className={`pr-2 py-1.5 pl-0.5 text-xs opacity-70 hover:opacity-100 cursor-pointer ${
-                          isPillarActive ? 'text-white' : 'text-slate-500'
-                        }`}
-                        title="উপ-অপশনসমূহ দেখুন"
-                      >
-                        <ChevronDown
-                          className={`w-3 h-3 transition-transform duration-200 ${
-                            isDropdownOpen ? 'rotate-180 text-amber-400' : ''
-                          }`}
-                        />
-                      </button>
-                    )}
-                  </div>
+                    {/* Clean Floating Sub-Items Dropdown */}
+                    {hasSubItems && isDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-1 w-60 bg-white rounded-2xl border border-slate-200 shadow-xl p-1.5 z-50 animate-fade-in space-y-0.5">
+                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                          {pillar.labelBn} বিভাগ
+                        </div>
+                        {pillar.items.map((subItem) => {
+                          const isSubActive = currentTab === subItem.id;
+                          const subIconConfig = ITEM_ICON_MAP[subItem.id] || {
+                            icon: ChevronRight,
+                            color: 'text-slate-600',
+                          };
+                          const SubIcon = subIconConfig.icon;
 
-                  {/* Clean Floating Sub-Items Dropdown */}
-                  {hasSubItems && isDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl p-1.5 z-50 animate-fade-in space-y-0.5">
-                      <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                        {pillar.labelBn} বিভাগ
-                      </div>
-                      {pillar.items.map((subItem) => {
-                        const isSubActive = currentTab === subItem.id;
-                        const subIconConfig = ITEM_ICON_MAP[subItem.id] || {
-                          icon: ChevronRight,
-                          color: 'text-slate-600',
-                        };
-                        const SubIcon = subIconConfig.icon;
-
-                        return (
-                          <button
-                            key={subItem.id}
-                            type="button"
-                            onClick={() => handleSelectTab(subItem.id)}
-                            className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                              isSubActive
-                                ? 'bg-emerald-50 text-emerald-950 font-black border border-emerald-200'
-                                : 'hover:bg-slate-50 text-slate-700'
-                            }`}
-                          >
-                            <div
-                              className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                          return (
+                            <button
+                              key={subItem.id}
+                              type="button"
+                              onClick={() => {
+                                handleSelectTab(subItem.id);
+                                setActiveDropdownPillarId(null);
+                              }}
+                              className={`w-full flex items-start gap-2.5 px-2.5 py-1.5 rounded-xl text-left transition-colors cursor-pointer ${
                                 isSubActive
-                                  ? 'bg-emerald-700 text-white'
-                                  : 'bg-slate-100 ' + subIconConfig.color
+                                  ? 'bg-emerald-50 text-emerald-950 font-black border border-emerald-200'
+                                  : 'hover:bg-slate-50 text-slate-700'
                               }`}
                             >
-                              <SubIcon className="w-3.5 h-3.5" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold truncate">
-                                {subItem.labelBn}
+                              <div
+                                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                                  isSubActive
+                                    ? 'bg-emerald-700 text-white'
+                                    : 'bg-slate-100 ' + subIconConfig.color
+                                }`}
+                              >
+                                <SubIcon className="w-3.5 h-3.5" />
                               </div>
-                              <div className="text-[10px] text-slate-400 truncate">
-                                {subItem.descriptionBn}
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold truncate">
+                                  {subItem.labelBn}
+                                </div>
+                                <div className="text-[10px] text-slate-400 truncate">
+                                  {subItem.descriptionBn}
+                                </div>
                               </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </nav>
 
-          {/* Right Header Controls (PWA, Theme, Alerts, Logout) */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {/* Right Header Controls with Safe Left Boundary */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-3 lg:pr-1 lg:pl-5 border-l border-slate-200/80">
             <PWAInstallButton
               onOpenMobileModal={onOpenMobileModal}
               isMobilePreview={isMobilePreview}
