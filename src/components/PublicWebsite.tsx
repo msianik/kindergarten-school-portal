@@ -186,7 +186,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [directorsList, setDirectorsList] = useState<CommitteeDirector[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('ananda_management_directors_v4');
+        const stored = localStorage.getItem('ananda_management_directors_v5');
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -207,7 +207,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         nextList = customEv.detail.directors;
       } else {
         try {
-          const stored = localStorage.getItem('ananda_management_directors_v4');
+          const stored = localStorage.getItem('ananda_management_directors_v5');
           if (stored) nextList = JSON.parse(stored);
         } catch {}
       }
@@ -968,6 +968,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                           className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg border ${
                             director.isManagingDirector
                               ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                              : director.roleBn?.includes('প্রতিষ্ঠাতা')
+                              ? 'bg-amber-100 text-amber-900 border-amber-300'
                               : director.roleBn?.includes('সদস্য সচিব')
                               ? 'bg-blue-100 text-blue-900 border-blue-300'
                               : 'bg-slate-100 text-slate-800 border-slate-200'

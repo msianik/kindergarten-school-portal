@@ -99,7 +99,7 @@ export const PORTAL_ACCOUNTS: PortalAccount[] = [
     nameBn: 'আলী আদনান',
     nameEn: 'Ali Adnan',
     role: 'director',
-    roleTitleBn: 'সম্মানিত পরিচালক (Director), পরিচালনা পর্ষদ',
+    roleTitleBn: 'প্রতিষ্ঠাতা ও পরিচালক (Founder & Director), পরিচালনা পর্ষদ',
     portalNameBn: 'পরিচালনা পর্ষদ ভিউ ও পর্যবেক্ষণ পোর্টাল',
     email: 'ali.adnan@anandapathshala.edu.bd',
     phone: '01711223344',
@@ -275,7 +275,7 @@ export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
     directorId: 'dir-1',
     nameBn: 'আলী আদনান',
     nameEn: 'Ali Adnan',
-    roleTitleBn: 'সম্মানিত পরিচালক (Director)',
+    roleTitleBn: 'প্রতিষ্ঠাতা ও পরিচালক (Founder & Director)',
     photoUrl: '/assets/fb/photo-6.jpg',
     email: 'ali.adnan@anandapathshala.edu.bd',
     phone: '01711223344',
@@ -425,7 +425,7 @@ export function getAllPortalAccounts(): PortalAccount[] {
   let directors: CommitteeDirector[] = MANAGEMENT_COMMITTEE;
   if (typeof window !== 'undefined') {
     try {
-      const rawDirs = localStorage.getItem('ananda_management_directors_v4');
+      const rawDirs = localStorage.getItem('ananda_management_directors_v5');
       if (rawDirs) {
         const parsed = JSON.parse(rawDirs);
         if (Array.isArray(parsed) && parsed.length > 0) directors = parsed;
@@ -691,7 +691,7 @@ export function resetPortalAccountCredentials(
   if (typeof window !== 'undefined') {
     // 1. Sync with Directors storage if applicable
     try {
-      const rawDir = localStorage.getItem('ananda_management_directors_v4');
+      const rawDir = localStorage.getItem('ananda_management_directors_v5');
       if (rawDir) {
         const directors: CommitteeDirector[] = JSON.parse(rawDir);
         if (Array.isArray(directors)) {
@@ -708,7 +708,7 @@ export function resetPortalAccountCredentials(
             return d;
           });
           if (changed) {
-            localStorage.setItem('ananda_management_directors_v4', JSON.stringify(nextDirectors));
+            localStorage.setItem('ananda_management_directors_v5', JSON.stringify(nextDirectors));
             window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
           }
         }
