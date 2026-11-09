@@ -349,7 +349,7 @@ export const MANAGEMENT_COMMITTEE: CommitteeDirector[] = [
     roleEn: 'Director & Child Care Advisor',
     designationBn: 'পরিচালন উপদেষ্টা ও শিশুশিক্ষা বিশেষজ্ঞ',
     designationEn: 'Governance Advisor & Early Education Specialist',
-    photoUrl: '/assets/fb/photo-2.jpg',
+    photoUrl: '/assets/fb/summy_akter.jpg',
     professionBn: 'শিশুশিক্ষা ও প্রারম্ভিক বিকাশ পরামর্শক',
     phone: '০১৮২২-৩৩৪৫৫৬',
     email: 'summy.akter@anandapathshala.edu.bd',
