@@ -12,7 +12,16 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+        includeAssets: [
+          'favicon.ico',
+          'favicon.png',
+          'favicon-32x32.png',
+          'favicon-16x16.png',
+          'icon.svg',
+          'apple-touch-icon.png',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+        ],
         manifest: {
           id: '/',
           name: 'আনন্দ পাঠশালা কুষ্টিয়া - মোবাইল অ্যাপ',
