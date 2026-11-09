@@ -49,7 +49,6 @@ import {
   ArrowUp,
   Globe,
 } from 'lucide-react';
-import { PWAInstallButton } from './MobileAppShell';
 import { HomeCarousel } from './HomeCarousel';
 import { NoticeBoard, NoticeTicker } from './NoticeBoard';
 import { PublicStatsBar } from './PublicStatsBar';
@@ -462,13 +461,6 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </span>
             </a>
 
-            {/* Mobile App Button (Square box matching logo) */}
-            <PWAInstallButton
-              onOpenMobileModal={onOpenMobileModal}
-              isMobilePreview={isMobilePreview}
-              square
-            />
-
             {/* Back to Portal (if logged in) */}
             {isLoggedIn && (
               <button
@@ -486,19 +478,16 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </button>
             )}
 
-            {/* Login Button (Square box matching logo) */}
+            {/* Login Button */}
             <button
               type="button"
               onClick={onOpenLoginModal}
-              className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-sm transition-all shrink-0 relative group"
+              className="h-9 sm:h-11 px-3 sm:px-4.5 rounded-xl sm:rounded-2xl flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 transition-all duration-200 border border-emerald-400/30 cursor-pointer shrink-0 group"
               title="লগইন করুন"
               aria-label="লগইন করুন"
             >
-              <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="sr-only">লগইন করুন</span>
-              <span className="pointer-events-none absolute -bottom-8 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-medium py-1 px-2 rounded-lg whitespace-nowrap shadow-lg z-50">
-                লগইন করুন
-              </span>
+              <LogIn className="w-4 h-4 text-emerald-100 group-hover:text-white transition-colors" />
+              <span className="tracking-wide">লগইন</span>
             </button>
           </div>
         </div>
