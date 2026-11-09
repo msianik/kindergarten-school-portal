@@ -51,7 +51,7 @@ try {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/zip",
     },
-    body: zipBuffer,
+    body: new Uint8Array(zipBuffer),
   });
 
   if (!res.ok) {

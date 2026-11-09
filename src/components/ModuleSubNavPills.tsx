@@ -10,6 +10,7 @@ import {
   FileCheck2,
   Award,
   CalendarCheck,
+  UserCheck,
   ShieldCheck,
   BookOpen,
   MessageSquare,
@@ -70,7 +71,8 @@ const SUB_NAV_GROUPS: SubNavGroup[] = [
     categoryIcon: CalendarCheck,
     accentColor: 'teal',
     tabs: [
-      { id: 'attendance', labelBn: 'দৈনিক হাজিরা', icon: CalendarCheck, descriptionBn: 'ডিজিটাল ক্লাসরুম হাজিরা ও SMS' },
+      { id: 'attendance', labelBn: 'শিক্ষার্থী হাজিরা', icon: CalendarCheck, descriptionBn: 'ডিজিটাল ক্লাসরুম হাজিরা ও SMS' },
+      { id: 'staff', labelBn: 'শিক্ষক ও স্টাফ', icon: UserCheck, descriptionBn: 'শিক্ষক ডিরেক্টরি, সার্ভিস কার্ড, স্টাফ হাজিরা ও ছুটি' },
       { id: 'pickup', labelBn: 'গেট-পাস ও পিক-আপ', icon: ShieldCheck, descriptionBn: 'কিউআর ভেরিফিকেশন ও নিরাপদ স্কুল প্রস্থান' },
       { id: 'diary', labelBn: 'ডিজিটাল ডায়েরি', icon: BookOpen, descriptionBn: 'আজকের ক্লাসের কাজ, টিফিন ও হোমওয়ার্ক' },
     ],

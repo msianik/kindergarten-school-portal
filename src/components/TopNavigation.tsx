@@ -79,6 +79,7 @@ const ITEM_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: st
   results: { icon: FileCheck2, color: 'text-indigo-700' },
   skills: { icon: Award, color: 'text-amber-500' },
   attendance: { icon: CalendarCheck, color: 'text-emerald-600' },
+  staff: { icon: UserCheck, color: 'text-teal-700' },
   pickup: { icon: ShieldCheck, color: 'text-teal-600' },
   diary: { icon: BookOpen, color: 'text-indigo-600' },
   messages: { icon: MessageSquare, color: 'text-teal-600' },

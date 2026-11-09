@@ -690,6 +690,59 @@ export interface TeacherMember {
   password?: string;
   portalRole?: PortalAccountRole;
   assignedClass?: SchoolClass;
+  qualificationBn?: string;
+  bloodGroup?: string;
+  joiningDateBn?: string;
+  status?: 'active' | 'on_leave' | 'inactive';
+}
+
+export type TeacherLeaveType = 'casual' | 'sick' | 'maternity' | 'emergency';
+export type TeacherLeaveStatus = 'pending' | 'approved' | 'rejected';
+
+export interface TeacherLeaveApplication {
+  id: string;
+  teacherId: string;
+  teacherNameBn: string;
+  designationBn: string;
+  photoUrl?: string;
+  leaveType: TeacherLeaveType;
+  leaveTypeBn: string;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  reasonBn: string;
+  appliedAtBn: string;
+  status: TeacherLeaveStatus;
+  approvedByBn?: string;
+  reviewedAtBn?: string;
+  adminRemarksBn?: string;
+  substituteTeacherNameBn?: string;
+}
+
+export type TeacherAttendanceStatus = 'present' | 'absent' | 'leave' | 'late';
+
+export interface TeacherAttendanceRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  teacherId: string;
+  teacherNameBn: string;
+  designationBn: string;
+  departmentBn?: string;
+  photoUrl?: string;
+  status: TeacherAttendanceStatus;
+  checkInTime?: string;
+  checkOutTime?: string;
+  remarksBn?: string;
+}
+
+export interface TeacherLeaveBalance {
+  teacherId: string;
+  totalCasualAllowed: number;
+  casualTaken: number;
+  totalSickAllowed: number;
+  sickTaken: number;
+  totalEmergencyAllowed: number;
+  emergencyTaken: number;
 }
 
 export interface CommitteeDirector {

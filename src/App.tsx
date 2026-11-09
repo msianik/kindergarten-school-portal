@@ -48,6 +48,7 @@ import { DigitalDiaryModule } from './components/DigitalDiaryModule';
 import { SkillAssessmentModule } from './components/SkillAssessmentModule';
 import { FeeAccountsModule } from './components/FeeAccountsModule';
 import { AttendanceModule } from './components/AttendanceModule';
+import { StaffManagementModule } from './components/StaffManagementModule';
 import { ParentTeacherChatModule } from './components/ParentTeacherChatModule';
 import { PublicWebsite } from './components/PublicWebsite';
 import { GoogleWorkspaceModule } from './components/GoogleWorkspaceModule';
@@ -1028,6 +1029,12 @@ export default function App() {
                       currentRole={currentRole}
                       loggedInTeacherNameBn={loggedInAccount?.nameBn}
                       onSendAttendanceNotification={dispatchRealTimeFcmNotification}
+                    />
+                  )}
+
+                  {currentTab === 'staff' && (
+                    <StaffManagementModule
+                      currentRole={currentRole}
                     />
                   )}
 

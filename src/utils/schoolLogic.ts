@@ -41,6 +41,7 @@ export const ALL_PORTAL_MODULE_IDS = [
   'notices',
   'skills',
   'attendance',
+  'staff',
   'fees',
   'workspace',
   'inventory',
@@ -1355,6 +1356,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
       descriptionBn: 'দৈনিক উপস্থিতি ও অনুপস্থিতির SMS',
     },
     {
+      id: 'staff',
+      labelBn: 'শিক্ষক ও স্টাফ',
+      shortLabelBn: 'স্টাফ',
+      descriptionBn: 'শিক্ষক ডিরেক্টরি, ডিজিটাল সার্ভিস কার্ড, স্টাফ হাজিরা ও ছুটির অনুমোদন',
+    },
+    {
       id: 'fees',
       labelBn: 'বেতন/ফি',
       shortLabelBn: 'বেতন/ফি',
@@ -1436,6 +1443,12 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         labelBn: 'হাজিরা',
         shortLabelBn: 'হাজিরা',
         descriptionBn: 'ডিজিটাল ক্লাসরুম রোল কল ও অ্যাটেনডেন্স',
+      },
+      {
+        id: 'staff',
+        labelBn: 'শিক্ষক ডিরেক্টরি ও ছুটি',
+        shortLabelBn: 'স্টাফ/ছুটি',
+        descriptionBn: 'ফ্যাকাল্টি ডিরেক্টরি, আইডি কার্ড ও ছুটির আবেদন',
       },
       {
         id: 'diary',
@@ -1738,13 +1751,19 @@ export function getGroupedNavPillars(role: string, directorId?: string): NavPill
       defaultTab: 'attendance',
       iconName: 'CalendarCheck',
       color: 'text-teal-600',
-      itemIds: ['attendance', 'pickup', 'diary'],
+      itemIds: ['attendance', 'staff', 'pickup', 'diary'],
       items: [
         {
           id: 'attendance',
-          labelBn: 'দৈনিক হাজিরা',
-          shortLabelBn: 'হাজিরা',
+          labelBn: 'শিক্ষার্থী হাজিরা',
+          shortLabelBn: 'শিক্ষার্থী হাজিরা',
           descriptionBn: 'ডিজিটাল ক্লাসরুম হাজিরা ও অনুপস্থিতির SMS',
+        },
+        {
+          id: 'staff',
+          labelBn: 'শিক্ষক ও স্টাফ',
+          shortLabelBn: 'স্টাফ',
+          descriptionBn: 'শিক্ষক ডিরেক্টরি, ডিজিটাল সার্ভিস কার্ড, স্টাফ হাজিরা ও ছুটির অনুমোদন',
         },
         {
           id: 'pickup',
@@ -1868,14 +1887,15 @@ export function getGroupedNavPillars(role: string, directorId?: string): NavPill
       },
       {
         id: 'pillar_operations',
-        labelBn: 'ক্লাসরুম পরিচালনা',
+        labelBn: 'ক্লাসরুম ও স্টাফ',
         shortLabelBn: 'পরিচালনা',
         defaultTab: 'attendance',
         iconName: 'CalendarCheck',
         color: 'text-teal-600',
-        itemIds: ['attendance', 'pickup', 'diary'],
+        itemIds: ['attendance', 'staff', 'pickup', 'diary'],
         items: [
           { id: 'attendance', labelBn: 'দৈনিক হাজিরা', shortLabelBn: 'হাজিরা', descriptionBn: 'ক্লাসরুম রোল কল ও হাজিরা' },
+          { id: 'staff', labelBn: 'শিক্ষক ডিরেক্টরি ও ছুটি', shortLabelBn: 'স্টাফ/ছুটি', descriptionBn: 'সহকর্মী ডিরেক্টরি, আইডি কার্ড ও ছুটির আবেদন' },
           { id: 'pickup', labelBn: 'গেট-পাস', shortLabelBn: 'গেট-পাস', descriptionBn: 'পিক-আপ কল ও অভিভাবক যাচাই' },
           { id: 'diary', labelBn: 'ডায়েরি পোস্ট', shortLabelBn: 'ডায়েরি', descriptionBn: 'ছবি, ক্রাফট ও টিফিন আপডেট' },
         ],
