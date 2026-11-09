@@ -1513,6 +1513,70 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
     ];
   }
 
+  if (role === 'accountant') {
+    return [
+      {
+        id: 'fees',
+        labelBn: 'বেতন ও হিসাব',
+        shortLabelBn: 'বেতন/ফি',
+        descriptionBn: 'টিউশন ফি কালেকশন, বকেয়া, বেতন শিট ও ফিনান্সিয়াল রিপোর্ট',
+      },
+      {
+        id: 'overview',
+        labelBn: 'হিসাব ড্যাশবোর্ড',
+        shortLabelBn: 'ড্যাশবোর্ড',
+        descriptionBn: 'দৈনিক ফি কালেকশন হার ও ক্যাশফ্লো চার্ট',
+      },
+      {
+        id: 'students',
+        labelBn: 'শিক্ষার্থী তথ্য',
+        shortLabelBn: 'শিক্ষার্থী',
+        descriptionBn: 'শ্রেণি ভিত্তিক শিক্ষার্থীদের রোল ও ফি বিবরণ',
+      },
+      {
+        id: 'inventory',
+        labelBn: 'স্কুল অ্যাসেট',
+        shortLabelBn: 'অ্যাসেট',
+        descriptionBn: 'স্কুল সামগ্রী, মন্টেসরি উপকরণ ও সরঞ্জাম ইনভেন্টরি ট্র্যাকার',
+      },
+      {
+        id: 'messages',
+        labelBn: 'স্টাফ চ্যাট',
+        shortLabelBn: 'চ্যাট',
+        descriptionBn: 'প্রশাসন ও শিক্ষকদের সাথে অফিশিয়াল মেসেজিং হাব',
+      },
+      {
+        id: 'workspace',
+        labelBn: 'গুগল ড্রাইভ',
+        shortLabelBn: 'ড্রাইভ',
+        descriptionBn: 'হিসাব সংক্রান্ত স্প্রেডশিট ও ভাউচার ফাইল ড্রাইভ',
+      },
+    ];
+  }
+
+  if (role === 'gate_security') {
+    return [
+      {
+        id: 'pickup',
+        labelBn: 'গেট-পাস ভেরিফিকেশন',
+        shortLabelBn: 'গেট-পাস',
+        descriptionBn: 'কিউআর স্ক্যান, অনুমোদিত অভিভাবক যাচাই ও ছুটি অনুমোদন',
+      },
+      {
+        id: 'overview',
+        labelBn: 'গেট লগ ড্যাশবোর্ড',
+        shortLabelBn: 'ড্যাশবোর্ড',
+        descriptionBn: 'দৈনিক পিক-আপ পরিসংখ্যান ও সারসংক্ষেপ',
+      },
+      {
+        id: 'messages',
+        labelBn: 'সিকিউরিটি চ্যাট',
+        shortLabelBn: 'চ্যাট',
+        descriptionBn: 'জরুরি পিক-আপ অ্যালার্ট ও শিক্ষক-প্রশাসন চ্যাট',
+      },
+    ];
+  }
+
   return [
     {
       id: 'pickup',

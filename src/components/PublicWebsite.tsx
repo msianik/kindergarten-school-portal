@@ -51,6 +51,10 @@ import {
 import { PWAInstallButton } from './MobileAppShell';
 import { HomeCarousel } from './HomeCarousel';
 import { NoticeBoard, NoticeTicker } from './NoticeBoard';
+import { PublicStatsBar } from './PublicStatsBar';
+import { AdmissionAgeCalculator } from './AdmissionAgeCalculator';
+import { ParentTestimonials } from './ParentTestimonials';
+import { FloatingHelpdesk } from './FloatingHelpdesk';
 
 interface PublicWebsiteProps {
   onEnterPortal: (tab?: string) => void;
@@ -472,6 +476,18 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12 pb-12">
+        {/* Dynamic Top Hero Carousel: Announcements, Gallery Highlights & 2027 Admissions */}
+        <HomeCarousel
+          fbGalleryImages={fbGallery}
+          onScrollToSection={(sectionId) => {
+            const el = document.getElementById(sectionId);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+
+        {/* Live Statistics & Institutional Achievements Bar */}
+        <PublicStatsBar />
+
         {/* Hero Section with Official Ananda Pathshala Kushtia Cover & Logo */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white p-8 sm:p-12 shadow-xl border border-emerald-400/30">
           {/* Subtle Ambient Decorative Glows */}
@@ -511,14 +527,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <a
                   href="#apply"
-                  className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2 transform active:scale-95"
+                  className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2 transform active:scale-95 cursor-pointer"
                 >
-                  অনলাইন ভর্তি আবেদন করুন
+                  অনলাইন ভর্তি আবেদন করুন (২০২৭)
                   <ArrowRight className="w-4 h-4" />
                 </a>
                 <a
                   href="#teachers"
-                  className="px-5 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-sm font-bold transition-all backdrop-blur-md"
+                  className="px-5 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-sm font-bold transition-all backdrop-blur-md cursor-pointer"
                 >
                   প্রিন্সিপাল ও শিক্ষকদের দেখুন
                 </a>
@@ -542,20 +558,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </section>
 
-      {/* Dynamic Carousel: Announcements, Gallery Highlights & Seasonal Notices */}
-      <HomeCarousel
-        fbGalleryImages={fbGallery}
-        onScrollToSection={(sectionId) => {
-          const el = document.getElementById(sectionId);
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
-      />
-
-      {/* Comprehensive Interactive Notice Board & Upcoming Events Section */}
-      <NoticeBoard
-        notices={notices}
-        onOpenNoticeDetail={(notice) => setSelectedNoticeForModal(notice)}
-      />
+        {/* Comprehensive Interactive Notice Board & Upcoming Events Section */}
+        <NoticeBoard
+          notices={notices}
+          onOpenNoticeDetail={(notice) => setSelectedNoticeForModal(notice)}
+        />
 
       {/* Academic Leadership & Teachers Section */}
       <section id="teachers" className="scroll-mt-24 space-y-8">
@@ -1045,6 +1052,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         </div>
       </section>
 
+      {/* Real Parent Testimonials Carousel */}
+      <ParentTestimonials />
+
       {/* 4 Core Pillars for Joyful Play School */}
       <section id="features" className="space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -1194,6 +1204,15 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Interactive Admission Age & Class Finder */}
+      <AdmissionAgeCalculator
+        onSelectClassAndApply={(cls) => {
+          setApplyingClass(cls);
+          const el = document.getElementById('apply');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
 
       {/* Online Admission Section */}
       <section id="apply" className="scroll-mt-24 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 text-slate-900 p-6 sm:p-10 lg:p-12 rounded-3xl shadow-xl border-2 border-emerald-100/90 space-y-8 relative overflow-hidden">
@@ -1764,6 +1783,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <ArrowUp className="w-5 h-5 sm:w-5 sm:h-5 group-hover:-translate-y-1 transition-transform" />
         </button>
       )}
+
+      {/* Floating Admission Helpline Widget (Left bottom) */}
+      <FloatingHelpdesk
+        phone1={schoolProfile.phone}
+        phone2={schoolProfile.altPhone}
+        addressBn={schoolProfile.addressBn}
+      />
 
       {/* Global Notice Detail Modal (Triggered by Ticker or Direct Link) */}
       {selectedNoticeForModal && (

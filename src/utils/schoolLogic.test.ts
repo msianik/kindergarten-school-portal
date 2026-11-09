@@ -292,6 +292,14 @@ test('getRoleNavMetadata returns role-specific full and compact single-line menu
   const parentNav = getRoleNavMetadata('parent');
   assert.equal(parentNav.length, 11);
   assert.equal(parentNav[0].shortLabelBn, 'সন্তান');
+
+  const accountantNav = getRoleNavMetadata('accountant');
+  assert.equal(accountantNav.length, 6);
+  assert.equal(accountantNav[0].id, 'fees');
+
+  const gateSecurityNav = getRoleNavMetadata('gate_security');
+  assert.equal(gateSecurityNav.length, 3);
+  assert.equal(gateSecurityNav[0].id, 'pickup');
 });
 
 test('getStudentConsistencyTier maps percentages to correct tiers', () => {

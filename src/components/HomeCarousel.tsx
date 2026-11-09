@@ -39,9 +39,9 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
-  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
   const fallbackGallery1 = fbGalleryImages[0]?.imageUrl || '/assets/fb/fb_photo_1.jpg';
   const fallbackGallery2 = fbGalleryImages[1]?.imageUrl || '/assets/fb/fb_photo_2.jpg';
@@ -49,10 +49,24 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
 
   const slides: CarouselSlide[] = [
     {
+      id: 'slide-online-admissions',
+      type: 'seasonal',
+      badgeBn: '🎓 ২০২৭ শিক্ষাবর্ষে ভর্তি চলছে',
+      badgeColor: 'bg-emerald-500/30 text-emerald-100 border-emerald-400/40',
+      titleBn: '২০২৭ শিক্ষাবর্ষে আপনার সন্তানের আনন্দময় শিক্ষার সূচনা',
+      titleEn: 'Admissions Open for Session 2027 · Ananda Pathshala Kushtia',
+      descriptionBn:
+        'হাতেখড়ি (২.৫+ বছর), প্লে, নার্সারি, কেজি ও প্রাথমিক শ্রেণিতে সীমিত আসনে ভর্তি চলছে। শিশুর ভীতিহীন পাঠদান ও ব্যক্তিত্ব বিকাশে ঘরে বসেই মাত্র ২ মিনিটে আবেদন করুন।',
+      dateOrTimeBn: 'ভর্তি কার্যক্রম চলমান · সীমিত আসন',
+      imageUrl: fallbackCover,
+      ctaTextBn: 'অনলাইনে ভর্তি আবেদন করুন (২০২৭)',
+      ctaLink: '#apply',
+    },
+    {
       id: 'slide-joyful-learning',
       type: 'announcement',
       badgeBn: '🌟 প্রাক-প্রাথমিক শিক্ষা দর্শন',
-      badgeColor: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+      badgeColor: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
       titleBn: 'ভয়হীন আনন্দময় পরিবেশ ও আধুনিক মন্টেসরি পদ্ধতি',
       titleEn: 'Joyful Early Childhood Education & Montessori Care',
       descriptionBn:
@@ -86,7 +100,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
       descriptionBn:
         'অভিভাবক ছবি যাচাই ও ডিজিটাল এসএমএস নোটিফিকেশন ছাড়া কাউকে শিশু হস্তান্তর করা হয় না। সিসিটিভি সার্বক্ষণিক নজরদারি ও দায়িত্বশীল সহকারী স্টাফ।',
       dateOrTimeBn: 'নিরাপদ শিশুবান্ধব ক্যাম্পাস',
-      imageUrl: fallbackCover,
+      imageUrl: fallbackGallery1,
       ctaTextBn: 'নিরাপত্তা ব্যবস্থা সম্পর্কে জানুন',
       ctaLink: '#features',
     },
@@ -94,29 +108,15 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
       id: 'slide-student-excellence',
       type: 'gallery',
       badgeBn: '🏆 মেধা ও মানবিক গুণাবলী',
-      badgeColor: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
+      badgeColor: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
       titleBn: 'কৃতি শিক্ষার্থীদের নৈতিক ও সুষম ব্যক্তিত্ব গঠন',
       titleEn: 'Inspiring Excellence & Holistic Growth',
       descriptionBn:
         'বার্ষিক মূল্যায়ন, সাংস্কৃতিক পরিবেশনা ও খেলাধুলার মাধ্যমে প্রতিটি শিশুর আত্মবিশ্বাস বৃদ্ধি ও নৈতিক মূল্যবোধ সম্পন্ন সুনাগরিক হিসেবে গড়ে তোলা।',
-      dateOrTimeBn: 'শিক্ষাবর্ষ ২০২৫-২০২৬ সাফল্য',
+      dateOrTimeBn: 'শিক্ষাবর্ষ সাফল্য',
       imageUrl: '/assets/biddalay/gallery_annual_day.jpg',
       ctaTextBn: 'কৃতি শিক্ষার্থীদের তালিকা দেখুন',
       ctaLink: '#students',
-    },
-    {
-      id: 'slide-online-admissions',
-      type: 'seasonal',
-      badgeBn: '✍️ অনলাইন ভর্তি পোর্টাল',
-      badgeColor: 'bg-rose-500/20 text-rose-200 border-rose-400/30',
-      titleBn: 'নতুন শিক্ষাবর্ষে অনলাইনে ভর্তি আবেদন চলছে',
-      titleEn: 'Admissions Open for New Academic Session',
-      descriptionBn:
-        'হাতেখড়ি (২.৫+ বছর), প্লে, নার্সারি, কেজি ও প্রাথমিক শ্রেণিতে সীমিত আসনে ভর্তি চলছে। ঘরে বসেই কয়েক মিনিটে অনলাইন আবেদন জমা দিন।',
-      dateOrTimeBn: 'আবেদন চলছে · গোশালা ক্যাম্পাস, কুষ্টিয়া',
-      imageUrl: fallbackGallery1,
-      ctaTextBn: 'অনলাইন আবেদন ফরম পূরণ করুন',
-      ctaLink: '#apply',
     },
   ];
 
@@ -124,26 +124,35 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % total);
+    setProgress(0);
   }, [total]);
 
   const prevSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + total) % total);
+    setProgress(0);
   }, [total]);
 
-  // Autoplay management
+  // Smooth progress bar autoplay ticker
   useEffect(() => {
-    if (!isPlaying) {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-      return;
-    }
-    autoPlayRef.current = setInterval(() => {
-      nextSlide();
-    }, 5500);
+    setProgress(0);
+    if (!isPlaying) return;
 
-    return () => {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-    };
-  }, [isPlaying, nextSlide]);
+    const interval = 50;
+    const duration = 5500;
+    const step = (interval / duration) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          nextSlide();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [isPlaying, nextSlide, currentIndex]);
 
   // Touch gesture handling
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -194,25 +203,33 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
   return (
     <section
       aria-label="স্কুল নোটিশ, গ্যালারি ও ঘোষণা ক্যারোসেল"
-      className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-800 via-blue-800 to-teal-800 border border-indigo-400/30 shadow-xl"
+      className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-teal-900 border-2 border-indigo-300/30 shadow-2xl"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background Graphic & Atmosphere (Luminous, refined - no black overlay) */}
+      {/* Top Autoplay Progress Bar */}
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-black/30 z-20 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 transition-all duration-75"
+          style={{ width: `${Math.min(progress, 100)}%` }}
+        />
+      </div>
+
+      {/* Background Graphic & Atmosphere (Luminous, refined) */}
       <div className="absolute inset-0 z-0">
         <img
           src={current.imageUrl || fallbackCover}
           alt={current.titleBn}
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center scale-105 transition-all duration-700 blur-[1px] opacity-35 brightness-95"
+          className="w-full h-full object-cover object-center scale-105 transition-all duration-700 blur-[1px] opacity-40 brightness-95"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/85 via-blue-900/65 to-indigo-800/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/90 via-blue-950/70 to-indigo-900/40" />
         {/* Subtle Ambient Glows */}
-        <div className="absolute top-0 right-10 w-80 h-80 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-10 w-96 h-96 bg-sky-400/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-10 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Main Content Area */}
@@ -221,15 +238,15 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md ${current.badgeColor}`}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-2xs ${current.badgeColor}`}
             >
               {current.type === 'announcement' && <Bell className="w-3.5 h-3.5" />}
               {current.type === 'gallery' && <ImageIcon className="w-3.5 h-3.5" />}
-              {current.type === 'seasonal' && <Calendar className="w-3.5 h-3.5" />}
+              {current.type === 'seasonal' && <Sparkles className="w-3.5 h-3.5 text-amber-300" />}
               <span>{current.badgeBn}</span>
             </span>
             {current.dateOrTimeBn && (
-              <span className="hidden sm:inline-flex items-center gap-1 bg-white/10 backdrop-blur-md text-slate-300 text-[11px] font-medium px-2.5 py-1 rounded-full border border-white/10">
+              <span className="hidden sm:inline-flex items-center gap-1 bg-white/10 backdrop-blur-md text-slate-200 text-[11px] font-medium px-3 py-1 rounded-full border border-white/15">
                 <Clock className="w-3 h-3 text-amber-300" />
                 <span>{current.dateOrTimeBn}</span>
               </span>
@@ -237,8 +254,14 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Live Indicator Pill */}
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>লাইভ স্লাইড</span>
+            </span>
+
             {/* Slide counter */}
-            <span className="text-xs font-mono font-bold text-slate-300 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/15">
+            <span className="text-xs font-mono font-bold text-slate-200 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/15">
               {toBnNumber(currentIndex + 1)} / {toBnNumber(total)}
             </span>
 
@@ -246,7 +269,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
             <button
               type="button"
               onClick={() => setIsPlaying(!isPlaying)}
-              className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-md flex items-center justify-center text-white transition-colors"
+              className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer"
               title={isPlaying ? 'স্বয়ংক্রিয় প্লে থামান' : 'স্বয়ংক্রিয় প্লে চালু করুন'}
             >
               {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -255,15 +278,15 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
         </div>
 
         {/* Center Headline & Body */}
-        <div className="my-6 max-w-3xl space-y-3.5 animate-fadeIn">
+        <div className="my-6 max-w-3xl space-y-3.5">
           {current.titleEn && (
-            <p className="text-xs uppercase tracking-widest font-bold text-amber-300/90 flex items-center gap-1.5">
+            <p className="text-xs uppercase tracking-widest font-black text-amber-300 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>{current.titleEn}</span>
             </p>
           )}
 
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-snug drop-shadow-sm">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-snug drop-shadow-sm">
             {current.titleBn}
           </h2>
 
@@ -277,7 +300,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
               <button
                 type="button"
                 onClick={() => handleCtaClick(current.ctaLink)}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-lg hover:shadow-amber-500/20 transition-all flex items-center gap-2 transform active:scale-95"
+                className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-lg hover:shadow-amber-500/25 transition-all flex items-center gap-2 cursor-pointer transform"
               >
                 <span>{current.ctaTextBn}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -287,7 +310,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
             <button
               type="button"
               onClick={() => handleCtaClick('#teachers')}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white border border-white/20 font-bold text-xs sm:text-sm rounded-xl transition-all backdrop-blur-md"
+              className="px-5 py-3 bg-white/15 hover:bg-white/25 active:scale-95 text-white border border-white/25 font-bold text-xs sm:text-sm rounded-xl transition-all backdrop-blur-md cursor-pointer"
             >
               প্রিন্সিপাল ও শিক্ষকদের বার্তা
             </button>
@@ -302,10 +325,13 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
               <button
                 key={s.id}
                 type="button"
-                onClick={() => setCurrentIndex(idx)}
-                className={`transition-all rounded-full ${
+                onClick={() => {
+                  setCurrentIndex(idx);
+                  setProgress(0);
+                }}
+                className={`transition-all rounded-full cursor-pointer ${
                   idx === currentIndex
-                    ? 'w-7 sm:w-9 h-2.5 bg-amber-400 shadow-sm shadow-amber-400/50'
+                    ? 'w-7 sm:w-10 h-2.5 bg-amber-400 shadow-sm shadow-amber-400/50'
                     : 'w-2.5 h-2.5 bg-white/30 hover:bg-white/50'
                 }`}
                 title={`স্লাইড ${toBnNumber(idx + 1)}: ${s.titleBn}`}
@@ -318,7 +344,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
             <button
               type="button"
               onClick={prevSlide}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/25 border border-white/20 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-95 shadow-sm"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/25 border border-white/20 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-95 shadow-sm cursor-pointer"
               aria-label="পূর্ববর্তী স্লাইড"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -326,7 +352,7 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
             <button
               type="button"
               onClick={nextSlide}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/25 border border-white/20 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-95 shadow-sm"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/25 border border-white/20 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-95 shadow-sm cursor-pointer"
               aria-label="পরবর্তী স্লাইড"
             >
               <ChevronRight className="w-5 h-5" />

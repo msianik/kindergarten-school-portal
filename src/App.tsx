@@ -370,6 +370,8 @@ export default function App() {
       setCurrentTab('overview');
     } else if (account.role === 'gate_security') {
       setCurrentTab('pickup');
+    } else if (account.role === 'accountant') {
+      setCurrentTab('fees');
     } else if (account.role === 'director') {
       const perm = getPermissionForDirector(account.directorId);
       const firstMod =
@@ -411,6 +413,8 @@ export default function App() {
       setCurrentTab('overview');
     } else if (role === 'gate_security') {
       setCurrentTab('pickup');
+    } else if (role === 'accountant') {
+      setCurrentTab('fees');
     } else if (role === 'director') {
       const perm = getPermissionForDirector(matchingAcc.directorId);
       const firstMod =

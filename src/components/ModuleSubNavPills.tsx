@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { UserRole } from '../types/school';
+import { getRoleNavMetadata } from '../utils/schoolLogic';
 import {
   Users,
   IdCard,
@@ -90,6 +91,7 @@ const SUB_NAV_GROUPS: SubNavGroup[] = [
 export const ModuleSubNavPills: React.FC<ModuleSubNavPillsProps> = ({
   currentTab,
   onSelectTab,
+  currentRole,
   className = '',
 }) => {
   // Find which group contains this tab
@@ -98,6 +100,14 @@ export const ModuleSubNavPills: React.FC<ModuleSubNavPillsProps> = ({
   );
 
   if (!activeGroup) return null;
+
+  const visibleTabs = useMemo(() => {
+    if (!currentRole) return activeGroup.tabs;
+    const navItems = getRoleNavMetadata(currentRole);
+    return activeGroup.tabs.filter((t) => navItems.some((n) => n.id === t.id));
+  }, [activeGroup, currentRole]);
+
+  if (visibleTabs.length <= 1) return null;
 
   const CategoryIcon = activeGroup.categoryIcon;
 
@@ -119,7 +129,7 @@ export const ModuleSubNavPills: React.FC<ModuleSubNavPillsProps> = ({
 
       {/* Sibling Tabs Pills */}
       <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0 sm:justify-end">
-        {activeGroup.tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const TabIcon = tab.icon;
           const isActive = tab.id === currentTab;
 
