@@ -278,7 +278,7 @@ export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
     senderId: 'dir-4',
     senderNameBn: 'আল নোমান',
     senderRoleTitleBn: 'সভাপতি ও চেয়ারম্যান, পরিচালনা পর্ষদ',
-    senderAvatarUrl: '/assets/fb/photo-3.jpg',
+    senderAvatarUrl: '/assets/fb/al_noman.jpg',
     text: 'সম্মানিত পরিচালনা পর্ষদ সদস্যবৃন্দ ও প্রিন্সিপাল মহোদয়, আসসালামু আলাইকুম। আগামী শিক্ষাবর্ষের বার্ষিক উন্নয়ন বাজেট, নতুন মন্টেসরি ক্লাসরুম সম্প্রসারণ ও শিক্ষক প্রশিক্ষণের খসড়া প্রস্তাবনা প্রস্তুত হয়েছে। আগামী শনিবারের বোর্ড সভায় এটি উপস্থাপন করা হবে।',
     actionType: 'emergency_briefing',
     actionDetails: {

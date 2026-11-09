@@ -77,7 +77,7 @@ export const PORTAL_ACCOUNTS: PortalAccount[] = [
     phone: '01633455667',
     username: 'noman',
     passwordHint: '123456',
-    avatarUrl: '/assets/fb/photo-3.jpg',
+    avatarUrl: '/assets/fb/al_noman.jpg',
     directorId: 'dir-4',
   },
   {
@@ -236,7 +236,7 @@ export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
     nameBn: 'আল নোমান',
     nameEn: 'Al Noman',
     roleTitleBn: 'সভাপতি / চেয়ারম্যান (Chairman)',
-    photoUrl: '/assets/fb/photo-3.jpg',
+    photoUrl: '/assets/fb/al_noman.jpg',
     email: 'al.noman@anandapathshala.edu.bd',
     phone: '01633455667',
     username: 'noman',
@@ -425,7 +425,7 @@ export function getAllPortalAccounts(): PortalAccount[] {
   let directors: CommitteeDirector[] = MANAGEMENT_COMMITTEE;
   if (typeof window !== 'undefined') {
     try {
-      const rawDirs = localStorage.getItem('ananda_management_directors_v5');
+      const rawDirs = localStorage.getItem('ananda_management_directors_v6');
       if (rawDirs) {
         const parsed = JSON.parse(rawDirs);
         if (Array.isArray(parsed) && parsed.length > 0) directors = parsed;
@@ -691,7 +691,7 @@ export function resetPortalAccountCredentials(
   if (typeof window !== 'undefined') {
     // 1. Sync with Directors storage if applicable
     try {
-      const rawDir = localStorage.getItem('ananda_management_directors_v5');
+      const rawDir = localStorage.getItem('ananda_management_directors_v6');
       if (rawDir) {
         const directors: CommitteeDirector[] = JSON.parse(rawDir);
         if (Array.isArray(directors)) {
@@ -708,7 +708,7 @@ export function resetPortalAccountCredentials(
             return d;
           });
           if (changed) {
-            localStorage.setItem('ananda_management_directors_v5', JSON.stringify(nextDirectors));
+            localStorage.setItem('ananda_management_directors_v6', JSON.stringify(nextDirectors));
             window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
           }
         }

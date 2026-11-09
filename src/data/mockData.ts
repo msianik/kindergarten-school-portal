@@ -74,7 +74,7 @@ export const PRINCIPAL_AND_DIRECTOR_PROFILES = {
     nameBn: 'আল নোমান',
     nameEn: 'Al Noman',
     roleBn: 'সভাপতি ও চেয়ারম্যান (Chairman)',
-    photoUrl: '/assets/fb/photo-3.jpg',
+    photoUrl: '/assets/fb/al_noman.jpg',
     quoteBn:
       'আনন্দ পাঠশালার মূল লক্ষ্য শিশুদের কোনো রকম মানসিক চাপ ছাড়া আনন্দের সাথে শিক্ষার আলোয় আলোকিত করা। মানসম্মত শিক্ষা উপকরণ, আধুনিক শ্রেণিকক্ষ ও শিশুবান্ধব মন্টেসরি পরিবেশের মাধ্যমে শৈশবের স্বাভাবিক কৌতূহল ও সৃজনশীলতা জাগ্রত করে একটি নৈতিক, আত্মবিশ্বাসী ও মানবিক আগামী প্রজন্ম গড়ে তোলাই আমাদের প্রধান অঙ্গীকার।',
     quoteEn:
@@ -255,7 +255,7 @@ export const MANAGEMENT_COMMITTEE: CommitteeDirector[] = [
     designationBn: 'সভাপতি ও চেয়ারম্যান, পরিচালনা পর্ষদ',
     designationEn: 'Chairman & President, Board of Directors',
     isChairman: true,
-    photoUrl: '/assets/fb/photo-3.jpg',
+    photoUrl: '/assets/fb/al_noman.jpg',
     professionBn: 'বিশিষ্ট শিক্ষানুরাগী, অর্থনীতিবিদ ও সমাজ উন্নয়ন ব্যক্তিত্ব',
     phone: '০১৬৩৩-৪৫৫৬৬৭',
     email: 'al.noman@anandapathshala.edu.bd',
