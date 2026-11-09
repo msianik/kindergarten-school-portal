@@ -7,8 +7,6 @@ import {
   Image as ImageIcon,
   Bell,
   ArrowRight,
-  Pause,
-  Play,
   Clock,
   ExternalLink,
 } from 'lucide-react';
@@ -259,21 +257,6 @@ export const HomeCarousel: React.FC<HomeCarouselProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span>লাইভ স্লাইড</span>
             </span>
-
-            {/* Slide counter */}
-            <span className="text-xs font-mono font-bold text-slate-200 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/15">
-              {toBnNumber(currentIndex + 1)} / {toBnNumber(total)}
-            </span>
-
-            {/* Play/Pause control */}
-            <button
-              type="button"
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer"
-              title={isPlaying ? 'স্বয়ংক্রিয় প্লে থামান' : 'স্বয়ংক্রিয় প্লে চালু করুন'}
-            >
-              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            </button>
           </div>
         </div>
 
