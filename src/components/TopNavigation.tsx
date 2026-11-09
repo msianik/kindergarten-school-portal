@@ -269,6 +269,28 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 >
                   অভিভাবক
                 </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('accountant')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    currentRole === 'accountant'
+                      ? 'bg-white text-emerald-950 font-bold shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  হিসাবরক্ষক
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectRole('gate_security')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    currentRole === 'gate_security'
+                      ? 'bg-white text-teal-950 font-bold shadow-xs'
+                      : 'bg-white/15 hover:bg-white/25 text-white'
+                  }`}
+                >
+                  সিকিউরিটি
+                </button>
               </>
             )}
             <button

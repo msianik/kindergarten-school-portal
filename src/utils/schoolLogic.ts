@@ -18,6 +18,8 @@ import {
   MonthlyAttendanceReportMeta,
   ActivityPost,
   SchoolAssetItem,
+  RolePolicyConfig,
+  DEFAULT_ROLE_POLICY_CONFIG,
 } from '../types/school';
 import {
   SCHOOL_TEACHERS,
@@ -162,11 +164,24 @@ export const PORTAL_ACCOUNTS: PortalAccount[] = [
     studentId: 'std-1',
   },
   {
+    id: 'acc-accountant',
+    nameBn: 'মাহমুদুল হাসান',
+    nameEn: 'Mahmudul Hasan',
+    role: 'accountant',
+    roleTitleBn: 'হিসাবরক্ষণ কর্মকর্তা (Accounts Officer)',
+    portalNameBn: 'হিসাবরক্ষণ ও বেতন/ফি পোর্টাল',
+    email: 'accounts@anandapathshala.edu.bd',
+    phone: '01719887766',
+    username: 'accountant',
+    passwordHint: '123456',
+    avatarUrl: '/assets/fb/photo-4.jpg',
+  },
+  {
     id: 'acc-gate',
-    nameBn: 'ক্যাম্পাস সিকিউরিটি ডেস্ক',
-    nameEn: 'Campus Gate Security',
+    nameBn: 'হাবিবুর রহমান',
+    nameEn: 'Habibur Rahman',
     role: 'gate_security',
-    roleTitleBn: 'গেট সিকিউরিটি ও ভেরিফিকেশন অফিসার',
+    roleTitleBn: 'গেট সিকিউরিটি ইন-চার্জ ও কেয়ারটেকার',
     portalNameBn: 'স্মার্ট গেট-পাস ও সিকিউরিটি পোর্টাল',
     email: 'gate@anandapathshala.edu.bd',
     phone: '01819001122',
@@ -175,6 +190,25 @@ export const PORTAL_ACCOUNTS: PortalAccount[] = [
     avatarUrl: '/assets/fb/logo.jpg',
   },
 ];
+
+export const ROLE_POLICY_STORAGE_KEY = 'ananda_role_policy_config_v1';
+
+export function getRolePolicyConfig(): RolePolicyConfig {
+  if (typeof window === 'undefined') return DEFAULT_ROLE_POLICY_CONFIG;
+  try {
+    const raw = localStorage.getItem(ROLE_POLICY_STORAGE_KEY);
+    if (raw) return { ...DEFAULT_ROLE_POLICY_CONFIG, ...JSON.parse(raw) };
+  } catch {}
+  return DEFAULT_ROLE_POLICY_CONFIG;
+}
+
+export function saveRolePolicyConfig(config: RolePolicyConfig): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(ROLE_POLICY_STORAGE_KEY, JSON.stringify(config));
+    window.dispatchEvent(new CustomEvent('ananda-role-policy-updated', { detail: config }));
+  } catch {}
+}
 
 export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
   {

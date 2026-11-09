@@ -255,7 +255,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const superAdminAcc = allAccounts.find((a) => a.role === 'super_admin') || PORTAL_ACCOUNTS[0];
   const directorAccounts = allAccounts.filter((a) => a.role === 'director');
   const academicAccounts = allAccounts.filter((a) =>
-    ['principal', 'teacher', 'parent', 'gate_security'].includes(a.role)
+    ['principal', 'teacher', 'parent', 'accountant', 'gate_security'].includes(a.role)
   );
 
   return (

@@ -1159,6 +1159,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         onToggleModule={handleToggleDirectorModule}
         onSetAllAccess={handleSetAllDirectorsAccess}
         logoUrl={logoUrl}
+        onSelectRole={onSelectRole}
       />
 
       {/* Media Manager Drawer */}

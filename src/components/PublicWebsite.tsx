@@ -40,6 +40,7 @@ import {
   LayoutDashboard,
   Bell,
   X,
+  Menu,
   Printer,
   Share2,
   MessageSquareQuote,
@@ -253,6 +254,16 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [submittedApp, setSubmittedApp] = useState<AdmissionApplication | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  const handleNavClick = (href: string) => {
+    setIsMobileMenuOpen(false);
+    const targetId = href.replace('#', '');
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -375,8 +386,23 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       {/* Standalone Public Website Header (Open to Everyone) */}
       <header className="bg-white/95 backdrop-blur-md border-b border-amber-200/80 sticky top-0 z-40 shadow-2xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left: School Logo & Title */}
+          {/* Left: Mobile Hamburger (তিনটা ড্যাশ) + School Logo & Title */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Mobile Hamburger Menu Toggle Button (তিনটা ড্যাশ / ☰) */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden w-9 h-9 rounded-2xl flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer"
+              title={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
+              aria-label={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-5 h-5 text-emerald-900" />
+              ) : (
+                <Menu className="w-5 h-5 text-emerald-800" />
+              )}
+            </button>
+
             <img
               src={logoUrl}
               alt="আনন্দ পাঠশালা কুষ্টিয়া লোগো"
@@ -393,8 +419,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
           </div>
 
-          {/* Middle: Centered Navigation Menubar (Between Anand Pathshala & Facebook Page) */}
-          <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth px-2 sm:px-4">
+          {/* Middle: Centered Navigation Menubar (Desktop / Tablet: hidden on mobile) */}
+          <div className="hidden md:flex flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth px-2 sm:px-4">
             <nav className="flex items-center gap-1.5 lg:gap-2 whitespace-nowrap py-1 w-max mx-auto">
               {publicNavLinks.map((item) => (
                 <a
@@ -468,6 +494,106 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Drawer / Slide-down Menu (তিনটা ড্যাশে ক্লিক করলে যা খুলবে) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 top-16 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-start animate-in fade-in duration-150">
+          <div
+            className="bg-white border-b-2 border-emerald-500/30 shadow-2xl p-4 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-top-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                  <Menu className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 leading-none">প্রধান মেনু</h3>
+                  <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">আনন্দ পাঠশালা কুষ্টিয়া</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="মেনু বন্ধ করুন"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Menu Links Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {publicNavLinks.map((item) => (
+                <button
+                  key={item.href}
+                  type="button"
+                  onClick={() => handleNavClick(item.href)}
+                  className={`w-full p-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs text-left cursor-pointer active:scale-98 ${item.colorClass}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-white shadow-2xs flex items-center justify-center shrink-0">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div className="font-black text-slate-900 text-sm leading-tight">
+                        {item.label}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-normal mt-0.5">
+                        {item.href === '#notice-board' && 'ডিজিটাল নোটিশ ও নোটিফিকেশন'}
+                        {item.href === '#teachers' && 'প্রিন্সিপাল ও শিক্ষক মণ্ডলী'}
+                        {item.href === '#governing-body' && 'সম্মানিত পরিচালনা পর্ষদ'}
+                        {item.href === '#students' && 'কৃতি শিক্ষার্থীবৃন্দ'}
+                        {item.href === '#curriculum' && 'শ্রেণিভিত্তিক পাঠ্যক্রম ও বয়স'}
+                        {item.href === '#apply' && '২০২৭ শিক্ষাবর্ষে নতুন ভর্তি'}
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Quick Contact & Actions Bar inside Mobile Menu */}
+            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <a
+                href={`tel:${schoolProfile.phone}`}
+                className="py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-bold flex items-center gap-2 border border-emerald-200/60"
+              >
+                <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{schoolProfile.phone}</span>
+              </a>
+
+              <a
+                href={schoolProfile.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-3 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] rounded-xl font-bold flex items-center gap-1.5 border border-[#1877F2]/20"
+              >
+                <Facebook className="w-3.5 h-3.5 fill-current" />
+                <span>ফেসবুক পেজ</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenLoginModal();
+                }}
+                className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-1.5 ml-auto cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>লগইন করুন</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Backdrop Click */}
+          <div className="flex-1" onClick={() => setIsMobileMenuOpen(false)} />
+        </div>
+      )}
 
       {/* Top Scrolling Live Announcement Ticker */}
       <NoticeTicker

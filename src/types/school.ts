@@ -597,6 +597,82 @@ export interface DirectorAccessPermission {
   lastUpdatedAtBn?: string;
 }
 
+export interface RolePolicyConfig {
+  teacher: {
+    canTakeAttendance: boolean;
+    canEnterExamMarks: boolean;
+    canPostClassDiary: boolean;
+    canEvaluateSkills: boolean;
+    canViewClassFeesDue: boolean;
+    canChatWithParents: boolean;
+  };
+  parent: {
+    childDataOnly: boolean;
+    canCommentOnDiary: boolean;
+    canPayFeesOnline: boolean;
+    canChatWithTeacher: boolean;
+    canUpdateChildHealth: boolean;
+    canRequestUrgentPickup: boolean;
+  };
+  accountant: {
+    canCollectFees: boolean;
+    canGenerateInvoice: boolean;
+    canGenerateSalarySlips: boolean;
+    canManageAssets: boolean;
+    canViewFinancialReports: boolean;
+  };
+  gateSecurity: {
+    canScanQrCode: boolean;
+    canAuthorizeRelease: boolean;
+    canSendSmsAlerts: boolean;
+    canSendEmergencyAlert: boolean;
+  };
+  principal: {
+    fullAcademicControl: boolean;
+    fullOperationalControl: boolean;
+    canBroadcastNotices: boolean;
+    canApproveAdmissions: boolean;
+  };
+}
+
+export const DEFAULT_ROLE_POLICY_CONFIG: RolePolicyConfig = {
+  teacher: {
+    canTakeAttendance: true,
+    canEnterExamMarks: true,
+    canPostClassDiary: true,
+    canEvaluateSkills: true,
+    canViewClassFeesDue: true,
+    canChatWithParents: true,
+  },
+  parent: {
+    childDataOnly: true,
+    canCommentOnDiary: true,
+    canPayFeesOnline: true,
+    canChatWithTeacher: true,
+    canUpdateChildHealth: true,
+    canRequestUrgentPickup: true,
+  },
+  accountant: {
+    canCollectFees: true,
+    canGenerateInvoice: true,
+    canGenerateSalarySlips: true,
+    canManageAssets: true,
+    canViewFinancialReports: true,
+  },
+  gateSecurity: {
+    canScanQrCode: true,
+    canAuthorizeRelease: true,
+    canSendSmsAlerts: true,
+    canSendEmergencyAlert: true,
+  },
+  principal: {
+    fullAcademicControl: true,
+    fullOperationalControl: true,
+    canBroadcastNotices: true,
+    canApproveAdmissions: true,
+  },
+};
+
 export interface TeacherMember {
   id: string;
   nameBn: string;
