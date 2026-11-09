@@ -326,7 +326,7 @@ export const MANAGEMENT_COMMITTEE: CommitteeDirector[] = [
     designationBn: 'প্রতিষ্ঠাতা ও পরিচালক',
     designationEn: 'Founder & Director',
     isChairman: false,
-    photoUrl: '/assets/fb/photo-6.jpg',
+    photoUrl: '/assets/fb/ali_adnan.jpg',
     professionBn: 'বিশিষ্ট শিক্ষানুরাগী ও সমাজসেবক',
     phone: '০১৭১১-২২৩৩৪৪',
     email: 'ali.adnan@anandapathshala.edu.bd',

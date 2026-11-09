@@ -504,7 +504,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const [directorsList, setDirectorsList] = useState<CommitteeDirector[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('ananda_management_directors_v6');
+        const stored = localStorage.getItem('ananda_management_directors_v7');
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -518,7 +518,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     setDirectorsList(updated);
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('ananda_management_directors_v6', JSON.stringify(updated));
+        localStorage.setItem('ananda_management_directors_v7', JSON.stringify(updated));
         window.dispatchEvent(
           new CustomEvent('ananda-directors-updated', { detail: { directors: updated } })
         );
