@@ -254,14 +254,20 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [formError, setFormError] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isAdmissionFormOpen, setIsAdmissionFormOpen] = useState<boolean>(false);
 
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
     const targetId = href.replace('#', '');
-    const el = document.getElementById(targetId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    if (targetId === 'apply') {
+      setIsAdmissionFormOpen(true);
     }
+    setTimeout(() => {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 60);
   };
 
   useEffect(() => {
@@ -425,6 +431,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                 <a
                   key={item.href}
                   href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                  }}
                   className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 group active:scale-95 shrink-0 ${item.colorClass}`}
                 >
                   {item.icon}
@@ -606,8 +616,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         <HomeCarousel
           fbGalleryImages={fbGallery}
           onScrollToSection={(sectionId) => {
-            const el = document.getElementById(sectionId);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            if (sectionId === 'apply') {
+              setIsAdmissionFormOpen(true);
+            }
+            setTimeout(() => {
+              const el = document.getElementById(sectionId);
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 60);
           }}
         />
 
@@ -651,13 +666,20 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
-                <a
-                  href="#apply"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdmissionFormOpen(true);
+                    setTimeout(() => {
+                      const el = document.getElementById('apply');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 60);
+                  }}
                   className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2 transform active:scale-95 cursor-pointer"
                 >
-                  অনলাইন ভর্তি আবেদন করুন (২০২৭)
+                  <span>অনলাইন ভর্তি আবেদন করুন (২০২৭)</span>
                   <ArrowRight className="w-4 h-4" />
-                </a>
+                </button>
                 <a
                   href="#teachers"
                   className="px-5 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-sm font-bold transition-all backdrop-blur-md cursor-pointer"
@@ -1337,41 +1359,75 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <AdmissionAgeCalculator
         onSelectClassAndApply={(cls) => {
           setApplyingClass(cls);
-          const el = document.getElementById('apply');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
+          setIsAdmissionFormOpen(true);
+          setTimeout(() => {
+            const el = document.getElementById('apply');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 60);
         }}
       />
 
-      {/* Online Admission Section */}
-      <section id="apply" className="scroll-mt-24 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 text-slate-900 p-6 sm:p-10 lg:p-12 rounded-3xl shadow-xl border-2 border-emerald-100/90 space-y-8 relative overflow-hidden">
-        {/* Subtle Ambient Decorative Blooms */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-200/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Online Admission Section (Conditional - opens on demand or from calculator) */}
+      <div id="apply" className="scroll-mt-24">
+        {isAdmissionFormOpen ? (
+          <section className="bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 text-slate-900 p-6 sm:p-10 lg:p-12 rounded-3xl shadow-xl border-2 border-emerald-400/80 space-y-8 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* Subtle Ambient Decorative Blooms */}
+            <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-200/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>অনলাইন অ্যাডমিশন পোর্টাল ২০২৭ · আনন্দ পাঠশালা কুষ্টিয়া</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-            ২০২৭ শিক্ষাবর্ষে আপনার সন্তানের ভর্তি আবেদনপত্র জমা দিন
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-            আনন্দময় ও শিশুবান্ধব শিক্ষায় আপনার সন্তানকে ভর্তি করতে ঘরে বসেই মাত্র ২ মিনিটে আবেদন ফরমটি পূরণ করুন। আবেদন যাচাই শেষে ২৪ ঘণ্টার মধ্যে আমাদের কুষ্টিয়া ক্যাম্পাস থেকে অভিভাবকের নম্বরে ফোনে যোগাযোগ করা হবে।
-          </p>
+            <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-emerald-200/70 pb-5">
+              <div className="max-w-2xl space-y-2">
+                <div className="inline-flex items-center gap-2 bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>অনলাইন অ্যাডমিশন পোর্টাল ২০২৭ · আনন্দ পাঠশালা কুষ্টিয়া</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                  ২০২৭ শিক্ষাবর্ষে আপনার সন্তানের ভর্তি আবেদনপত্র
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                  ঘরে বসেই মাত্র ২ মিনিটে আবেদন ফরমটি পূরণ করুন। আবেদন যাচাই শেষে ২৪ ঘণ্টার মধ্যে আমাদের কুষ্টিয়া ক্যাম্পাস থেকে অভিভাবকের নম্বরে ফোনে যোগাযোগ করা হবে।
+                </p>
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> ২০২৭ শিক্ষাবর্ষে সীমিত আসন
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200/60 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" /> ২ মিনিটে সহজ আবেদন
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200/60 shadow-2xs">
-              <Phone className="w-3.5 h-3.5 text-cyan-600" /> ২৪ ঘণ্টার মধ্যে নিশ্চিতকরণ কল
-            </span>
-          </div>
-        </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> ২০২৭ শিক্ষাবর্ষে সীমিত আসন
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200/60 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" /> ২ মিনিটে সহজ আবেদন
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200/60 shadow-2xs">
+                    <Phone className="w-3.5 h-3.5 text-cyan-600" /> ২৪ ঘণ্টার মধ্যে নিশ্চিতকরণ কল
+                  </span>
+                </div>
+              </div>
+
+              {/* Close / Collapse Button */}
+              <button
+                type="button"
+                onClick={() => setIsAdmissionFormOpen(false)}
+                className="self-start md:self-auto px-4 py-2 bg-white/95 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-300 rounded-xl text-xs font-bold shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="ভর্তি ফরম আড়াল করুন"
+              >
+                <X className="w-4 h-4 text-rose-500" />
+                <span>ফরম আড়াল করুন</span>
+              </button>
+            </div>
+
+            {/* Selected Class Highlight Banner */}
+            <div className="relative z-10 p-3.5 sm:p-4 bg-emerald-100/70 border border-emerald-300 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span className="text-emerald-950 font-bold">
+                  ভর্তি ইচ্ছুক শ্রেণি হিসেবে নির্বাচিত:{' '}
+                  <span className="text-sm font-black text-emerald-900 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">
+                    {ALL_SCHOOL_CLASSES.find((c) => c.id === applyingClass)?.fullNameBn || applyingClass}
+                  </span>
+                </span>
+              </div>
+              <span className="text-slate-600 font-medium text-[11px]">
+                (নিচের ফরমে প্রয়োজন অনুসারে শ্রেণি পরিবর্তনও করা যাবে)
+              </span>
+            </div>
 
         {submittedApp ? (
           <div className="relative z-10 bg-white border-2 border-emerald-200 p-6 sm:p-8 rounded-3xl shadow-lg space-y-6 max-w-2xl mx-auto">
@@ -1799,8 +1855,38 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </button>
             </div>
           </form>
+            )}
+          </section>
+        ) : (
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-3xl border-2 border-dashed border-emerald-300/80 p-6 sm:p-8 text-center space-y-3 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900">
+                ২০২৭ শিক্ষাবর্ষে অনলাইনে ভর্তি আবেদন
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
+                উপরে ক্যালকুলেটরে শিশুর জন্ম তারিখ দিয়ে উপযুক্ত শ্রেণিতে ক্লিক করলেই ভর্তি ফরমটি নিচে সরাসরি উন্মুক্ত হয়ে যাবে। অথবা নিচে চাপ দিয়ে সরাসরি ফরম পূরণ করতে পারেন।
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAdmissionFormOpen(true);
+                setTimeout(() => {
+                  const el = document.getElementById('apply');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 50);
+              }}
+              className="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <span>সরাসরি অনলাইন ভর্তি ফরম খুলুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         )}
-      </section>
+      </div>
 
       {/* Authentic Kushtia Campus Info & Contacts */}
       <footer className="bg-gradient-to-b from-slate-50 to-emerald-50/40 border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-2xs text-xs text-slate-600 space-y-6">

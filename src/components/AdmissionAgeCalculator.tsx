@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SchoolClass } from '../types/school';
 import {
   Calendar,
   Sparkles,
-  ArrowRight,
+  ArrowDown,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -14,19 +14,71 @@ interface AdmissionAgeCalculatorProps {
   onSelectClassAndApply: (schoolClass: SchoolClass) => void;
 }
 
-interface ClassRecommendation {
-  classId: SchoolClass | null;
-  classNameBn: string;
+interface ClassMeta {
+  id: SchoolClass;
+  nameBn: string;
+  shortNameBn: string;
   ageRangeBn: string;
   descriptionBn: string;
-  status: 'eligible' | 'too_young' | 'older';
 }
+
+const SCHOOL_CLASSES_META: ClassMeta[] = [
+  {
+    id: 'HateKhori',
+    nameBn: 'হাতেখড়ি (Pre-Play)',
+    shortNameBn: 'হাতেখড়ি',
+    ageRangeBn: '২.৫ থেকে ৩.৫ বছর',
+    descriptionBn:
+      'খেলাধুলা, ছড়া, বর্ণমালার সাথে প্রাথমিক ভাববিনিময় ও বর্ণিল মন্টেসরি উপকরণের মাধ্যমে ভয়হীন আনন্দের সূচনা।',
+  },
+  {
+    id: 'Play',
+    nameBn: 'প্লে (Play Group)',
+    shortNameBn: 'প্লে গ্রুপ',
+    ageRangeBn: '৩.৫ থেকে ৪.৫ বছর',
+    descriptionBn:
+      'সুর, ছন্দ, উচ্চারণ, সেন্সরি অ্যাক্টিভিটি ও বর্ণ-সংখ্যার পরিচয় দিয়ে সামাজিক যোগাযোগ ও আত্মবিশ্বাস গড়ে তোলা।',
+  },
+  {
+    id: 'Nursery',
+    nameBn: 'নার্সারি (Nursery)',
+    shortNameBn: 'নার্সারি',
+    ageRangeBn: '৪.৫ থেকে ৫.৫ বছর',
+    descriptionBn:
+      'শব্দ গঠন, ড্রইং, হাতের লেখার সুন্দর চর্চা, প্রাথমিক পরিবেশ বিজ্ঞান ও সৃজনশীল আর্ট-ক্রাফট শিক্ষা।',
+  },
+  {
+    id: 'KG',
+    nameBn: 'কেজি (Kindergarten)',
+    shortNameBn: 'কেজি',
+    ageRangeBn: '৫.৫ থেকে ৬.৫ বছর',
+    descriptionBn:
+      'বাক্য গঠন, সহজ গণিত, ইংরেজি ধ্বনি (Phonics), বিজ্ঞান কৌতূহল ও প্রাথমিক আনুষ্ঠানিক ক্লাসের পূর্ণ প্রস্তুতি।',
+  },
+  {
+    id: 'Class-1',
+    nameBn: '১ম শ্রেণি (Class One)',
+    shortNameBn: '১ম শ্রেণি',
+    ageRangeBn: '৬.৫ থেকে ৭.৫ বছর',
+    descriptionBn:
+      'জাতীয় পাঠ্যক্রম ও আন্তর্জাতিক মানের সমন্বয়, সৃজনশীল গণিত, পাঠ্যাভ্যাস ও নৈতিক মূল্যবোধ শিক্ষা।',
+  },
+  {
+    id: 'Class-2',
+    nameBn: '২য় শ্রেণি (Class Two)',
+    shortNameBn: '২য় শ্রেণি',
+    ageRangeBn: '৭.৫+ বছর',
+    descriptionBn:
+      'উন্নত পঠন-পাঠন, সমস্যা সমাধানের দক্ষতা ও সহ-শিক্ষামূলক কার্যক্রমে সক্রিয় অংশগ্রহণ।',
+  },
+];
 
 export const AdmissionAgeCalculator: React.FC<AdmissionAgeCalculatorProps> = ({
   onSelectClassAndApply,
 }) => {
-  // Default child DOB: ~3 years old on Jan 1, 2027 (e.g. 2023-08-15)
+  // Default child DOB: ~3 years 4 months on Jan 1, 2027
   const [dobInput, setDobInput] = useState<string>('2023-08-15');
+  const [selectedClassId, setSelectedClassId] = useState<SchoolClass>('Play');
 
   // Convert numbers to Bengali digits
   const toBnNumber = (n: number | string) => {
@@ -61,80 +113,45 @@ export const AdmissionAgeCalculator: React.FC<AdmissionAgeCalculatorProps> = ({
 
     const totalDecimalYears = years + months / 12 + days / 365;
 
-    let recommendation: ClassRecommendation;
+    let recommendedClassId: SchoolClass | null = null;
+    let isTooYoung = false;
 
     if (totalDecimalYears < 2.5) {
-      recommendation = {
-        classId: null,
-        classNameBn: 'বয়স এখনও কিছুটা কম',
-        ageRangeBn: '২.৫ বছর পূর্ণ হলে যোগ্য',
-        descriptionBn:
-          '২০২৭ শিক্ষাবর্ষের শুরুতে আপনার শিশুর বয়স ২.৫ বছরের কম হচ্ছে। শিশু ২.৫ বছর পূর্ণ করলে হাতেখড়ি শ্রেণিতে ভর্তির সুযোগ পাবে। তবে আপনি চাইলে এখনই ক্যাম্পাসে এসে শিশুশিক্ষা প্রাথমিক কাউন্সেলিং ও ভর্তি তথ্য জেনে রাখতে পারেন।',
-        status: 'too_young',
-      };
+      isTooYoung = true;
     } else if (totalDecimalYears >= 2.5 && totalDecimalYears < 3.5) {
-      recommendation = {
-        classId: 'HateKhori',
-        classNameBn: 'হাতেখড়ি (Pre-Play)',
-        ageRangeBn: '২.৫ থেকে ৩.৫ বছর',
-        descriptionBn:
-          'খেলাধুলা, ছড়া, বর্ণমালার সাথে প্রাথমিক ভাববিনিময় ও বর্ণিল মন্টেসরি উপকরণের মাধ্যমে ভয়হীন আনন্দের সূচনা।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'HateKhori';
     } else if (totalDecimalYears >= 3.5 && totalDecimalYears < 4.5) {
-      recommendation = {
-        classId: 'Play',
-        classNameBn: 'প্লে (Play Group)',
-        ageRangeBn: '৩.৫ থেকে ৪.৫ বছর',
-        descriptionBn:
-          'সুর, ছন্দ, উচ্চারণ, সেন্সরি অ্যাক্টিভিটি ও বর্ণ-সংখ্যার পরিচয় দিয়ে সামাজিক যোগাযোগ ও আত্মবিশ্বাস গড়ে তোলা।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'Play';
     } else if (totalDecimalYears >= 4.5 && totalDecimalYears < 5.5) {
-      recommendation = {
-        classId: 'Nursery',
-        classNameBn: 'নার্সারি (Nursery)',
-        ageRangeBn: '৪.৫ থেকে ৫.৫ বছর',
-        descriptionBn:
-          'শব্দ গঠন, ড্রইং, হাতের লেখার সুন্দর চর্চা, প্রাথমিক পরিবেশ বিজ্ঞান ও সৃজনশীল আর্ট-ক্রাফট শিক্ষা।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'Nursery';
     } else if (totalDecimalYears >= 5.5 && totalDecimalYears < 6.5) {
-      recommendation = {
-        classId: 'KG',
-        classNameBn: 'কেজি (Kindergarten)',
-        ageRangeBn: '৫.৫ থেকে ৬.৫ বছর',
-        descriptionBn:
-          'বাক্য গঠন, সহজ গণিত, ইংরেজি ধ্বনি (Phonics), বিজ্ঞান কৌতূহল ও প্রাথমিক আনুষ্ঠানিক ক্লাসের পূর্ণ প্রস্তুতি।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'KG';
     } else if (totalDecimalYears >= 6.5 && totalDecimalYears < 7.5) {
-      recommendation = {
-        classId: 'Class-1',
-        classNameBn: '১ম শ্রেণি (Class One)',
-        ageRangeBn: '৬.৫ থেকে ৭.৫ বছর',
-        descriptionBn:
-          'জাতীয় পাঠ্যক্রম ও আন্তর্জাতিক মানের সমন্বয়, সৃজনশীল গণিত, পাঠ্যাভ্যাস ও নৈতিক মূল্যবোধ শিক্ষা।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'Class-1';
     } else {
-      recommendation = {
-        classId: 'Class-2',
-        classNameBn: '২য় শ্রেণি (Class Two)',
-        ageRangeBn: '৭.৫+ বছর',
-        descriptionBn:
-          'উন্নত পঠন-পাঠন, সমস্যা সমাধানের দক্ষতা ও সহ-শিক্ষামূলক কার্যক্রমে সক্রিয় অংশগ্রহণ।',
-        status: 'eligible',
-      };
+      recommendedClassId = 'Class-2';
     }
 
     return {
       years,
       months,
       days,
-      recommendation,
+      recommendedClassId,
+      isTooYoung,
     };
   }, [dobInput]);
+
+  // Synchronize selected class with recommendation whenever calculation updates
+  useEffect(() => {
+    if (calculation?.recommendedClassId) {
+      setSelectedClassId(calculation.recommendedClassId);
+    }
+  }, [calculation?.recommendedClassId]);
+
+  // Active class definition
+  const currentClassDef = useMemo(() => {
+    return SCHOOL_CLASSES_META.find((c) => c.id === selectedClassId) || SCHOOL_CLASSES_META[1];
+  }, [selectedClassId]);
 
   return (
     <div className="w-full max-w-full bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 text-white rounded-3xl sm:rounded-4xl border-2 sm:border-3 border-emerald-500/50 p-4 sm:p-7 md:p-9 shadow-2xl shadow-emerald-950/50 relative overflow-hidden space-y-5 sm:space-y-6 box-border">
@@ -153,7 +170,7 @@ export const AdmissionAgeCalculator: React.FC<AdmissionAgeCalculatorProps> = ({
             শিশুর বয়স ও শ্রেণি নির্ধারণ ক্যালকুলেটর
           </h3>
           <p className="text-xs sm:text-sm text-emerald-200/90 font-medium">
-            শিশুর জন্মতারিখ নির্বাচন করুন—সিস্টেম স্বয়ংক্রিয়ভাবে বয়স হিসাব করে ২০২৭ শিক্ষাবর্ষের উপযুক্ত শ্রেণি সুপারিশ করবে।
+            শিশুর জন্মতারিখ দিন—সিস্টেম স্বয়ংক্রিয়ভাবে বয়স হিসাব করে ২০২৭ শিক্ষাবর্ষের উপযুক্ত শ্রেণি সুপারিশ করবে।
           </p>
         </div>
       </div>
@@ -191,7 +208,7 @@ export const AdmissionAgeCalculator: React.FC<AdmissionAgeCalculatorProps> = ({
         </div>
       </div>
 
-      {/* Unified Results Area in the Exact Same Box */}
+      {/* Unified Dynamic Results Area in the Exact Same Box */}
       {calculation ? (
         <div className="relative z-10 space-y-4 sm:space-y-5 animate-in fade-in zoom-in-95 duration-200">
           {/* Highlighted Age Summary Banner in the Same Box */}
@@ -223,59 +240,112 @@ export const AdmissionAgeCalculator: React.FC<AdmissionAgeCalculatorProps> = ({
             </div>
           </div>
 
-          {/* Integrated Recommendation & Application Section in the Same Box */}
-          <div className="bg-slate-900/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-emerald-400/50 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-5">
+          {/* Interactive Class Selector Pills (উপযুক্ত শ্রেণি সিলেক্ট করার অপশন) */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-emerald-200 flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-amber-300" />
+                <span>২০২৭ শিক্ষাবর্ষের শ্রেণিসমূহ (বয়স অনুযায়ী নির্বাচিত):</span>
+              </span>
+              <span className="text-[11px] text-slate-300 hidden sm:inline">
+                (পছন্দের শ্রেণিতে চাপ দিয়ে ফরমটি নিচে আনুন)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {SCHOOL_CLASSES_META.map((cls) => {
+                const isRecommended = calculation.recommendedClassId === cls.id;
+                const isSelected = selectedClassId === cls.id;
+                return (
+                  <button
+                    key={cls.id}
+                    type="button"
+                    onClick={() => setSelectedClassId(cls.id)}
+                    className={`relative p-2.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-lg scale-[1.03] z-10 font-black'
+                        : isRecommended
+                        ? 'bg-emerald-800/80 hover:bg-emerald-800 text-white border-emerald-400/80 shadow-xs'
+                        : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border-emerald-900/60'
+                    }`}
+                  >
+                    {isRecommended && (
+                      <span className="absolute -top-2 right-2 bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full border border-emerald-300 shadow-2xs">
+                        সুপারিশকৃত
+                      </span>
+                    )}
+                    <div className="text-xs font-black truncate">{cls.shortNameBn}</div>
+                    <div
+                      className={`text-[10px] font-semibold truncate ${
+                        isSelected ? 'text-slate-800' : 'text-emerald-300'
+                      }`}
+                    >
+                      {cls.ageRangeBn}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Integrated Recommendation Card & Click to Open Admission Form */}
+          <div
+            onClick={() => onSelectClassAndApply(selectedClassId)}
+            className="group bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-emerald-400/60 hover:border-amber-400 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-5 cursor-pointer transition-all hover:scale-[1.01]"
+            title="এই শ্রেণির ওপর ক্লিক করলেই ভর্তি ফরমটি নিচে সরাসরি উন্মুক্ত হয়ে যাবে"
+          >
             <div className="space-y-2 text-center lg:text-left">
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-emerald-600 px-3 py-1 rounded-full shadow-xs">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>
-                    {calculation.recommendation.status === 'eligible'
-                      ? 'ভর্তির জন্য উপযুক্ত শ্রেণি'
-                      : 'বয়স বিষয়ক পরামর্শ'}
+                    {calculation.isTooYoung
+                      ? 'বয়স বিষয়ক প্রাথমিক তথ্য'
+                      : selectedClassId === calculation.recommendedClassId
+                      ? 'বয়স অনুযায়ী সম্পূর্ণ উপযুক্ত শ্রেণি'
+                      : 'আপনার নির্বাচিত শ্রেণি'}
                   </span>
                 </span>
                 <span className="text-xs font-bold text-emerald-200 bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-700/60">
-                  নির্ধারিত বয়সসীমা: <strong className="text-white">{calculation.recommendation.ageRangeBn}</strong>
+                  নির্ধারিত বয়সসীমা: <strong className="text-white">{currentClassDef.ageRangeBn}</strong>
                 </span>
               </div>
 
               <div className="space-y-1 pt-1">
-                <h4 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center justify-center lg:justify-start gap-2">
+                <h4 className="text-2xl sm:text-3xl font-black text-white group-hover:text-amber-300 transition-colors tracking-tight flex items-center justify-center lg:justify-start gap-2">
                   <GraduationCap className="w-7 h-7 text-amber-400" />
-                  <span>{calculation.recommendation.classNameBn}</span>
+                  <span>{currentClassDef.nameBn}</span>
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                  {calculation.recommendation.descriptionBn}
+                  {currentClassDef.descriptionBn}
                 </p>
               </div>
             </div>
 
-            {/* Direct Application CTA Button */}
+            {/* Prominent Click Action Button */}
             <div className="w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
-              {calculation.recommendation.classId ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (calculation.recommendation.classId) {
-                      onSelectClassAndApply(calculation.recommendation.classId);
-                    }
-                  }}
-                  className="w-full lg:w-auto px-7 py-4 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-xl hover:shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer transform hover:scale-[1.02]"
-                >
-                  <span>{calculation.recommendation.classNameBn} তে অনলাইনে আবেদন করুন</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              ) : (
-                <div className="p-3.5 bg-amber-950/80 rounded-2xl border border-amber-500/40 text-xs font-bold text-amber-200 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>
-                    শিশু ২.৫ বছর পূর্ণ করা সাপেক্ষে ভর্তির সুযোগ পাবে। প্রয়োজনে বিদ্যালয়ে যোগাযোগ করুন।
-                  </span>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectClassAndApply(selectedClassId);
+                }}
+                className="w-full lg:w-auto px-7 py-4 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-xl hover:shadow-amber-500/30 active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer transform group-hover:scale-105"
+              >
+                <span>{currentClassDef.shortNameBn} তে অনলাইনে আবেদন ফরম খুলুন</span>
+                <ArrowDown className="w-5 h-5 animate-bounce" />
+              </button>
             </div>
           </div>
+
+          {calculation.isTooYoung && (
+            <div className="p-3 bg-amber-950/80 rounded-2xl border border-amber-500/40 text-xs font-bold text-amber-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                শিশুর বয়স ২.৫ বছরের কম হলেও প্রাথমিক প্রস্তুতি ও কাউন্সেলিংয়ের জন্য আবেদন ফরম জমা রাখা যাবে।
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-6 sm:p-8 text-center bg-slate-900/60 rounded-3xl border border-dashed border-emerald-500/40 text-slate-300 space-y-2">
