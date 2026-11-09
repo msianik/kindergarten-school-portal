@@ -1,5 +1,7 @@
-import { existsSync, readFileSync, unlinkSync } from "fs";
+import { existsSync, readFileSync, rmSync } from "fs";
 import { join } from "path";
+import { execSync } from "child_process";
+import AdmZip from "adm-zip";
 
 // Read environment variables from process or .env.local
 let token = process.env.NETLIFY_AUTH_TOKEN;
@@ -26,35 +28,22 @@ if (!token || !siteId) {
 }
 
 console.log("🔨 Building production bundle...");
-const buildProc = Bun.spawnSync(["bun", "run", "build"]);
-if (buildProc.exitCode !== 0) {
-  console.error("❌ Build failed:", buildProc.stderr.toString());
-  process.exit(1);
-}
+execSync("bun run build", { stdio: "inherit" });
 console.log("✅ Build finished successfully.");
 
-console.log("📦 Compressing dist folder for deployment...");
-const zipFile = join(process.cwd(), "dist.zip");
-if (existsSync(zipFile)) {
-  unlinkSync(zipFile);
+// Clean any leftover .git inside dist
+const distGit = join(process.cwd(), "dist", ".git");
+if (existsSync(distGit)) {
+  rmSync(distGit, { recursive: true, force: true });
 }
 
-// Compress using PowerShell on Windows
-const zipProc = Bun.spawnSync([
-  "powershell",
-  "-NoProfile",
-  "-Command",
-  `Compress-Archive -Path dist/* -DestinationPath "${zipFile}" -Force`,
-]);
+console.log("📦 Creating POSIX-compliant zip archive with AdmZip...");
+const zip = new AdmZip();
+zip.addLocalFolder(join(process.cwd(), "dist"));
+const zipBuffer = zip.toBuffer();
+console.log(`📦 Archive created (${(zipBuffer.length / 1024 / 1024).toFixed(2)} MB) with proper forward-slash paths.`);
 
-if (zipProc.exitCode !== 0 || !existsSync(zipFile)) {
-  console.error("❌ Failed to create dist.zip:", zipProc.stderr.toString());
-  process.exit(1);
-}
-
-console.log("🚀 Deploying directly to Netlify (Site ID:", siteId, ")...");
-const zipBytes = readFileSync(zipFile);
-
+console.log(`🚀 Deploying directly to Netlify (Site ID: ${siteId})...`);
 try {
   const res = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
     method: "POST",
@@ -62,7 +51,7 @@ try {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/zip",
     },
-    body: zipBytes,
+    body: zipBuffer,
   });
 
   if (!res.ok) {
@@ -78,8 +67,4 @@ try {
 } catch (err: any) {
   console.error("❌ Deployment failed:", err.message);
   process.exit(1);
-} finally {
-  if (existsSync(zipFile)) {
-    unlinkSync(zipFile);
-  }
 }
