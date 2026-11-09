@@ -1,6 +1,10 @@
 [build]
   publish = "dist"
-  command = "bun run build"
+  command = "bun run build || yarn build || npm run build"
+
+[build.environment]
+  BUN_VERSION = "latest"
+  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"
