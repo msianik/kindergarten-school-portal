@@ -213,26 +213,6 @@ export function saveRolePolicyConfig(config: RolePolicyConfig): void {
 
 export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
   {
-    directorId: 'dir-3',
-    nameBn: 'মোস্তফা আল মামুন',
-    nameEn: 'Mostofa Al Mamun',
-    roleTitleBn: 'সুপার অ্যাডমিন · পরিচালক ও সদস্য সচিব (Director & Secretary)',
-    photoUrl: '/assets/biddalay/mostofa_mamun.jpg',
-    email: 'mostofa.mamun@anandapathshala.edu.bd',
-    phone: '01788990011',
-    username: 'superadmin',
-    isSuperAdmin: true,
-    viewAllModules: true,
-    canEditSchoolAndBoard: true,
-    canManageNoticesAndEvents: true,
-    canManageStudentsAndAdmissions: true,
-    canManageFeesAndAccounts: true,
-    canApproveGatePassAndDiary: true,
-    allowedModules: [...ALL_PORTAL_MODULE_IDS],
-    lastUpdatedByBn: 'সিস্টেম ডিফল্ট (সুপার অ্যাডমিন)',
-    lastUpdatedAtBn: 'সার্বক্ষণিক পূর্ণ নিয়ন্ত্রণ',
-  },
-  {
     directorId: 'dir-4',
     nameBn: 'আল নোমান',
     nameEn: 'Al Noman',
@@ -241,26 +221,6 @@ export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
     email: 'al.noman@anandapathshala.edu.bd',
     phone: '01633455667',
     username: 'noman',
-    isSuperAdmin: false,
-    viewAllModules: true,
-    canEditSchoolAndBoard: false,
-    canManageNoticesAndEvents: false,
-    canManageStudentsAndAdmissions: false,
-    canManageFeesAndAccounts: false,
-    canApproveGatePassAndDiary: false,
-    allowedModules: [...ALL_PORTAL_MODULE_IDS],
-    lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
-    lastUpdatedAtBn: 'সকল মডিউল ভিউ অ্যাক্সেস সক্রিয়',
-  },
-  {
-    directorId: 'dir-5',
-    nameBn: 'এম এস আই অনিক',
-    nameEn: 'MSI Anik',
-    roleTitleBn: 'সম্মানিত পরিচালক (Director)',
-    photoUrl: '/assets/fb/msi_anik.webp',
-    email: 'msianik.bd@gmail.com',
-    phone: '01914057511',
-    username: 'anik',
     isSuperAdmin: false,
     viewAllModules: true,
     canEditSchoolAndBoard: false,
@@ -301,6 +261,46 @@ export const INITIAL_DIRECTOR_PERMISSIONS: DirectorAccessPermission[] = [
     email: 'summy.akter@anandapathshala.edu.bd',
     phone: '01822334556',
     username: 'summy',
+    isSuperAdmin: false,
+    viewAllModules: true,
+    canEditSchoolAndBoard: false,
+    canManageNoticesAndEvents: false,
+    canManageStudentsAndAdmissions: false,
+    canManageFeesAndAccounts: false,
+    canApproveGatePassAndDiary: false,
+    allowedModules: [...ALL_PORTAL_MODULE_IDS],
+    lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+    lastUpdatedAtBn: 'সকল মডিউল ভিউ অ্যাক্সেস সক্রিয়',
+  },
+  {
+    directorId: 'dir-3',
+    nameBn: 'মোস্তফা আল মামুন',
+    nameEn: 'Mostofa Al Mamun',
+    roleTitleBn: 'সুপার অ্যাডমিন · পরিচালক ও সদস্য সচিব (Director & Secretary)',
+    photoUrl: '/assets/biddalay/mostofa_mamun.jpg',
+    email: 'mostofa.mamun@anandapathshala.edu.bd',
+    phone: '01788990011',
+    username: 'superadmin',
+    isSuperAdmin: true,
+    viewAllModules: true,
+    canEditSchoolAndBoard: true,
+    canManageNoticesAndEvents: true,
+    canManageStudentsAndAdmissions: true,
+    canManageFeesAndAccounts: true,
+    canApproveGatePassAndDiary: true,
+    allowedModules: [...ALL_PORTAL_MODULE_IDS],
+    lastUpdatedByBn: 'সিস্টেম ডিফল্ট (সুপার অ্যাডমিন)',
+    lastUpdatedAtBn: 'সার্বক্ষণিক পূর্ণ নিয়ন্ত্রণ',
+  },
+  {
+    directorId: 'dir-5',
+    nameBn: 'এম এস আই অনিক',
+    nameEn: 'MSI Anik',
+    roleTitleBn: 'সম্মানিত পরিচালক (Director)',
+    photoUrl: '/assets/fb/msi_anik.webp',
+    email: 'msianik.bd@gmail.com',
+    phone: '01914057511',
+    username: 'anik',
     isSuperAdmin: false,
     viewAllModules: true,
     canEditSchoolAndBoard: false,
@@ -426,7 +426,7 @@ export function getAllPortalAccounts(): PortalAccount[] {
   let directors: CommitteeDirector[] = MANAGEMENT_COMMITTEE;
   if (typeof window !== 'undefined') {
     try {
-      const rawDirs = localStorage.getItem('ananda_management_directors_v9');
+      const rawDirs = localStorage.getItem('ananda_management_directors_v10');
       if (rawDirs) {
         const parsed = JSON.parse(rawDirs);
         if (Array.isArray(parsed) && parsed.length > 0) directors = parsed;
@@ -692,7 +692,7 @@ export function resetPortalAccountCredentials(
   if (typeof window !== 'undefined') {
     // 1. Sync with Directors storage if applicable
     try {
-      const rawDir = localStorage.getItem('ananda_management_directors_v9');
+      const rawDir = localStorage.getItem('ananda_management_directors_v10');
       if (rawDir) {
         const directors: CommitteeDirector[] = JSON.parse(rawDir);
         if (Array.isArray(directors)) {
@@ -709,7 +709,7 @@ export function resetPortalAccountCredentials(
             return d;
           });
           if (changed) {
-            localStorage.setItem('ananda_management_directors_v9', JSON.stringify(nextDirectors));
+            localStorage.setItem('ananda_management_directors_v10', JSON.stringify(nextDirectors));
             window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
           }
         }

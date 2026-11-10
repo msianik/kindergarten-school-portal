@@ -185,7 +185,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const [directorsList, setDirectorsList] = useState<CommitteeDirector[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('ananda_management_directors_v9');
+        const stored = localStorage.getItem('ananda_management_directors_v10');
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -206,7 +206,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         nextList = customEv.detail.directors;
       } else {
         try {
-          const stored = localStorage.getItem('ananda_management_directors_v9');
+          const stored = localStorage.getItem('ananda_management_directors_v10');
           if (stored) nextList = JSON.parse(stored);
         } catch {}
       }
@@ -967,6 +967,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {directorsList
                 .filter((d) => !d.isChairman)
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((director) => (
                   <div
                     key={director.id}
