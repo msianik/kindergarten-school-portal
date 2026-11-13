@@ -2293,14 +2293,6 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
               <Calendar className="w-4 h-4 text-emerald-700" />
               <span>সাপ্তাহিক রুটিন ও প্রিন্ট</span>
             </button>
-            <button
-              type="button"
-              onClick={() => onNavigateTab('routine')}
-              className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>সাপ্তাহিক সারসংক্ষেপ ও সকল রুটিন</span>
-            </button>
           </div>
         </div>
 

@@ -297,7 +297,7 @@ test('getRoleNavMetadata returns role-specific full and compact single-line menu
   assert.equal(teacherNav[0].id, 'overview');
 
   const parentNav = getRoleNavMetadata('parent');
-  assert.equal(parentNav.length, 11);
+  assert.equal(parentNav.length, 10);
   assert.equal(parentNav[0].shortLabelBn, 'সন্তান');
 
   const accountantNav = getRoleNavMetadata('accountant');

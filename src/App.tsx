@@ -310,6 +310,13 @@ export default function App() {
     };
   }, []);
 
+  // Guard: Parent role does not use ClassRoutineModule (since daily routine is directly on home overview)
+  useEffect(() => {
+    if (currentRole === 'parent' && currentTab === 'routine') {
+      setCurrentTab('overview');
+    }
+  }, [currentRole, currentTab]);
+
   const dispatchRealTimeFcmNotification = (notif: FcmNotification) => {
     setFcmNotifications((prev) => mergeNotificationsIdempotent(prev, notif));
     setActiveFcmToast(notif);
@@ -900,14 +907,9 @@ export default function App() {
                     />
                   )}
 
-                  {currentTab === 'routine' && (
+                  {currentTab === 'routine' && currentRole !== 'parent' && (
                     <ClassRoutineModule
                       currentRole={currentRole}
-                      initialClass={
-                        currentRole === 'parent' && loggedInAccount?.assignedClass
-                          ? (loggedInAccount.assignedClass as any)
-                          : undefined
-                      }
                     />
                   )}
 

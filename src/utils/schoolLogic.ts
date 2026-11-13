@@ -1762,12 +1762,6 @@ export function getRoleNavMetadata(role: string, directorId?: string): RoleNavIt
         descriptionBn: 'সন্তানের লাইভ স্ট্যাটাস ও সারসংক্ষেপ ড্যাশবোর্ড',
       },
       {
-        id: 'routine',
-        labelBn: 'ক্লাস রুটিন',
-        shortLabelBn: 'রুটিন',
-        descriptionBn: 'সন্তানের দৈনিক ও সাপ্তাহিক ক্লাস সময়সূচি',
-      },
-      {
         id: 'calendar',
         labelBn: 'একাডেমিক ক্যালেন্ডার',
         shortLabelBn: 'ক্যালেন্ডার',
@@ -2220,12 +2214,11 @@ export function getGroupedNavPillars(role: string, directorId?: string): NavPill
         id: 'pillar_academics',
         labelBn: 'পড়াশোনা ও ফলাফল',
         shortLabelBn: 'পড়াশোনা',
-        defaultTab: 'routine',
+        defaultTab: 'calendar',
         iconName: 'BookOpen',
         color: 'text-indigo-600',
-        itemIds: ['routine', 'calendar', 'results', 'diary', 'skills'],
+        itemIds: ['calendar', 'results', 'diary', 'skills'],
         items: [
-          { id: 'routine', labelBn: 'ক্লাস রুটিন', shortLabelBn: 'রুটিন', descriptionBn: 'সন্তানের দৈনিক ও সাপ্তাহিক ক্লাস সময়সূচি' },
           { id: 'calendar', labelBn: 'অ্যাকাডেমিক ক্যালেন্ডার', shortLabelBn: 'ক্যালেন্ডার', descriptionBn: 'ছুটি, পরীক্ষা ও স্কুলের বিশেষ দিনপঞ্জি' },
           { id: 'results', labelBn: 'পরীক্ষার ফলাফল', shortLabelBn: 'ফলাফল', descriptionBn: 'একাডেমিক মার্কশিট ও কালারফুল রিপোর্ট কার্ড' },
           { id: 'diary', labelBn: 'ক্লাস ডায়েরি', shortLabelBn: 'ডায়েরি', descriptionBn: 'আজকের ক্লাসের কাজ, টিফিন ও ছবি' },
