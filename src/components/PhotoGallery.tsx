@@ -1,29 +1,17 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FacebookGalleryItem } from '../types/school';
 import {
   Image as ImageIcon,
-  Upload,
-  Plus,
   X,
   ChevronLeft,
   ChevronRight,
   Maximize2,
   Download,
   Search,
-  Filter,
-  CheckCircle2,
-  Trash2,
   Sparkles,
-  Lock,
-  Unlock,
-  ExternalLink,
-  Layers,
-  Calendar,
-  Tag,
-  AlertCircle,
   Eye,
+  Trash2,
 } from 'lucide-react';
-import { SCHOOL_PROFILE } from '../data/mockData';
 
 export interface PhotoGalleryProps {
   photos?: FacebookGalleryItem[];
@@ -51,117 +39,20 @@ const CATEGORIES: CategoryMeta[] = [
   { key: 'branding', labelBn: 'ক্যাম্পাস ও অন্যান্য', badgeClass: 'bg-rose-50 text-rose-800 border-rose-300' },
 ];
 
-interface StagedUploadFile {
-  id: string;
-  file: File;
-  previewUrl: string;
-  compressedDataUrl: string;
-  titleBn: string;
-  captionBn: string;
-  category: 'classroom' | 'craft' | 'outdoor' | 'event' | 'branding';
-  sizeFormatted: string;
-}
-
 // Convert English numerals to Bengali
 function toBengaliDigits(n: number | string): string {
   const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   return String(n).replace(/\d/g, (d) => bn[parseInt(d, 10)]);
 }
 
-// Format current date in Bengali
-function getBengaliToday(): string {
-  const bnMonths = [
-    'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
-    'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',
-  ];
-  const now = new Date();
-  const day = toBengaliDigits(now.getDate());
-  const month = bnMonths[now.getMonth()];
-  const year = toBengaliDigits(now.getFullYear());
-  return `${day} ${month} ${year}`;
-}
-
-// Canvas-based image resizer & compressor to ensure photos fit safely in memory/storage
-async function compressImageFile(file: File, maxDim = 1280, quality = 0.82): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(e.target?.result as string);
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        // Prefer webp with fallback to jpeg
-        try {
-          const dataUrl = canvas.toDataURL('image/webp', quality);
-          resolve(dataUrl);
-        } catch {
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(dataUrl);
-        }
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   photos = [],
-  onAddPhotos,
   onDeletePhoto,
   isLoggedIn = false,
-  currentUserRole = 'staff',
-  currentUserName = 'শিক্ষক/স্টাফ',
 }) => {
-  // Gallery display states
   const [selectedCategory, setSelectedCategory] = useState<GalleryCategoryKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  // Staff upload modal states
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isStaffAuthenticated, setIsStaffAuthenticated] = useState(isLoggedIn);
-  const [staffPasscode, setStaffPasscode] = useState('');
-  const [passcodeError, setPasscodeError] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [stagedFiles, setStagedFiles] = useState<StagedUploadFile[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [uploadSuccessToast, setUploadSuccessToast] = useState<string | null>(null);
-
-  // Batch defaults for upload
-  const [batchCategory, setBatchCategory] = useState<'classroom' | 'craft' | 'outdoor' | 'event' | 'branding'>('classroom');
-  const [batchCaption, setBatchCaption] = useState('আনন্দ পাঠশালা কুষ্টিয়ায় শিক্ষার্থীদের আনন্দমুখর কার্যক্রম।');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      setIsStaffAuthenticated(true);
-    }
-  }, [isLoggedIn]);
 
   // Filter photos by category and search term
   const filteredPhotos = useMemo(() => {
@@ -185,114 +76,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     });
   }, [photos, selectedCategory, searchQuery]);
 
-  // Handle staff passcode unlock
-  const handleVerifyStaffPasscode = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (staffPasscode === '1234' || staffPasscode === '123456' || staffPasscode.toLowerCase() === 'admin') {
-      setIsStaffAuthenticated(true);
-      setPasscodeError(false);
-    } else {
-      setPasscodeError(true);
-    }
-  };
-
-  // Process multiple selected image files
-  const handleFilesSelected = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    setIsProcessing(true);
-
-    const newStaged: StagedUploadFile[] = [];
-    const filesArray = Array.from(fileList);
-
-    for (let i = 0; i < filesArray.length; i++) {
-      const file = filesArray[i];
-      if (!file.type.startsWith('image/')) continue;
-
-      try {
-        const compressed = await compressImageFile(file, 1360, 0.85);
-        const previewUrl = URL.createObjectURL(file);
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
-
-        // Derive friendly title from filename or index
-        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
-        const defaultTitle = cleanName.length > 2 && !cleanName.startsWith('IMG')
-          ? cleanName
-          : `আনন্দ পাঠশালা অ্যালবাম ছবি ${toBengaliDigits(stagedFiles.length + i + 1)}`;
-
-        newStaged.push({
-          id: `staged-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}`,
-          file,
-          previewUrl,
-          compressedDataUrl: compressed,
-          titleBn: defaultTitle,
-          captionBn: batchCaption,
-          category: batchCategory,
-          sizeFormatted: `${sizeMb} MB`,
-        });
-      } catch (err) {
-        console.error('Failed to compress image:', err);
-      }
-    }
-
-    setStagedFiles((prev) => [...prev, ...newStaged]);
-    setIsProcessing(false);
-  };
-
-  // Remove a staged photo before submitting
-  const handleRemoveStagedPhoto = (id: string) => {
-    setStagedFiles((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  // Update specific staged photo field
-  const handleUpdateStagedPhoto = (id: string, field: 'titleBn' | 'captionBn' | 'category', value: string) => {
-    setStagedFiles((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
-  };
-
-  // Apply batch defaults to all currently staged photos
-  const handleApplyBatchDefaults = () => {
-    setStagedFiles((prev) =>
-      prev.map((item) => ({
-        ...item,
-        category: batchCategory,
-        captionBn: batchCaption,
-      }))
-    );
-  };
-
-  // Finalize multi-image upload
-  const handleCommitUpload = () => {
-    if (stagedFiles.length === 0) return;
-
-    const dateToday = getBengaliToday();
-    const newItems: FacebookGalleryItem[] = stagedFiles.map((staged, idx) => {
-      const catMeta = CATEGORIES.find((c) => c.key === staged.category);
-      return {
-        id: `photo-${Date.now()}-${idx}`,
-        titleBn: staged.titleBn.trim() || `আনন্দ পাঠশালা স্মৃতি অ্যালবাম ${toBengaliDigits(idx + 1)}`,
-        captionBn: staged.captionBn.trim() || 'আনন্দ পাঠশালা কুষ্টিয়ায় আনন্দময় ক্লাসরুম ও সহশিক্ষামূলক কার্যক্রম।',
-        imageUrl: staged.compressedDataUrl,
-        category: staged.category,
-        categoryBn: catMeta ? catMeta.labelBn.split(' (')[0] : 'শ্রেণিকক্ষ ও পাঠদান',
-        dateBn: dateToday,
-        fbUrl: SCHOOL_PROFILE.facebookUrl,
-      };
-    });
-
-    if (onAddPhotos) {
-      onAddPhotos(newItems);
-    }
-
-    const countBn = toBengaliDigits(newItems.length);
-    setUploadSuccessToast(`${countBn}টি নতুন ছবি সফলভাবে গ্যালারিতে যোগ করা হয়েছে!`);
-    setTimeout(() => setUploadSuccessToast(null), 4500);
-
-    // Reset upload modal
-    setStagedFiles([]);
-    setIsUploadModalOpen(false);
-  };
-
   // Lightbox keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -314,23 +97,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   return (
     <section id="gallery" className="space-y-6 pt-4 scroll-mt-20">
-      {/* Success Feedback Toast */}
-      {uploadSuccessToast && (
-        <div className="fixed top-20 right-4 z-50 bg-emerald-700 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-500 animate-in fade-in slide-in-from-top-4 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
-          <span className="text-xs sm:text-sm font-bold">{uploadSuccessToast}</span>
-          <button
-            onClick={() => setUploadSuccessToast(null)}
-            className="p-1 hover:bg-emerald-800 rounded-lg text-emerald-200"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
       {/* Gallery Header Card */}
       <div className="bg-white rounded-3xl border border-amber-200/90 p-5 sm:p-7 shadow-2xs space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-100/80 pb-5">
+        <div className="border-b border-amber-100/80 pb-5">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 bg-emerald-100/80 text-emerald-900 px-3 py-0.5 rounded-full text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
@@ -343,27 +112,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             <p className="text-xs sm:text-sm text-slate-600 max-w-2xl">
               আনন্দ পাঠশালার ছোট্ট সোনামণিদের শ্রেণিকক্ষের সৃজনশীল পাঠদান, আর্ট ও ক্রাফট, ক্রীড়া প্রতিযোগিতা এবং জাতীয় উৎসবের রঙিন মুহূর্তসমূহ।
             </p>
-          </div>
-
-          {/* Action Buttons: Staff Upload & Facebook Page Link */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md cursor-pointer active:scale-95"
-            >
-              <Upload className="w-4 h-4" />
-              <span>স্টাফ ফটো আপলোড (Multi-Upload)</span>
-            </button>
-
-            <a
-              href={SCHOOL_PROFILE.facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-2.5 rounded-xl bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white border border-[#1877F2]/30 text-xs font-bold flex items-center gap-1.5 transition-all"
-            >
-              <span>ফেসবুক অ্যালবাম ({SCHOOL_PROFILE.followers})</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
         </div>
 
@@ -430,7 +178,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           </div>
           <h3 className="text-base font-bold text-slate-800">কোনো ছবি পাওয়া যায়নি</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            আপনার নির্বাচিত ক্যাটাগরি বা অনুসন্ধানে কোনো ছবি নেই। ক্যাটাগরি পরিবর্তন করুন অথবা নতুন ছবি আপলোড করুন।
+            আপনার নির্বাচিত ক্যাটাগরি বা অনুসন্ধানে কোনো ছবি নেই। ক্যাটাগরি পরিবর্তন করুন অথবা অনুসন্ধান ফিল্টার রিসেট করুন।
           </p>
           <button
             onClick={() => {
@@ -506,14 +254,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                     <button
                       onClick={() => setLightboxIndex(index)}
-                      className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+                      className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>বড় করে দেখুন</span>
                     </button>
 
                     {/* Delete Option for Staff/Admin */}
-                    {isStaffAuthenticated && onDeletePhoto && (
+                    {isLoggedIn && onDeletePhoto && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -521,7 +269,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             onDeletePhoto(photo.id);
                           }
                         }}
-                        className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded"
+                        className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded cursor-pointer"
                         title="ছবি মুছুন"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -571,7 +319,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
               <button
                 onClick={() => setLightboxIndex(null)}
-                className="p-1.5 rounded-xl bg-white/15 hover:bg-rose-600 text-white transition-colors"
+                className="p-1.5 rounded-xl bg-white/15 hover:bg-rose-600 text-white transition-colors cursor-pointer"
                 title="বন্ধ করুন (Esc)"
               >
                 <X className="w-5 h-5" />
@@ -592,7 +340,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 )
               }
               aria-label="পূর্ববর্তী ছবি"
-              className="absolute left-2 sm:left-4 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all hover:scale-105"
+              className="absolute left-2 sm:left-4 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -615,7 +363,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 )
               }
               aria-label="পরবর্তী ছবি"
-              className="absolute right-2 sm:right-4 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all hover:scale-105"
+              className="absolute right-2 sm:right-4 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -645,7 +393,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 <button
                   key={thumb.id || idx}
                   onClick={() => setLightboxIndex(idx)}
-                  className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                  className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                     idx === lightboxIndex
                       ? 'border-emerald-400 scale-105 shadow-md'
                       : 'border-white/20 opacity-60 hover:opacity-100'
@@ -658,312 +406,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   />
                 </button>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STAFF MULTI-IMAGE UPLOAD MODAL */}
-      {isUploadModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
-        >
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-amber-200 overflow-hidden">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-4 sm:p-5 flex items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Upload className="w-5 h-5 text-amber-200" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black">স্টাফ মাল্টি-ইমেজ ফটো আপলোড</h3>
-                  <p className="text-xs text-emerald-100">
-                    ওয়েবসাইটে প্রদর্শনের জন্য এক সাথে একাধিক ছবি আপলোড ও অপ্টিমাইজ করুন
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  setStagedFiles([]);
-                }}
-                className="p-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
-              {/* Staff Authentication Gate if not logged in */}
-              {!isStaffAuthenticated ? (
-                <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 space-y-4 text-center max-w-md mx-auto">
-                  <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 mx-auto flex items-center justify-center">
-                    <Lock className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-slate-900">শিক্ষক ও স্টাফ ভেরিফিকেশন</h4>
-                    <p className="text-xs text-slate-600">
-                      পাবলিক ওয়েবসাইটে ছবি প্রকাশের ক্ষমতা শুধুমাত্র স্কুলের শিক্ষক ও অনুমোদিত স্টাফদের জন্য সংরক্ষিত।
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleVerifyStaffPasscode} className="space-y-3">
-                    <div>
-                      <input
-                        type="password"
-                        value={staffPasscode}
-                        onChange={(e) => setStaffPasscode(e.target.value)}
-                        placeholder="স্টাফ পিন কোড দিন (যেমন: 1234)"
-                        className="w-full text-center tracking-widest px-4 py-2.5 text-sm rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
-                      />
-                      {passcodeError && (
-                        <p className="text-xs text-rose-600 font-semibold mt-1">
-                          ভুল পিন কোড! শিক্ষক পিন (1234) ব্যবহার করুন।
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        className="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Unlock className="w-4 h-4" />
-                        <span>আনলক করুন</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStaffPasscode('1234');
-                          setIsStaffAuthenticated(true);
-                        }}
-                        className="px-3 py-2.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-xl text-xs font-bold"
-                      >
-                        কুইক ডেমো পিন
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <>
-                  {/* Uploader Drag & Drop Zone */}
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setIsDragging(false);
-                      handleFilesSelected(e.dataTransfer.files);
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
-                      isDragging
-                        ? 'border-emerald-600 bg-emerald-50 scale-[0.99]'
-                        : 'border-slate-300 hover:border-emerald-500 bg-slate-50/70 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      multiple
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleFilesSelected(e.target.files)}
-                    />
-
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center mb-3 shadow-2xs">
-                      <Upload className="w-7 h-7" />
-                    </div>
-
-                    <h4 className="text-base font-bold text-slate-900">
-                      এক সাথে একাধিক ছবি নির্বাচন করুন
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                      ছবিগুলো ড্র্যাগ করে এখানে এনে ছেড়ে দিন অথবা ক্লিক করে আপনার ডিভাইস থেকে এক বা একাধিক ছবি নির্বাচন করুন।
-                    </p>
-                    <div className="inline-flex items-center gap-2 mt-3 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                      <span>✓ একাধিক ফাইল নির্বাচন সমর্থিত</span>
-                      <span>·</span>
-                      <span>✓ অটো কম্প্রেসড</span>
-                    </div>
-                  </div>
-
-                  {isProcessing && (
-                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs font-bold animate-pulse">
-                      <Sparkles className="w-4 h-4 text-emerald-600" />
-                      <span>ছবিগুলো প্রসেসিং ও অপ্টিমাইজ করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
-                    </div>
-                  )}
-
-                  {/* Batch Global Controls */}
-                  {stagedFiles.length > 0 && (
-                    <div className="bg-amber-50/80 rounded-2xl border border-amber-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                          <Layers className="w-4 h-4 text-amber-700" />
-                          <span>নির্বাচিত {toBengaliDigits(stagedFiles.length)}টি ছবির কমন সেটিংস (Batch):</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleApplyBatchDefaults}
-                          className="text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg"
-                        >
-                          সবগুলোতে প্রয়োগ করুন
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                            ক্যাটাগরি নির্ধারণ
-                          </label>
-                          <select
-                            value={batchCategory}
-                            onChange={(e) =>
-                              setBatchCategory(
-                                e.target.value as 'classroom' | 'craft' | 'outdoor' | 'event' | 'branding'
-                              )
-                            }
-                            className="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white font-medium"
-                          >
-                            <option value="classroom">শ্রেণিকক্ষ ও পাঠদান</option>
-                            <option value="event">বার্ষিক ক্রীড়া ও উৎসব</option>
-                            <option value="craft">আর্ট, ক্রাফট ও ড্রয়িং</option>
-                            <option value="outdoor">খেলাধুলা ও আউটডোর</option>
-                            <option value="branding">ক্যাম্পাস ও অন্যান্য</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                            ডিফল্ট বিবরণ / ক্যাপশন
-                          </label>
-                          <input
-                            type="text"
-                            value={batchCaption}
-                            onChange={(e) => setBatchCaption(e.target.value)}
-                            placeholder="ক্যাপশন..."
-                            className="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white font-medium"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Staged Photo List */}
-                  {stagedFiles.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                          আপলোড লিস্ট ({toBengaliDigits(stagedFiles.length)}টি ছবি)
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => setStagedFiles([])}
-                          className="text-[11px] text-rose-600 hover:underline font-bold"
-                        >
-                          সবগুলো মুছুন
-                        </button>
-                      </div>
-
-                      <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                        {stagedFiles.map((item, index) => (
-                          <div
-                            key={item.id}
-                            className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                          >
-                            <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-                              <img
-                                src={item.previewUrl}
-                                alt="প্রিভিউ"
-                                className="w-14 h-14 rounded-xl object-cover border border-slate-300 bg-white shrink-0"
-                              />
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <input
-                                  type="text"
-                                  value={item.titleBn}
-                                  onChange={(e) =>
-                                    handleUpdateStagedPhoto(item.id, 'titleBn', e.target.value)
-                                  }
-                                  placeholder="ছবির শিরোনাম..."
-                                  className="w-full text-xs font-bold text-slate-900 bg-white px-2 py-1 rounded-lg border border-slate-200"
-                                />
-                                <input
-                                  type="text"
-                                  value={item.captionBn}
-                                  onChange={(e) =>
-                                    handleUpdateStagedPhoto(item.id, 'captionBn', e.target.value)
-                                  }
-                                  placeholder="ছবির ক্যাপশন..."
-                                  className="w-full text-[11px] text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {item.sizeFormatted}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveStagedPhoto(item.id)}
-                                className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors"
-                                title="তালিকা থেকে বাদ দিন"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-slate-50 border-t border-slate-200 p-4 px-6 flex items-center justify-between gap-3 shrink-0">
-              <span className="text-xs text-slate-500">
-                {isStaffAuthenticated && stagedFiles.length > 0
-                  ? `মোট ${toBengaliDigits(stagedFiles.length)}টি ছবি নির্বাচিত`
-                  : 'প্রথমে ছবি নির্বাচন করুন'}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsUploadModalOpen(false);
-                    setStagedFiles([]);
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
-                >
-                  বাতিল
-                </button>
-
-                {isStaffAuthenticated && (
-                  <button
-                    type="button"
-                    disabled={stagedFiles.length === 0 || isProcessing}
-                    onClick={handleCommitUpload}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-sm"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>
-                      {stagedFiles.length > 0
-                        ? `একত্রে ${toBengaliDigits(stagedFiles.length)}টি ছবি আপলোড করুন`
-                        : 'আপলোড করুন'}
-                    </span>
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>
