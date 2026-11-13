@@ -1900,9 +1900,6 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
         </div>
       </div>
 
-      {/* Birthday Celebration Widget for Parent */}
-      <BirthdayCelebrationWidget students={students} />
-
       {/* Parent 1-Click Urgent Pickup Request to Class Teacher via FCM */}
       <div className="bg-white rounded-3xl border-2 border-amber-300 p-6 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
