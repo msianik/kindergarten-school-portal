@@ -348,40 +348,53 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
   const publicNavLinks = [
     {
-      href: '#notice-board',
-      label: 'নোটিশ বোর্ড',
-      icon: <Bell className="w-3.5 h-3.5 text-emerald-600 animate-pulse shrink-0" />,
+      href: '#about',
+      label: 'আমাদের সম্পর্কে',
+      icon: <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />,
       colorClass: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200/90 hover:border-emerald-300 shadow-2xs',
-    },
-    {
-      href: '#teachers',
-      label: 'শিক্ষকবৃন্দ',
-      icon: <GraduationCap className="w-3.5 h-3.5 text-sky-600 shrink-0" />,
-      colorClass: 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-200/90 hover:border-sky-300 shadow-2xs',
+      description: 'আনন্দ পাঠশালার মূল লক্ষ্য ও পরিচিতি',
     },
     {
       href: '#governing-body',
       label: 'পরিচালনা পর্ষদ',
       icon: <Users className="w-3.5 h-3.5 text-amber-600 shrink-0" />,
       colorClass: 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200/90 hover:border-amber-300 shadow-2xs',
+      description: 'সম্মানিত পরিচালনা পর্ষদ ও পরিচালকবৃন্দ',
+    },
+    {
+      href: '#teachers',
+      label: 'শিক্ষকবৃন্দ',
+      icon: <GraduationCap className="w-3.5 h-3.5 text-sky-600 shrink-0" />,
+      colorClass: 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-200/90 hover:border-sky-300 shadow-2xs',
+      description: 'প্রিন্সিপাল, প্রধান শিক্ষক ও শিক্ষক মণ্ডলী',
     },
     {
       href: '#students',
       label: 'শিক্ষার্থী',
       icon: <Award className="w-3.5 h-3.5 text-purple-600 shrink-0" />,
       colorClass: 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200/90 hover:border-purple-300 shadow-2xs',
+      description: 'কৃতি ও প্রিয় শিক্ষার্থীবৃন্দ',
     },
     {
       href: '#curriculum',
-      label: 'পাঠক্রম',
+      label: 'পাঠ্যক্রম',
       icon: <BookOpen className="w-3.5 h-3.5 text-teal-600 shrink-0" />,
       colorClass: 'bg-teal-50 hover:bg-teal-100 text-teal-800 border-teal-200/90 hover:border-teal-300 shadow-2xs',
+      description: 'শ্রেণিভিত্তিক পাঠ্যক্রম ও বয়সসীমা',
     },
     {
-      href: '#apply',
-      label: 'অনলাইন আবেদন',
-      icon: <Send className="w-3.5 h-3.5 text-rose-600 group-hover:translate-x-0.5 transition-transform shrink-0" />,
-      colorClass: 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200/90 hover:border-rose-300 font-black shadow-2xs',
+      href: '#notice-board',
+      label: 'নোটিশ বোর্ড',
+      icon: <Bell className="w-3.5 h-3.5 text-rose-600 shrink-0" />,
+      colorClass: 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200/90 hover:border-rose-300 shadow-2xs',
+      description: 'ডিজিটাল নোটিশ ও প্রাতিষ্ঠানিক বার্তা',
+    },
+    {
+      href: '#contact',
+      label: 'যোগাযোগ করুন',
+      icon: <Phone className="w-3.5 h-3.5 text-indigo-600 shrink-0" />,
+      colorClass: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-200/90 hover:border-indigo-300 shadow-2xs',
+      description: 'ক্যাম্পাস ঠিকানা ও জরুরি হেল্পলাইন',
     },
   ];
 
@@ -396,7 +409,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden w-9 h-9 rounded-2xl flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer"
+              className="xl:hidden w-9 h-9 rounded-2xl flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer"
               title={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
               aria-label={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
             >
@@ -423,9 +436,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
           </div>
 
-          {/* Middle: Centered Navigation Menubar (Desktop / Tablet: hidden on mobile) */}
-          <div className="hidden md:flex flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth px-2 sm:px-4">
-            <nav className="flex items-center gap-1.5 lg:gap-2 whitespace-nowrap py-1 w-max mx-auto">
+          {/* Middle: Centered Navigation Menubar (Desktop: xl+ screens) */}
+          <div className="hidden xl:flex flex-1 min-w-0 px-2 lg:px-4 justify-center">
+            <nav className="flex items-center gap-1.5 2xl:gap-2 whitespace-nowrap py-1">
               {publicNavLinks.map((item) => (
                 <a
                   key={item.href}
@@ -434,7 +447,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     e.preventDefault();
                     handleNavClick(item.href);
                   }}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 group active:scale-95 shrink-0 ${item.colorClass}`}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 group active:scale-95 shrink-0 ${item.colorClass}`}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -493,98 +506,95 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         </div>
       </header>
 
-      {/* Mobile Navigation Drawer / Slide-down Menu (তিনটা ড্যাশে ক্লিক করলে যা খুলবে) */}
+      {/* Mobile & Tablet Navigation Drawer / Slide-down Menu (তিনটা ড্যাশে ক্লিক করলে যা খুলবে) */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-start animate-in fade-in duration-150">
+        <div className="xl:hidden fixed inset-0 top-16 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-start animate-in fade-in duration-150">
           <div
             className="bg-white border-b-2 border-emerald-500/30 shadow-2xl p-4 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-top-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                  <Menu className="w-4 h-4" />
+            <div className="max-w-4xl mx-auto space-y-4">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                    <Menu className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900 leading-none">প্রধান মেনু</h3>
+                    <p className="text-[10px] text-emerald-700 font-semibold mt-1">আনন্দ পাঠশালা কুষ্টিয়া</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 leading-none">প্রধান মেনু</h3>
-                  <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">আনন্দ পাঠশালা কুষ্টিয়া</p>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="মেনু বন্ধ করুন"
+                >
+                  <X className="w-4.5 h-4.5" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
-                aria-label="মেনু বন্ধ করুন"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+              {/* Menu Links Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                {publicNavLinks.map((item) => (
+                  <button
+                    key={item.href}
+                    type="button"
+                    onClick={() => handleNavClick(item.href)}
+                    className={`w-full p-3 sm:p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs text-left cursor-pointer active:scale-98 ${item.colorClass}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-white shadow-2xs flex items-center justify-center shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-black text-slate-900 text-sm leading-tight truncate">
+                          {item.label}
+                        </div>
+                        <div className="text-[11px] text-slate-600 font-normal mt-0.5 truncate">
+                          {item.description}
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  </button>
+                ))}
+              </div>
 
-            {/* Menu Links Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {publicNavLinks.map((item) => (
-                <button
-                  key={item.href}
-                  type="button"
-                  onClick={() => handleNavClick(item.href)}
-                  className={`w-full p-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs text-left cursor-pointer active:scale-98 ${item.colorClass}`}
+              {/* Bottom Quick Contact & Actions Bar inside Mobile Menu */}
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                <a
+                  href={`tel:${schoolProfile.phone}`}
+                  className="py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-bold flex items-center gap-2 border border-emerald-200/60 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white shadow-2xs flex items-center justify-center shrink-0">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <div className="font-black text-slate-900 text-sm leading-tight">
-                        {item.label}
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                        {item.href === '#notice-board' && 'ডিজিটাল নোটিশ ও নোটিফিকেশন'}
-                        {item.href === '#teachers' && 'প্রিন্সিপাল ও শিক্ষক মণ্ডলী'}
-                        {item.href === '#governing-body' && 'সম্মানিত পরিচালনা পর্ষদ'}
-                        {item.href === '#students' && 'কৃতি শিক্ষার্থীবৃন্দ'}
-                        {item.href === '#curriculum' && 'শ্রেণিভিত্তিক পাঠ্যক্রম ও বয়স'}
-                        {item.href === '#apply' && '২০২৭ শিক্ষাবর্ষে নতুন ভর্তি'}
-                      </div>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{schoolProfile.phone}</span>
+                </a>
+
+                <a
+                  href={schoolProfile.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2 px-3.5 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] rounded-xl font-bold flex items-center gap-1.5 border border-[#1877F2]/20 transition-colors"
+                >
+                  <Facebook className="w-3.5 h-3.5 fill-current" />
+                  <span>ফেসবুক পেজ</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenLoginModal();
+                  }}
+                  className="py-2 px-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-bold flex items-center gap-1.5 ml-auto cursor-pointer shadow-sm active:scale-95 transition-all"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>লগইন করুন</span>
                 </button>
-              ))}
-            </div>
-
-            {/* Bottom Quick Contact & Actions Bar inside Mobile Menu */}
-            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <a
-                href={`tel:${schoolProfile.phone}`}
-                className="py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-bold flex items-center gap-2 border border-emerald-200/60"
-              >
-                <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{schoolProfile.phone}</span>
-              </a>
-
-              <a
-                href={schoolProfile.facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-2 px-3 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] rounded-xl font-bold flex items-center gap-1.5 border border-[#1877F2]/20"
-              >
-                <Facebook className="w-3.5 h-3.5 fill-current" />
-                <span>ফেসবুক পেজ</span>
-              </a>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  onOpenLoginModal();
-                }}
-                className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-1.5 ml-auto cursor-pointer"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>লগইন করুন</span>
-              </button>
+              </div>
             </div>
           </div>
 
@@ -618,8 +628,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         {/* Live Statistics & Institutional Achievements Bar */}
         <PublicStatsBar />
 
-        {/* Hero Section with Official Ananda Pathshala Kushtia Cover & Logo */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white p-8 sm:p-12 shadow-xl border border-emerald-400/30">
+        {/* Hero & About Us Section with Official Ananda Pathshala Kushtia Cover & Logo */}
+        <section id="about" className="scroll-mt-24 relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white p-6 sm:p-10 lg:p-12 shadow-xl border border-emerald-400/30">
           {/* Subtle Ambient Decorative Glows */}
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl pointer-events-none" />
@@ -629,7 +639,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold border border-white/25">
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>২০২৭ শিক্ষাবর্ষে ভর্তি চলছে: হাতেখড়ি থেকে ২য় শ্রেণি (২.৫+ বছর থেকে)</span>
+                  <span>আমাদের সম্পর্কে · প্রতিষ্ঠান পরিচিতি</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-amber-400/20 text-amber-200 px-3 py-1 rounded-full text-xs font-semibold border border-amber-300/30">
+                  <span>২০২৭ শিক্ষাবর্ষে ভর্তি চলছে</span>
                 </div>
               </div>
 
@@ -1879,7 +1892,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       </div>
 
       {/* Authentic Kushtia Campus Info & Contacts */}
-      <footer className="bg-gradient-to-b from-slate-50 to-emerald-50/40 border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-2xs text-xs text-slate-600 space-y-6">
+      <footer id="contact" className="scroll-mt-24 bg-gradient-to-b from-slate-50 to-emerald-50/40 border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-2xs text-xs text-slate-600 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* ১. ক্যাম্পাস ঠিকানা */}
           <div className="space-y-2.5">

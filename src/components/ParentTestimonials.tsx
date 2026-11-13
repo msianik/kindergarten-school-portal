@@ -16,6 +16,8 @@ interface Testimonial {
 export const ParentTestimonials: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const testimonials: Testimonial[] = [
@@ -79,6 +81,27 @@ export const ParentTestimonials: React.FC = () => {
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   }, [total]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchEndX(null);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    if (distance > 45) {
+      next();
+    } else if (distance < -45) {
+      prev();
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
   useEffect(() => {
     if (isPaused) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -97,9 +120,12 @@ export const ParentTestimonials: React.FC = () => {
   return (
     <section
       aria-label="অভিভাবকদের মতামত ও অভিজ্ঞতা"
-      className="bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 rounded-3xl border border-emerald-100 p-6 sm:p-10 shadow-2xs space-y-6"
+      className="bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 rounded-3xl border border-emerald-100 p-6 sm:p-10 shadow-2xs space-y-6 select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
@@ -120,7 +146,7 @@ export const ParentTestimonials: React.FC = () => {
           <button
             type="button"
             onClick={prev}
-            className="w-9 h-9 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 flex items-center justify-center transition-all shadow-2xs hover:border-emerald-300 cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 flex items-center justify-center transition-all shadow-2xs hover:border-emerald-300 cursor-pointer active:scale-95"
             aria-label="পূর্ববর্তী অভিভাবক মতামত"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -128,7 +154,7 @@ export const ParentTestimonials: React.FC = () => {
           <button
             type="button"
             onClick={next}
-            className="w-9 h-9 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 flex items-center justify-center transition-all shadow-2xs hover:border-emerald-300 cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 flex items-center justify-center transition-all shadow-2xs hover:border-emerald-300 cursor-pointer active:scale-95"
             aria-label="পরবর্তী অভিভাবক মতামত"
           >
             <ChevronRight className="w-5 h-5" />
@@ -136,26 +162,26 @@ export const ParentTestimonials: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Review Card */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-2xs relative overflow-hidden transition-all duration-300">
+      {/* Main Review Card - Stabilized min-height prevents layout shifts */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-2xs relative overflow-hidden transition-all duration-300 min-h-[230px] sm:min-h-[210px] flex flex-col justify-between">
         <Quote className="absolute top-4 right-6 w-16 h-16 text-emerald-100 -rotate-12 pointer-events-none" />
 
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 space-y-4 flex flex-col justify-between flex-1">
           {/* Star Rating */}
           <div className="flex items-center gap-1">
             {[...Array(current.rating)].map((_, i) => (
               <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
             ))}
-            <span className="text-xs font-bold text-slate-400 ml-2">৫.০ / ৫.০ স্টার রিভিউ</span>
+            <span className="text-xs font-bold text-slate-600 ml-2">৫.০ / ৫.০ স্টার রিভিউ</span>
           </div>
 
-          {/* Testimonial Quote */}
-          <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-normal italic">
+          {/* Testimonial Quote - Minimum height ensures stable layout */}
+          <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-normal italic min-h-[72px] sm:min-h-[56px] flex items-center">
             “{current.commentBn}”
           </p>
 
           {/* Author Details */}
-          <div className="pt-2 flex items-center gap-3 border-t border-slate-100">
+          <div className="pt-3 flex items-center gap-3 border-t border-slate-100 mt-auto">
             <div
               className={`w-11 h-11 rounded-2xl border-2 flex items-center justify-center font-black text-base shadow-2xs ${current.avatarBg}`}
             >

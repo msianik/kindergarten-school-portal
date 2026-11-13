@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   UserRole,
   Student,
@@ -41,25 +41,27 @@ import {
   ALL_PORTAL_MODULE_IDS,
 } from './utils/schoolLogic';
 import { TopNavigation } from './components/TopNavigation';
-import { OverviewDashboard } from './components/OverviewDashboard';
-import { TeacherPortalDashboard, ParentPortalDashboard } from './components/RolePortals';
-import { PickupModule } from './components/PickupModule';
-import { DigitalDiaryModule } from './components/DigitalDiaryModule';
-import { SkillAssessmentModule } from './components/SkillAssessmentModule';
-import { FeeAccountsModule } from './components/FeeAccountsModule';
-import { AttendanceModule } from './components/AttendanceModule';
-import { StaffManagementModule } from './components/StaffManagementModule';
-import { ParentTeacherChatModule } from './components/ParentTeacherChatModule';
 import { PublicWebsite } from './components/PublicWebsite';
-import { GoogleWorkspaceModule } from './components/GoogleWorkspaceModule';
-import { SchoolAssetsModule } from './components/SchoolAssetsModule';
-import { StudentDirectoryModule } from './components/StudentDirectoryModule';
-import { StudentIdCardModule } from './components/StudentIdCardModule';
-import { ClassRoutineModule } from './components/ClassRoutineModule';
-import { AcademicCalendarModule } from './components/AcademicCalendarModule';
-import { ExamResultsModule } from './components/ExamResultsModule';
-import { ChildHealthModule } from './components/ChildHealthModule';
-import { NoticeBoard } from './components/NoticeBoard';
+
+const OverviewDashboard = lazy(() => import('./components/OverviewDashboard').then(m => ({ default: m.OverviewDashboard })));
+const TeacherPortalDashboard = lazy(() => import('./components/RolePortals').then(m => ({ default: m.TeacherPortalDashboard })));
+const ParentPortalDashboard = lazy(() => import('./components/RolePortals').then(m => ({ default: m.ParentPortalDashboard })));
+const PickupModule = lazy(() => import('./components/PickupModule').then(m => ({ default: m.PickupModule })));
+const DigitalDiaryModule = lazy(() => import('./components/DigitalDiaryModule').then(m => ({ default: m.DigitalDiaryModule })));
+const SkillAssessmentModule = lazy(() => import('./components/SkillAssessmentModule').then(m => ({ default: m.SkillAssessmentModule })));
+const FeeAccountsModule = lazy(() => import('./components/FeeAccountsModule').then(m => ({ default: m.FeeAccountsModule })));
+const AttendanceModule = lazy(() => import('./components/AttendanceModule').then(m => ({ default: m.AttendanceModule })));
+const StaffManagementModule = lazy(() => import('./components/StaffManagementModule').then(m => ({ default: m.StaffManagementModule })));
+const ParentTeacherChatModule = lazy(() => import('./components/ParentTeacherChatModule').then(m => ({ default: m.ParentTeacherChatModule })));
+const GoogleWorkspaceModule = lazy(() => import('./components/GoogleWorkspaceModule').then(m => ({ default: m.GoogleWorkspaceModule })));
+const SchoolAssetsModule = lazy(() => import('./components/SchoolAssetsModule').then(m => ({ default: m.SchoolAssetsModule })));
+const StudentDirectoryModule = lazy(() => import('./components/StudentDirectoryModule').then(m => ({ default: m.StudentDirectoryModule })));
+const StudentIdCardModule = lazy(() => import('./components/StudentIdCardModule').then(m => ({ default: m.StudentIdCardModule })));
+const ClassRoutineModule = lazy(() => import('./components/ClassRoutineModule').then(m => ({ default: m.ClassRoutineModule })));
+const AcademicCalendarModule = lazy(() => import('./components/AcademicCalendarModule').then(m => ({ default: m.AcademicCalendarModule })));
+const ExamResultsModule = lazy(() => import('./components/ExamResultsModule').then(m => ({ default: m.ExamResultsModule })));
+const ChildHealthModule = lazy(() => import('./components/ChildHealthModule').then(m => ({ default: m.ChildHealthModule })));
+const NoticeBoard = lazy(() => import('./components/NoticeBoard').then(m => ({ default: m.NoticeBoard })));
 import { ModuleSubNavPills } from './components/ModuleSubNavPills';
 import { FcmNotificationCenter } from './components/FcmNotificationCenter';
 import { LoginModal } from './components/LoginModal';
@@ -808,7 +810,14 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <>
+                <Suspense
+                  fallback={
+                    <div className="flex flex-col items-center justify-center p-16 text-emerald-800 space-y-3">
+                      <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm font-semibold text-slate-600">মডিউল লোড হচ্ছে...</span>
+                    </div>
+                  }
+                >
                   {currentTab !== 'overview' && currentTab !== 'public' && (
                     <ModuleSubNavPills
                       currentTab={currentTab}
@@ -1057,7 +1066,7 @@ export default function App() {
                       onSendLowStockNotification={dispatchRealTimeFcmNotification}
                     />
                   )}
-                </>
+                </Suspense>
               )}
             </main>
           </>

@@ -79,13 +79,13 @@ export const PublicStatsBar: React.FC = () => {
               <div className="w-9 h-9 rounded-xl bg-white shadow-2xs border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                 {st.icon}
               </div>
-              <span className="text-[10px] font-bold text-slate-400 font-mono">
+              <span className="text-[10px] font-bold text-slate-500 font-mono">
                 ২০২৬–২৭
               </span>
             </div>
 
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-serif">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-sans">
                 {st.valueBn}
               </div>
               <div className="text-xs font-bold text-slate-800 mt-0.5 leading-snug">
