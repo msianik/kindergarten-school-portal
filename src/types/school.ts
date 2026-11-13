@@ -534,6 +534,7 @@ export interface StaffChatMember {
   id: string;
   teacherId?: string;
   directorId?: string;
+  studentId?: string;
   nameBn: string;
   nameEn: string;
   role: UserRole;
@@ -543,7 +544,10 @@ export interface StaffChatMember {
   phone?: string;
   email?: string;
   username?: string;
-  category: 'director' | 'principal' | 'teacher' | 'support_staff' | 'accountant';
+  category: 'director' | 'principal' | 'teacher' | 'support_staff' | 'accountant' | 'parent';
+  childNameBn?: string;
+  childClassName?: SchoolClass;
+  childRollNo?: string;
 }
 
 export interface StaffInternalMessage {
