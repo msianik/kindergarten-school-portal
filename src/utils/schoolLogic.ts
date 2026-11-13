@@ -362,6 +362,8 @@ export function getPortalRoleLabelBn(role: PortalAccountRole = 'parent'): string
       return 'প্রিন্সিপাল (Principal)';
     case 'teacher':
       return 'শিক্ষক (Teacher)';
+    case 'accountant':
+      return 'হিসাবরক্ষণ কর্মকর্তা (Accountant)';
     case 'gate_security':
       return 'সহায়ক স্টাফ / সিকিউরিটি (Support Staff)';
     case 'parent':
@@ -380,6 +382,8 @@ export function getPortalNameForRoleBn(role: PortalAccountRole = 'parent'): stri
       return 'প্রিন্সিপাল ও একাডেমিক অ্যাডমিন পোর্টাল';
     case 'teacher':
       return 'শিক্ষক ক্লাসরুম ও একাডেমিক পোর্টাল';
+    case 'accountant':
+      return 'হিসাবরক্ষণ ও বেতন/ফি পোর্টাল';
     case 'gate_security':
       return 'স্মার্ট গেট-পাস ও সহায়ক স্টাফ পোর্টাল';
     case 'parent':
@@ -582,12 +586,62 @@ export function getAllPortalAccounts(): PortalAccount[] {
         }
       }
     } catch {}
+  } else {
+    for (const customAcc of memoryCustomAccounts) {
+      accountMap.set(customAcc.id, customAcc);
+    }
   }
 
-  return Array.from(accountMap.values());
+  // 6. Filter out any explicitly deleted accounts
+  const deletedIds = getDeletedPortalAccountIds();
+  const result: PortalAccount[] = [];
+  for (const acc of accountMap.values()) {
+    // Super admin can never be deleted
+    if (acc.role === 'super_admin' || acc.username === 'superadmin' || acc.id === 'acc-superadmin') {
+      result.push(acc);
+      continue;
+    }
+    if (deletedIds.includes(acc.id) || deletedIds.includes(acc.username)) {
+      continue;
+    }
+    if (acc.directorId && deletedIds.includes(acc.directorId)) {
+      continue;
+    }
+    if (acc.studentId && deletedIds.includes(acc.studentId)) {
+      continue;
+    }
+    result.push(acc);
+  }
+
+  return result;
+}
+
+let memoryCustomAccounts: PortalAccount[] = [];
+let memoryDeletedAccountIds: string[] = [];
+
+export const DELETED_PORTAL_ACCOUNTS_STORAGE_KEY = 'ananda_deleted_portal_accounts_v1';
+
+export function getDeletedPortalAccountIds(): string[] {
+  if (typeof window === 'undefined') return memoryDeletedAccountIds;
+  try {
+    const raw = localStorage.getItem(DELETED_PORTAL_ACCOUNTS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : memoryDeletedAccountIds;
+  } catch {
+    return memoryDeletedAccountIds;
+  }
 }
 
 export function upsertPortalAccount(account: PortalAccount): void {
+  memoryCustomAccounts = [
+    ...memoryCustomAccounts.filter(
+      (a) =>
+        a.id !== account.id &&
+        !(account.studentId && a.studentId === account.studentId) &&
+        !(account.directorId && a.directorId === account.directorId)
+    ),
+    account,
+  ];
+
   if (typeof window === 'undefined') return;
   try {
     const raw = localStorage.getItem(PORTAL_ACCOUNTS_STORAGE_KEY);
@@ -605,6 +659,16 @@ export function upsertPortalAccount(account: PortalAccount): void {
 }
 
 export function removePortalAccountByEntityId(entityId: string): void {
+  memoryCustomAccounts = memoryCustomAccounts.filter(
+    (a) =>
+      a.id !== entityId &&
+      a.studentId !== entityId &&
+      a.directorId !== entityId &&
+      a.id !== `acc-std-${entityId}` &&
+      a.id !== `acc-dir-${entityId}` &&
+      a.id !== `acc-tch-${entityId}`
+  );
+
   if (typeof window === 'undefined') return;
   try {
     const raw = localStorage.getItem(PORTAL_ACCOUNTS_STORAGE_KEY);
@@ -621,6 +685,206 @@ export function removePortalAccountByEntityId(entityId: string): void {
     );
     localStorage.setItem(PORTAL_ACCOUNTS_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: updated } }));
+  } catch {}
+}
+
+export function createPortalUserAccount(data: {
+  nameBn: string;
+  nameEn?: string;
+  role: PortalAccountRole;
+  roleTitleBn?: string;
+  email?: string;
+  phone: string;
+  username: string;
+  passwordHint: string;
+  avatarUrl?: string;
+  assignedClass?: SchoolClass;
+  studentId?: string;
+  isAccessDisabled?: boolean;
+  canFullEdit?: boolean;
+}): PortalAccount {
+  const cleanUsername = (data.username || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '') || `user_${Date.now()}`;
+  const cleanPhone = normalizeIdentifier(data.phone);
+  const accId = `acc-custom-${Date.now()}`;
+  const directorId = data.role === 'director' ? `dir-custom-${Date.now()}` : undefined;
+
+  const newAccount: PortalAccount = {
+    id: accId,
+    nameBn: data.nameBn.trim(),
+    nameEn: data.nameEn?.trim() || cleanUsername,
+    role: data.role,
+    roleTitleBn: data.roleTitleBn?.trim() || getPortalRoleLabelBn(data.role),
+    portalNameBn: getPortalNameForRoleBn(data.role),
+    email: data.email?.trim() || `${cleanUsername}@anandapathshala.edu.bd`,
+    phone: cleanPhone,
+    username: cleanUsername,
+    passwordHint: data.passwordHint?.trim() || '123456',
+    avatarUrl: data.avatarUrl || '/assets/fb/logo.jpg',
+    assignedClass: data.assignedClass,
+    studentId: data.studentId,
+    directorId,
+    isAccessDisabled: Boolean(data.isAccessDisabled),
+  };
+
+  // If was previously in deleted list, remove it
+  if (typeof window !== 'undefined') {
+    try {
+      const deleted = getDeletedPortalAccountIds().filter(
+        (id) => id !== accId && id !== cleanUsername && id !== directorId
+      );
+      localStorage.setItem(DELETED_PORTAL_ACCOUNTS_STORAGE_KEY, JSON.stringify(deleted));
+    } catch {}
+  }
+
+  // If director, add to director permissions
+  if (data.role === 'director' && directorId) {
+    const currentPerms = getDirectorPermissions();
+    const newPerm: DirectorAccessPermission = {
+      directorId,
+      nameBn: newAccount.nameBn,
+      nameEn: newAccount.nameEn,
+      roleTitleBn: newAccount.roleTitleBn,
+      photoUrl: newAccount.avatarUrl || '/assets/fb/logo.jpg',
+      email: newAccount.email,
+      phone: newAccount.phone,
+      username: newAccount.username,
+      isSuperAdmin: false,
+      viewAllModules: true,
+      canEditSchoolAndBoard: Boolean(data.canFullEdit),
+      canManageNoticesAndEvents: Boolean(data.canFullEdit),
+      canManageStudentsAndAdmissions: Boolean(data.canFullEdit),
+      canManageFeesAndAccounts: Boolean(data.canFullEdit),
+      canApproveGatePassAndDiary: Boolean(data.canFullEdit),
+      allowedModules: [...ALL_PORTAL_MODULE_IDS],
+      lastUpdatedByBn: 'মোস্তফা আল মামুন (সুপার অ্যাডমিন)',
+      lastUpdatedAtBn: 'সদ্য তৈরি অ্যাকাউন্ট',
+    };
+    saveDirectorPermissions([...currentPerms, newPerm]);
+  }
+
+  upsertPortalAccount(newAccount);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: getAllPortalAccounts() } }));
+    window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
+    window.dispatchEvent(new CustomEvent('ananda-teachers-updated'));
+  }
+  return newAccount;
+}
+
+export function deletePortalUserAccount(accountId: string): boolean {
+  try {
+    const allAccounts = getAllPortalAccounts();
+    const target = allAccounts.find((a) => a.id === accountId || a.username === accountId);
+    if (!target) return false;
+
+    // Safety protection: Super Admin cannot be deleted
+    if (target.role === 'super_admin' || target.username === 'superadmin' || target.id === 'acc-superadmin') {
+      return false;
+    }
+
+    // 1. Add identifiers to deleted storage
+    const deleted = getDeletedPortalAccountIds();
+    const toAdd = [target.id, target.username, target.directorId, target.studentId].filter(Boolean) as string[];
+    const nextDeleted = Array.from(new Set([...deleted, ...toAdd]));
+    memoryDeletedAccountIds = nextDeleted;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(DELETED_PORTAL_ACCOUNTS_STORAGE_KEY, JSON.stringify(nextDeleted));
+    }
+
+    // 2. Remove from custom storage
+    removePortalAccountByEntityId(target.id);
+
+    // 3. If director, remove from director permissions
+    if (target.directorId) {
+      const perms = getDirectorPermissions().filter((p) => p.directorId !== target.directorId);
+      saveDirectorPermissions(perms);
+    }
+
+    // 4. Dispatch updates
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: getAllPortalAccounts() } }));
+      window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
+      window.dispatchEvent(new CustomEvent('ananda-teachers-updated'));
+    }
+    return true;
+  } catch (err) {
+    console.error('Error deleting account:', err);
+    return false;
+  }
+}
+
+export function togglePortalUserAccess(accountId: string, disableAccess: boolean): boolean {
+  try {
+    const allAccounts = getAllPortalAccounts();
+    const target = allAccounts.find((a) => a.id === accountId);
+    if (!target) return false;
+    if (target.role === 'super_admin' || target.username === 'superadmin') return false;
+
+    const updated: PortalAccount = {
+      ...target,
+      isAccessDisabled: disableAccess,
+    };
+    upsertPortalAccount(updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: getAllPortalAccounts() } }));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function updatePortalUserAccount(account: PortalAccount, canFullEdit?: boolean): boolean {
+  try {
+    upsertPortalAccount(account);
+
+    if (account.directorId) {
+      const perms = getDirectorPermissions().map((p) => {
+        if (p.directorId !== account.directorId) return p;
+        return {
+          ...p,
+          nameBn: account.nameBn,
+          nameEn: account.nameEn,
+          phone: account.phone,
+          email: account.email,
+          username: account.username,
+          ...(canFullEdit !== undefined
+            ? {
+                canEditSchoolAndBoard: canFullEdit,
+                canManageNoticesAndEvents: canFullEdit,
+                canManageStudentsAndAdmissions: canFullEdit,
+                canManageFeesAndAccounts: canFullEdit,
+                canApproveGatePassAndDiary: canFullEdit,
+              }
+            : {}),
+        };
+      });
+      saveDirectorPermissions(perms);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: getAllPortalAccounts() } }));
+      window.dispatchEvent(new CustomEvent('ananda-directors-updated'));
+      window.dispatchEvent(new CustomEvent('ananda-teachers-updated'));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function setAllPortalUsersAccess(enable: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const allAccounts = getAllPortalAccounts();
+    for (const acc of allAccounts) {
+      if (acc.role === 'super_admin' || acc.username === 'superadmin') continue;
+      upsertPortalAccount({
+        ...acc,
+        isAccessDisabled: !enable,
+      });
+    }
+    window.dispatchEvent(new CustomEvent('ananda-portal-accounts-updated', { detail: { accounts: getAllPortalAccounts() } }));
   } catch {}
 }
 

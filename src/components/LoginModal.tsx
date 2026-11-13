@@ -224,6 +224,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
+    if (account.isAccessDisabled) {
+      setErrorBn('🚫 আপনার অ্যাকাউন্টটির অ্যাক্সেস বর্তমানে সুপার অ্যাডমিন কর্তৃক স্থগিত (Blocked) রয়েছে। অনুগ্রহ করে কর্তৃপক্ষের সাথে যোগাযোগ করুন।');
+      return;
+    }
+
     const expectedPassword = account.passwordHint || '123456';
     if (password.trim() !== expectedPassword) {
       setErrorBn(
@@ -248,6 +253,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setForgotErrorBn(null);
     }
     if (autoLogin) {
+      if (acc.isAccessDisabled) {
+        setErrorBn('🚫 এই অ্যাকাউন্টটির অ্যাক্সেস বর্তমানে সুপার অ্যাডমিন কর্তৃক স্থগিত (Blocked) রয়েছে।');
+        return;
+      }
       onLoginSuccess(acc);
     }
   };

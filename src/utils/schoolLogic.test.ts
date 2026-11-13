@@ -17,6 +17,11 @@ import {
   getStudentConsistencyTier,
   generateMonthlyAttendanceSummary,
   exportAttendanceToCsv,
+  createPortalUserAccount,
+  updatePortalUserAccount,
+  deletePortalUserAccount,
+  togglePortalUserAccess,
+  getAllPortalAccounts,
 } from './schoolLogic';
 import {
   Student,
@@ -452,6 +457,65 @@ test('getGroupedNavPillars returns simplified, non-repetitive core pillars', () 
   assert.ok(parentPillars.some((p) => p.id === 'pillar_chat'));
   assert.ok(parentPillars.some((p) => p.id === 'pillar_notices'));
 });
+
+test('Super Admin User Management: create, access toggle, update, and delete accounts', () => {
+  // 1. Create a user
+  const newAccount = createPortalUserAccount({
+    nameBn: 'নাজমুন নাহার',
+    nameEn: 'Nazmun Nahar',
+    role: 'teacher',
+    phone: '01719888999',
+    username: 'test_nazmun',
+    passwordHint: '987654',
+    assignedClass: 'Play',
+  });
+
+  assert.ok(newAccount.id.startsWith('acc-custom-'));
+  assert.equal(newAccount.nameBn, 'নাজমুন নাহার');
+  assert.equal(newAccount.username, 'test_nazmun');
+  assert.equal(newAccount.passwordHint, '987654');
+  assert.equal(newAccount.role, 'teacher');
+  assert.equal(newAccount.assignedClass, 'Play');
+  assert.equal(newAccount.isAccessDisabled, false);
+
+  // Verify it appears in getAllPortalAccounts
+  const allAccountsAfterCreate = getAllPortalAccounts();
+  const createdInList = allAccountsAfterCreate.find((a) => a.username === 'test_nazmun');
+  assert.ok(createdInList);
+
+  // 2. Toggle access (block user)
+  const toggleResult = togglePortalUserAccess(newAccount.id, true);
+  assert.equal(toggleResult, true);
+  const allAccountsAfterToggle = getAllPortalAccounts();
+  const toggledAcc = allAccountsAfterToggle.find((a) => a.username === 'test_nazmun');
+  assert.equal(toggledAcc?.isAccessDisabled, true);
+
+  // 3. Update user
+  const updateResult = updatePortalUserAccount({
+    ...newAccount,
+    nameBn: 'নাজমুন নাহার ইতি',
+    passwordHint: 'newpassword123',
+  });
+  assert.equal(updateResult, true);
+  const allAccountsAfterUpdate = getAllPortalAccounts();
+  const updatedAcc = allAccountsAfterUpdate.find((a) => a.username === 'test_nazmun');
+  assert.equal(updatedAcc?.nameBn, 'নাজমুন নাহার ইতি');
+  assert.equal(updatedAcc?.passwordHint, 'newpassword123');
+
+  // 4. Delete user
+  const deleteResult = deletePortalUserAccount(newAccount.id);
+  assert.equal(deleteResult, true);
+  const allAccountsAfterDelete = getAllPortalAccounts();
+  const deletedInList = allAccountsAfterDelete.find((a) => a.username === 'test_nazmun');
+  assert.equal(deletedInList, undefined);
+
+  // 5. Verify Super Admin cannot be deleted
+  const superAdminAcc = allAccountsAfterDelete.find((a) => a.role === 'super_admin');
+  assert.ok(superAdminAcc);
+  const deleteSuperAdminResult = deletePortalUserAccount(superAdminAcc.id);
+  assert.equal(deleteSuperAdminResult, false);
+});
+
 
 
 

@@ -132,6 +132,7 @@ export type PortalAccountRole =
   | 'director'
   | 'principal'
   | 'teacher'
+  | 'accountant'
   | 'parent'
   | 'gate_security';
 
@@ -446,7 +447,7 @@ export interface PortalAccount {
   id: string;
   nameBn: string;
   nameEn: string;
-  role: 'super_admin' | 'director' | 'principal' | 'teacher' | 'parent' | 'gate_security';
+  role: 'super_admin' | 'director' | 'principal' | 'teacher' | 'accountant' | 'parent' | 'gate_security';
   roleTitleBn: string;
   portalNameBn: string;
   email: string;
@@ -457,6 +458,7 @@ export interface PortalAccount {
   assignedClass?: SchoolClass;
   studentId?: string;
   directorId?: string;
+  isAccessDisabled?: boolean;
 }
 
 export type MessageCategory =
