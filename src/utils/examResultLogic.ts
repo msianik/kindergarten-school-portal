@@ -156,18 +156,18 @@ export function calculateOverallResult(subjects: SubjectMark[]): {
 
 export const DEFAULT_EXAM_TERMS: ExamTerm[] = [
   {
-    id: 'term-annual-2026',
-    titleBn: 'বার্ষিক মূল্যায়ন ২০২৬ (Annual Assessment)',
+    id: 'term-first-2026',
+    titleBn: '১ম সাময়িক পরীক্ষা ২০২৬ (First Term)',
     academicYear: '২০২৬',
-    termType: 'annual',
-    startDate: '2026-11-15',
-    endDate: '2026-11-25',
-    publishDateBn: '২৮ নভেম্বর ২০২৬',
+    termType: 'first_term',
+    startDate: '2026-03-12',
+    endDate: '2026-03-22',
+    publishDateBn: '২৭ মার্চ ২০২৬',
     isPublished: true,
   },
   {
     id: 'term-second-2026',
-    titleBn: '২য় সাময়িক মূল্যায়ন ২০২৬ (Mid-Term Exam)',
+    titleBn: '২য় সাময়িক পরীক্ষা ২০২৬ (Mid-Term Exam)',
     academicYear: '২০২৬',
     termType: 'second_term',
     startDate: '2026-07-10',
@@ -176,13 +176,13 @@ export const DEFAULT_EXAM_TERMS: ExamTerm[] = [
     isPublished: true,
   },
   {
-    id: 'term-first-2026',
-    titleBn: '১ম সাময়িক মূল্যায়ন ২০২৬ (First Term)',
+    id: 'term-annual-2026',
+    titleBn: 'বার্ষিক পরীক্ষা ২০২৬ (Annual Assessment)',
     academicYear: '২০২৬',
-    termType: 'first_term',
-    startDate: '2026-03-12',
-    endDate: '2026-03-22',
-    publishDateBn: '২৭ মার্চ ২০২৬',
+    termType: 'annual',
+    startDate: '2026-11-15',
+    endDate: '2026-11-25',
+    publishDateBn: '২৮ নভেম্বর ২০২৬',
     isPublished: true,
   },
 ];
@@ -272,6 +272,195 @@ export const INITIAL_STUDENT_EXAM_RESULTS: StudentExamResult[] = [
   },
 
   // std-1: আদিত্য রায় (Nursery, Roll 101) - Demo Parent Subrata Roy
+  // ১ম সাময়িক পরীক্ষা ২০২৬
+  {
+    id: 'res-std-1-first',
+    studentId: 'std-1',
+    studentNameBn: 'আদিত্য রায়',
+    studentNameEn: 'Aditya Roy',
+    rollNo: '১০১',
+    className: 'Nursery',
+    sectionBn: 'ক (শাপলা)',
+    examTermId: 'term-first-2026',
+    examTitleBn: '১ম সাময়িক পরীক্ষা ২০২৬ (First Term)',
+    academicYear: '২০২৬',
+    publishDateBn: '২৭ মার্চ ২০২৬',
+    subjects: [
+      {
+        subjectCode: 'nur-1',
+        subjectNameBn: 'বাংলা ও বর্ণমালা জ্ঞান',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 46,
+        highestMarksInClass: 48,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'স্বরবর্ণ চেনা ও স্পষ্ট উচ্চারণে খুব ভালো',
+      },
+      {
+        subjectCode: 'nur-2',
+        subjectNameBn: 'সংখ্যা ও মৌলিক গণিত',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 47,
+        highestMarksInClass: 49,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: '১ থেকে ২০ পর্যন্ত সুন্দর গণনা করে',
+      },
+      {
+        subjectCode: 'nur-3',
+        subjectNameBn: 'ইংরেজি ছড়া ও শব্দ পরিচিতি',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 45,
+        highestMarksInClass: 48,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'A to M পর্যন্ত ছড়া ও ছবি সুন্দর বলতে পারে',
+      },
+      {
+        subjectCode: 'nur-4',
+        subjectNameBn: 'সৃজনশীল অঙ্কন ও রং মেলানো',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 47,
+        highestMarksInClass: 49,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'রং চেনা ও সোজা-বাঁকা রেখা টানায় দারুণ দক্ষতা',
+      },
+      {
+        subjectCode: 'nur-5',
+        subjectNameBn: 'সাধারণ জ্ঞান ও স্বাস্থ্যবিধি',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 46,
+        highestMarksInClass: 48,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'পরিষ্কার-পরিচ্ছন্নতা ও আদব-কায়দা খুবই ভালো',
+      },
+    ],
+    totalMarks: 250,
+    totalObtained: 231,
+    percentage: 92.4,
+    gpa: 5.0,
+    overallGrade: 'A+',
+    meritPosition: 2,
+    status: 'passed',
+    attendanceSummary: {
+      totalWorkingDays: 52,
+      presentDays: 50,
+      attendancePercentage: 96.2,
+    },
+    coCurricularSkills: {
+      disciplineBn: 'খুবই শান্ত ও মনোযোগী',
+      cleanlinessBn: 'প্রতিদিন পরিপাটি ইউনিফর্ম',
+      friendlinessBn: 'বন্ধুদের সাথে মিলেমিশে খেলাধুলা করে',
+      creativityBn: 'ছড়া ও অভিনয়ে আনন্দিত অংশগ্রহণ',
+    },
+    classTeacherRemarksBn: 'আদিত্য ১ম সাময়িকে অত্যন্ত চমৎকার সূচনা করেছে। ক্লাসের সব কার্যক্রমে তার স্বতঃস্ফূর্ত আগ্রহ প্রশংসনীয়।',
+    principalRemarksBn: 'শিক্ষাজীবনের শুরুতে আদিত্যের এমন একাগ্রতা ও সুশৃঙ্খলতা অত্যন্ত আশাব্যঞ্জক। শুভকামনা রইল!',
+    isPublished: true,
+    updatedAt: '2026-03-27T14:00:00Z',
+  },
+
+  // ২য় সাময়িক পরীক্ষা ২০২৬
+  {
+    id: 'res-std-1-second',
+    studentId: 'std-1',
+    studentNameBn: 'আদিত্য রায়',
+    studentNameEn: 'Aditya Roy',
+    rollNo: '১০১',
+    className: 'Nursery',
+    sectionBn: 'ক (শাপলা)',
+    examTermId: 'term-second-2026',
+    examTitleBn: '২য় সাময়িক পরীক্ষা ২০২৬ (Mid-Term Exam)',
+    academicYear: '২০২৬',
+    publishDateBn: '২৫ জুলাই ২০২৬',
+    subjects: [
+      {
+        subjectCode: 'nur-1',
+        subjectNameBn: 'বাংলা ও বর্ণমালা জ্ঞান',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 47,
+        highestMarksInClass: 49,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'ব্যঞ্জনবর্ণ চেনা ও সাধারণ শব্দ গঠন খুব ভালো',
+      },
+      {
+        subjectCode: 'nur-2',
+        subjectNameBn: 'সংখ্যা ও মৌলিক গণিত',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 48,
+        highestMarksInClass: 50,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'বস্তু গণনা ও ছোট-বড় তুলনা নিখুঁত',
+      },
+      {
+        subjectCode: 'nur-3',
+        subjectNameBn: 'ইংরেজি ছড়া ও শব্দ পরিচিতি',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 46,
+        highestMarksInClass: 49,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'A to Z বলতে ও লিখতে পারে, সুন্দর উচ্চারণ',
+      },
+      {
+        subjectCode: 'nur-4',
+        subjectNameBn: 'সৃজনশীল অঙ্কন ও রং মেলানো',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 48,
+        highestMarksInClass: 50,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'ছবি আঁকা ও রঙের সঠিক ব্যবহারে অসাধারণ অগ্রগতি',
+      },
+      {
+        subjectCode: 'nur-5',
+        subjectNameBn: 'সাধারণ জ্ঞান ও স্বাস্থ্যবিধি',
+        totalMarks: 50,
+        passMarks: 20,
+        obtainedMarks: 47,
+        highestMarksInClass: 49,
+        letterGrade: 'A+',
+        gradePoint: 5.0,
+        remarksBn: 'জাতীয় ফল, ফুল ও পশুর নাম সুন্দরভাবে বলতে পারে',
+      },
+    ],
+    totalMarks: 250,
+    totalObtained: 236,
+    percentage: 94.4,
+    gpa: 5.0,
+    overallGrade: 'A+',
+    meritPosition: 1,
+    status: 'passed',
+    attendanceSummary: {
+      totalWorkingDays: 68,
+      presentDays: 66,
+      attendancePercentage: 97.1,
+    },
+    coCurricularSkills: {
+      disciplineBn: 'অনুকরণীয় নিয়মানুবর্তিতা',
+      cleanlinessBn: 'খাবার আগে ও পরে হাত ধোয়ার অভ্যাস চমৎকার',
+      friendlinessBn: 'ক্লাসে সবার সাথে সহযোগিতাপূর্ণ অমায়িক আচরণ',
+      creativityBn: 'হাতের কাজ ও চিত্রাঙ্কনে বিশেষ পারদর্শী',
+    },
+    classTeacherRemarksBn: '২য় সাময়িকে আদিত্যের মেধা ও শৃঙ্খলার ধারাবাহিক উন্নতি ঘটেছে। প্রতিটি বিষয়ের প্রস্তুতি অত্যন্ত সুদৃঢ়।',
+    principalRemarksBn: 'আদিত্যের ধারাবাহিক কৃতিত্ব ও চমৎকার আচরণ আনন্দ পাঠশালাকে গর্বিত করেছে।',
+    isPublished: true,
+    updatedAt: '2026-07-25T14:00:00Z',
+  },
+
+  // বার্ষিক পরীক্ষা ২০২৬
   {
     id: 'res-std-1-annual',
     studentId: 'std-1',
@@ -741,6 +930,14 @@ export function getStoredExamResults(): StudentExamResult[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure new initial items (such as 1st/2nd term results) are merged in
+        const existingIds = new Set(parsed.map((r: any) => r.id));
+        const missingInitial = INITIAL_STUDENT_EXAM_RESULTS.filter((r) => !existingIds.has(r.id));
+        if (missingInitial.length > 0) {
+          const merged = [...parsed, ...missingInitial];
+          localStorage.setItem(EXAM_RESULTS_STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        }
         return parsed;
       }
     }
@@ -773,6 +970,13 @@ export function getStoredExamTerms(): ExamTerm[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        const existingIds = new Set(parsed.map((t: any) => t.id));
+        const missingTerms = DEFAULT_EXAM_TERMS.filter((t) => !existingIds.has(t.id));
+        if (missingTerms.length > 0) {
+          const merged = [...DEFAULT_EXAM_TERMS];
+          localStorage.setItem(EXAM_TERMS_STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        }
         return parsed;
       }
     }

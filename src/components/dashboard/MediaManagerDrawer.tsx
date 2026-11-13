@@ -69,24 +69,33 @@ export const MediaManagerDrawer: React.FC<MediaManagerDrawerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-emerald-500 p-6 shadow-md space-y-5 print:hidden">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Camera className="w-5 h-5 text-emerald-600" />
-            স্কুল লোগো এবং ফেসবুক গ্যালারি ছবি ম্যানেজার
-          </h3>
-          <p className="text-xs text-slate-500">
-            আপনার কম্পিউটার/ফোন থেকে নতুন লোগো ও ক্লাসরুমের ছবি আপলোড করুন অথবা ফেসবুক পেজের ছবি সিলেক্ট করুন
-          </p>
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto print:hidden"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border-2 border-emerald-500 my-4 space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-emerald-600" />
+              স্কুল লোগো এবং ফেসবুক গ্যালারি ছবি ম্যানেজার
+            </h3>
+            <p className="text-xs text-slate-500">
+              আপনার কম্পিউটার/ফোন থেকে নতুন লোগো ও ক্লাসরুমের ছবি আপলোড করুন অথবা ফেসবুক পেজের ছবি সিলেক্ট করুন
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+          >
+            বন্ধ করুন
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg"
-        >
-          বন্ধ করুন
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Update School Logo */}
@@ -218,5 +227,6 @@ export const MediaManagerDrawer: React.FC<MediaManagerDrawerProps> = ({
         </form>
       </div>
     </div>
-  );
+  </div>
+);
 };

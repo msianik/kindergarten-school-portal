@@ -1544,6 +1544,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           <FacebookGallerySection
             fbGallery={fbGallery}
             logoUrl={logoUrl}
+            onAddGalleryPhoto={onAddGalleryPhoto}
             onOpenMediaManager={() => setShowMediaManager(true)}
             onNavigateTab={onNavigateTab}
             onSelectPhoto={(photo) => setActiveLightboxPhoto(photo)}

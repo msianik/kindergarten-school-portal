@@ -482,6 +482,11 @@ export default function App() {
 
   const handleAddGalleryPhoto = (item: FacebookGalleryItem) => {
     setFbGallery((prev) => [item, ...prev]);
+    try {
+      const stored = localStorage.getItem('ananda_custom_gallery_photos');
+      const existing: FacebookGalleryItem[] = stored ? JSON.parse(stored) : [];
+      localStorage.setItem('ananda_custom_gallery_photos', JSON.stringify([item, ...existing]));
+    } catch {}
     saveGalleryItemToCloud(item).catch(() => {});
   };
 
