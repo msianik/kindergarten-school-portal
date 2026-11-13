@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
+  Student,
   UserRole,
   PortalAccount,
   StaffInternalMessage,
@@ -73,16 +74,20 @@ import {
   Heart,
   ThumbsUp,
   Share2,
+  GraduationCap,
+  HeartHandshake,
 } from 'lucide-react';
 
 interface StaffRoomChatModuleProps {
   currentRole: UserRole;
   loggedInAccount: PortalAccount | null;
   onSendNotification?: (notif: FcmNotification) => void;
+  students?: Student[];
 }
 
 const COLOR_PRESETS = [
   { key: 'amber', label: 'সোনালী / অ্যাম্বার (পরিচালক)', badgeBg: 'bg-amber-100', textColor: 'text-amber-900', dot: 'bg-amber-500' },
+  { key: 'teal', label: 'টিয়াল / সবুজ (অভিভাবক ও পিটিএ)', badgeBg: 'bg-teal-100', textColor: 'text-teal-900', dot: 'bg-teal-500' },
   { key: 'emerald', label: 'সবুজ (ইমারাল্ড)', badgeBg: 'bg-emerald-100', textColor: 'text-emerald-800', dot: 'bg-emerald-500' },
   { key: 'indigo', label: 'নীল (ইন্ডিগো)', badgeBg: 'bg-indigo-100', textColor: 'text-indigo-800', dot: 'bg-indigo-500' },
   { key: 'purple', label: 'বেগুনি (পার্পল)', badgeBg: 'bg-purple-100', textColor: 'text-purple-800', dot: 'bg-purple-500' },
@@ -91,11 +96,13 @@ const COLOR_PRESETS = [
 ];
 
 const ICON_OPTIONS = [
+  { id: 'Users', label: 'অভিভাবক/টিম' },
+  { id: 'GraduationCap', label: 'অভিভাবক ও পিটিএ' },
+  { id: 'HeartHandshake', label: 'অভিভাবক ফোরাম' },
   { id: 'ShieldAlert', label: 'পরিচালনা পর্ষদ' },
   { id: 'Building2', label: 'কমনরুম' },
   { id: 'Smile', label: 'প্রি-স্কুল' },
   { id: 'Palette', label: 'আর্ট/ল্যাব' },
-  { id: 'Users', label: 'টিম পরিষদ' },
   { id: 'Sparkles', label: 'ইভেন্ট' },
   { id: 'Briefcase', label: 'অফিসিয়াল' },
   { id: 'MessageSquare', label: 'ফোরাম' },
@@ -105,6 +112,10 @@ const QUICK_EMOJIS = ['👍', '❤️', '👏', '🎉', '💡', '🔥', '🙏', 
 
 const renderChannelIcon = (iconType: string, className = 'w-4 h-4') => {
   switch (iconType) {
+    case 'GraduationCap':
+      return <GraduationCap className={className} />;
+    case 'HeartHandshake':
+      return <HeartHandshake className={className} />;
     case 'ShieldAlert':
       return <ShieldAlert className={className} />;
     case 'Building2':
@@ -130,11 +141,12 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   currentRole,
   loggedInAccount,
   onSendNotification,
+  students,
 }) => {
   // Current logged in user accurately resolved as a StaffChatMember
   const currentUser: StaffChatMember = useMemo(
-    () => getStaffMemberIdentity(currentRole, loggedInAccount),
-    [currentRole, loggedInAccount]
+    () => getStaffMemberIdentity(currentRole, loggedInAccount, students),
+    [currentRole, loggedInAccount, students]
   );
 
   // Edit Permission: Strictly restricted to Principal or Admin!
@@ -144,8 +156,8 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     [currentRole, loggedInAccount]
   );
 
-  // Unified roster of all staff & directors
-  const allStaffMembers = useMemo(() => getAllStaffChatMembers(), []);
+  // Unified roster of all staff, directors & parents
+  const allStaffMembers = useMemo(() => getAllStaffChatMembers(students), [students]);
 
   // Dynamic Channels State
   const [channels, setChannels] = useState<StaffChannelMeta[]>(() =>
@@ -305,6 +317,44 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
   const [channelColorInput, setChannelColorInput] = useState<string>('emerald');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [memberSearchQuery, setMemberSearchQuery] = useState<string>('');
+  const [modalRosterTab, setModalRosterTab] = useState<'all' | 'parent' | 'teacher' | 'director'>('all');
+
+  // Counts of each group for the member picker
+  const rosterCounts = useMemo(() => {
+    const parents = allStaffMembers.filter((m) => m.category === 'parent').length;
+    const teachers = allStaffMembers.filter(
+      (m) => m.category === 'teacher' || m.category === 'support_staff' || m.role === 'principal' || m.role === 'accountant'
+    ).length;
+    const directors = allStaffMembers.filter((m) => m.category === 'director' || m.role === 'super_admin').length;
+    return { all: allStaffMembers.length, parents, teachers, directors };
+  }, [allStaffMembers]);
+
+  // Filtered members for group creation/edit modal
+  const filteredModalMembers = useMemo(() => {
+    return allStaffMembers.filter((m) => {
+      // 1. Tab filter
+      if (modalRosterTab === 'parent' && m.category !== 'parent') return false;
+      if (
+        modalRosterTab === 'teacher' &&
+        !(m.category === 'teacher' || m.category === 'support_staff' || m.role === 'principal' || m.role === 'accountant')
+      )
+        return false;
+      if (modalRosterTab === 'director' && !(m.category === 'director' || m.role === 'super_admin')) return false;
+
+      // 2. Search query filter
+      if (!memberSearchQuery.trim()) return true;
+      const q = memberSearchQuery.toLowerCase().trim();
+      return (
+        m.nameBn.toLowerCase().includes(q) ||
+        m.nameEn.toLowerCase().includes(q) ||
+        m.designationBn.toLowerCase().includes(q) ||
+        (m.childNameBn && m.childNameBn.toLowerCase().includes(q)) ||
+        (m.childClassName && m.childClassName.toLowerCase().includes(q)) ||
+        (m.childRollNo && m.childRollNo.includes(q)) ||
+        (m.phone && m.phone.includes(q))
+      );
+    });
+  }, [allStaffMembers, modalRosterTab, memberSearchQuery]);
 
   // View Members Modal State
   const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
@@ -339,6 +389,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
         m.nameBn.toLowerCase().includes(q) ||
         m.nameEn.toLowerCase().includes(q) ||
         m.designationBn.toLowerCase().includes(q) ||
+        (m.childNameBn && m.childNameBn.toLowerCase().includes(q)) ||
         (m.phone && m.phone.includes(q))
       );
     });
@@ -348,6 +399,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
       principal: list.filter((m) => m.role === 'principal' || m.category === 'principal'),
       teachers: list.filter((m) => m.category === 'teacher'),
       support: list.filter((m) => m.category === 'support_staff' || m.role === 'accountant' || m.role === 'gate_security'),
+      parents: list.filter((m) => m.category === 'parent'),
     };
   }, [allStaffMembers, currentUser.id, colleagueSearchQuery]);
 
@@ -660,10 +712,15 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
     setEditingChannel(null);
     setChannelTitleInput('');
     setChannelSubtitleInput('');
-    setChannelIconInput('Building2');
-    setChannelColorInput('emerald');
-    setSelectedMemberIds(allStaffMembers.map((m) => m.id));
+    setChannelIconInput('Users');
+    setChannelColorInput('teal');
+    // Default select staff & directors, allowing easy inclusion of parents with 1-click or individually
+    const staffAndDirIds = allStaffMembers
+      .filter((m) => m.category !== 'parent')
+      .map((m) => m.id);
+    setSelectedMemberIds(staffAndDirIds);
     setMemberSearchQuery('');
+    setModalRosterTab('all');
     setShowChannelModal(true);
   };
 
@@ -684,6 +741,7 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
       setSelectedMemberIds(allStaffMembers.map((m) => m.id));
     }
     setMemberSearchQuery('');
+    setModalRosterTab('all');
     setShowChannelModal(true);
   };
 
@@ -1204,6 +1262,64 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                             </p>
                             <p className="text-[10.5px] text-slate-700 font-medium truncate mt-0.5">
                               {lastMsg ? lastMsg.text : 'সরাসরি বার্তা শুরু করুন'}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Section 5: Parents & Guardians */}
+                {categorizedColleagues.parents.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-teal-800 tracking-wider px-2 flex items-center gap-1">
+                      <Users className="w-3 h-3 text-teal-600" />
+                      অভিভাবকবৃন্দ ({toBengaliNumber(categorizedColleagues.parents.length)})
+                    </span>
+                    {categorizedColleagues.parents.map((colleague) => {
+                      const isSelected = selectedColleagueId === colleague.id;
+                      const dirRoomId = getDirectRoomId(currentUser.id, colleague.id);
+                      const lastMsg = messages
+                        .filter((m) => m.roomId === dirRoomId)
+                        .slice(-1)[0];
+
+                      return (
+                        <button
+                          key={colleague.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedColleagueId(colleague.id);
+                            setShowMobileChatView(true);
+                          }}
+                          className={`w-full p-2.5 rounded-2xl text-left transition flex items-start gap-2.5 cursor-pointer ${
+                            isSelected
+                              ? 'bg-teal-50 border border-teal-300 shadow-2xs ring-1 ring-teal-300'
+                              : 'bg-white hover:bg-slate-100/80 border border-slate-100'
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <img
+                              src={colleague.photoUrl}
+                              alt={colleague.nameBn}
+                              className="w-9 h-9 rounded-xl object-cover border border-teal-200 shrink-0 shadow-2xs"
+                            />
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">
+                                {colleague.nameBn}
+                              </h4>
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-100 text-teal-800 font-bold shrink-0">
+                                অভিভাবক
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate">
+                              {colleague.designationBn}
+                            </p>
+                            <p className="text-[10.5px] text-teal-800 font-medium truncate mt-0.5">
+                              {lastMsg ? lastMsg.text : 'সরাসরি ব্যক্তিগত বার্তা পাঠান'}
                             </p>
                           </div>
                         </button>
@@ -1946,6 +2062,11 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                             পরিচালক
                           </span>
                         )}
+                        {member.category === 'parent' && (
+                          <span className="text-[9px] font-black px-2 py-0.2 rounded-full bg-teal-100 text-teal-800 border border-teal-200">
+                            👨‍👩‍👧 অভিভাবক
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10.5px] text-slate-500 truncate">{member.designationBn}</p>
                     </div>
@@ -2047,69 +2168,211 @@ export const StaffRoomChatModule: React.FC<StaffRoomChatModuleProps> = ({
                 </div>
               </div>
 
-              {/* Member Selection from Unified Roster */}
-              <div className="space-y-2 pt-2 border-t border-slate-200">
-                <div className="flex items-center justify-between gap-2">
+              {/* Member Selection from Unified Roster (Staff, Directors & Parents) */}
+              <div className="space-y-2.5 pt-3 border-t border-slate-200">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label className="text-xs font-bold text-slate-800">
                     রুমের অনুমোদিত সদস্য নির্বাচন ({toBengaliNumber(selectedMemberIds.length)} জন নির্বাচিত):
                   </label>
-                  <div className="flex items-center gap-1.5 text-[10.5px]">
+                  <div className="flex items-center gap-1.5 text-[10.5px] flex-wrap">
                     <button
                       type="button"
                       onClick={() => setSelectedMemberIds(allStaffMembers.map((m) => m.id))}
-                      className="text-indigo-600 hover:text-indigo-900 font-bold cursor-pointer"
+                      className="text-indigo-600 hover:text-indigo-900 font-bold hover:underline cursor-pointer"
                     >
-                      সবাইকে যুক্ত করুন
+                      সবাইকে যোগ
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const parentIds = allStaffMembers.filter((m) => m.category === 'parent').map((m) => m.id);
+                        setSelectedMemberIds((prev) => Array.from(new Set([...prev, ...parentIds])));
+                      }}
+                      className="text-teal-700 hover:text-teal-900 font-bold hover:underline cursor-pointer"
+                    >
+                      + সকল অভিভাবক
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const staffIds = allStaffMembers
+                          .filter((m) => m.category !== 'parent')
+                          .map((m) => m.id);
+                        setSelectedMemberIds((prev) => Array.from(new Set([...prev, ...staffIds])));
+                      }}
+                      className="text-blue-700 hover:text-blue-900 font-bold hover:underline cursor-pointer"
+                    >
+                      + সকল স্টাফ
                     </button>
                     <span>·</span>
                     <button
                       type="button"
                       onClick={() => setSelectedMemberIds([])}
-                      className="text-slate-500 hover:text-slate-800 font-bold cursor-pointer"
+                      className="text-rose-600 hover:text-rose-800 font-bold hover:underline cursor-pointer"
                     >
                       খালি করুন
                     </button>
                   </div>
                 </div>
 
-                <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-2xl p-2 space-y-1 bg-slate-50">
-                  {allStaffMembers.map((member) => {
-                    const isChecked = selectedMemberIds.includes(member.id);
-                    return (
-                      <div
-                        key={member.id}
-                        onClick={() => handleToggleMemberSelection(member.id)}
-                        className={`p-2 rounded-xl flex items-center justify-between gap-2.5 cursor-pointer transition ${
-                          isChecked ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <img
-                            src={member.photoUrl}
-                            alt={member.nameBn}
-                            className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold text-slate-900 truncate block">
-                              {member.nameBn}
-                            </span>
-                            <span className="text-[10px] text-slate-500 truncate block">
-                              {member.designationBn}
-                            </span>
-                          </div>
-                        </div>
-                        <span
-                          className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                {/* Search Bar for Member Selection */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={memberSearchQuery}
+                    onChange={(e) => setMemberSearchQuery(e.target.value)}
+                    placeholder="নাম, অভিভাবক, শিক্ষার্থী, শ্রেণি, রোল বা ফোন নম্বর দিয়ে খুঁজুন..."
+                    className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-indigo-500 placeholder:text-slate-400"
+                  />
+                  {memberSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setMemberSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px] scrollbar-thin">
+                  <button
+                    type="button"
+                    onClick={() => setModalRosterTab('all')}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition cursor-pointer ${
+                      modalRosterTab === 'all'
+                        ? 'bg-indigo-600 text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    সবাই ({toBengaliNumber(rosterCounts.all)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalRosterTab('parent')}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition flex items-center gap-1 cursor-pointer ${
+                      modalRosterTab === 'parent'
+                        ? 'bg-teal-600 text-white shadow-2xs'
+                        : 'bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200/80'
+                    }`}
+                  >
+                    <span>👨‍👩‍👧 অভিভাবকবৃন্দ</span>
+                    <span>({toBengaliNumber(rosterCounts.parents)})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalRosterTab('teacher')}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition cursor-pointer ${
+                      modalRosterTab === 'teacher'
+                        ? 'bg-indigo-600 text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    শিক্ষক ও স্টাফ ({toBengaliNumber(rosterCounts.teachers)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalRosterTab('director')}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition cursor-pointer ${
+                      modalRosterTab === 'director'
+                        ? 'bg-amber-600 text-white shadow-2xs'
+                        : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200/80'
+                    }`}
+                  >
+                    পরিচালনা পর্ষদ ({toBengaliNumber(rosterCounts.directors)})
+                  </button>
+                </div>
+
+                {/* Member Items Selection List */}
+                <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-2xl p-2 space-y-1.5 bg-slate-50">
+                  {filteredModalMembers.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-slate-400">
+                      কোনো সদস্য পাওয়া যায়নি।
+                    </div>
+                  ) : (
+                    filteredModalMembers.map((member) => {
+                      const isChecked = selectedMemberIds.includes(member.id);
+                      const isParentMember = member.category === 'parent';
+
+                      return (
+                        <div
+                          key={member.id}
+                          onClick={() => handleToggleMemberSelection(member.id)}
+                          className={`p-2.5 rounded-xl flex items-center justify-between gap-2.5 cursor-pointer transition border ${
                             isChecked
-                              ? 'bg-indigo-600 text-white'
-                              : 'border border-slate-300 text-transparent'
+                              ? isParentMember
+                                ? 'bg-teal-50/80 border-teal-300 ring-1 ring-teal-300/40'
+                                : 'bg-indigo-50/80 border-indigo-300 ring-1 ring-indigo-300/40'
+                              : 'bg-white hover:bg-slate-100/80 border-slate-200/70'
                           }`}
                         >
-                          ✓
-                        </span>
-                      </div>
-                    );
-                  })}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative shrink-0">
+                              <img
+                                src={member.photoUrl}
+                                alt={member.nameBn}
+                                className={`w-8 h-8 rounded-xl object-cover border shrink-0 ${
+                                  isParentMember ? 'border-teal-300' : 'border-slate-200'
+                                }`}
+                              />
+                              {isParentMember && (
+                                <span className="w-3.5 h-3.5 rounded-full bg-teal-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white flex items-center justify-center text-[8px] text-white font-bold">
+                                  P
+                                </span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-bold text-slate-900 truncate">
+                                  {member.nameBn}
+                                </span>
+                                {isParentMember ? (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-teal-100 text-teal-900 border border-teal-200">
+                                    👨‍👩‍👧 অভিভাবক
+                                  </span>
+                                ) : member.category === 'director' ? (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                                    পরিচালক
+                                  </span>
+                                ) : member.role === 'principal' ? (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                                    প্রিন্সিপাল
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-blue-100 text-blue-900 border border-blue-200">
+                                    শিক্ষক/স্টাফ
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-600 truncate">
+                                {member.designationBn}
+                              </p>
+                              {member.phone && (
+                                <p className="text-[9px] text-slate-400 font-mono truncate">
+                                  ফোন: {member.phone}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <span
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition ${
+                              isChecked
+                                ? isParentMember
+                                  ? 'bg-teal-600 text-white shadow-2xs'
+                                  : 'bg-indigo-600 text-white shadow-2xs'
+                                : 'border border-slate-300 text-transparent hover:border-slate-400'
+                            }`}
+                          >
+                            ✓
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 

@@ -72,18 +72,11 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
   const isAdmin = currentRole === 'principal' || currentRole === 'super_admin' || currentRole === 'director';
 
   const [activeChatSection, setActiveChatSection] = useState<'parent_chat' | 'staff_room'>(() => {
-    if (currentRole === 'parent') return 'parent_chat';
     if (currentRole === 'director' || currentRole === 'super_admin' || currentRole === 'accountant' || currentRole === 'gate_security') {
       return 'staff_room';
     }
     return initialChatMode || 'parent_chat';
   });
-
-  useEffect(() => {
-    if (isParent) {
-      setActiveChatSection('parent_chat');
-    }
-  }, [isParent]);
 
   // Identify default student for logged-in parent
   const parentDefaultChild = useMemo(() => {
@@ -324,80 +317,95 @@ export const ParentTeacherChatModule: React.FC<ParentTeacherChatModuleProps> = (
         </div>
       )}
 
-      {/* Role Navigation Switcher for Teachers & Staff */}
-      {!isParent && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-xs transition-colors shrink-0 ${
-                activeChatSection === 'staff_room'
-                  ? 'bg-gradient-to-br from-indigo-600 to-violet-700 text-white'
-                  : 'bg-gradient-to-br from-teal-600 to-emerald-700 text-white'
-              }`}
-            >
-              {activeChatSection === 'staff_room' ? (
-                <Building2 className="w-5 h-5" />
-              ) : (
-                <MessageSquare className="w-5 h-5" />
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-extrabold text-slate-900 leading-tight">
-                  {activeChatSection === 'staff_room'
-                    ? 'স্কুল চ্যাট রুম ও ফোরাম (পরিচালক ও স্টাফ)'
-                    : 'শিক্ষার্থী ও অভিভাবক সরাসরি বার্তা আদান-প্রদান'}
-                </h2>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                  {activeChatSection === 'staff_room' ? 'পরিচালক ও স্টাফ হাব' : 'অভিভাবক সংযোগ'}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                {activeChatSection === 'staff_room'
-                  ? 'পরিচালনা পর্ষদ ফোরাম, সর্বজনীন স্টাফ লাউঞ্জ, উইং গ্রুপ ও ১-অন-১ চ্যাট'
-                  : 'শ্রেণির প্রতিটি শিক্ষার্থীর অভিভাবকের সাথে সরাসরি ওয়ান-অন-ওয়ান চ্যাট'}
-              </p>
-            </div>
+      {/* Role Navigation Switcher for Teachers, Staff & Parents */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-xs transition-colors shrink-0 ${
+              activeChatSection === 'staff_room'
+                ? 'bg-gradient-to-br from-indigo-600 to-violet-700 text-white'
+                : 'bg-gradient-to-br from-teal-600 to-emerald-700 text-white'
+            }`}
+          >
+            {activeChatSection === 'staff_room' ? (
+              <Building2 className="w-5 h-5" />
+            ) : (
+              <MessageSquare className="w-5 h-5" />
+            )}
           </div>
-
-          <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl self-stretch sm:self-auto border border-slate-200/80">
-            <button
-              type="button"
-              onClick={() => setActiveChatSection('parent_chat')}
-              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeChatSection === 'parent_chat'
-                  ? 'bg-teal-700 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>অভিভাবক চ্যাট</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveChatSection('staff_room')}
-              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeChatSection === 'staff_room'
-                  ? 'bg-indigo-700 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>স্কুল চ্যাট রুম</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white">
-                পরিচালক ও স্টাফ
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-extrabold text-slate-900 leading-tight">
+                {activeChatSection === 'staff_room'
+                  ? isParent
+                    ? 'স্কুল গ্রুপ চ্যাট রুম ও ফোরাম (অভিভাবক ও শিক্ষক)'
+                    : 'স্কুল চ্যাট রুম ও ফোরাম (পরিচালক ও স্টাফ)'
+                  : isParent
+                  ? 'শ্রেণি শিক্ষক সরাসরি বার্তা আদান-প্রদান'
+                  : 'শিক্ষার্থী ও অভিভাবক সরাসরি বার্তা আদান-প্রদান'}
+              </h2>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                {activeChatSection === 'staff_room'
+                  ? isParent
+                    ? 'গ্রুপ ফোরাম সংযোগ'
+                    : 'পরিচালক ও স্টাফ হাব'
+                  : 'অভিভাবক সংযোগ'}
               </span>
-            </button>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {activeChatSection === 'staff_room'
+                ? isParent
+                  ? 'বিদ্যালয় প্রশাসন, শিক্ষক ও অভিভাবকদের সমন্বিত পিটিএ ও উইং গ্রুপ চ্যাট রুম'
+                  : 'পরিচালনা পর্ষদ ফোরাম, সর্বজনীন স্টাফ লাউঞ্জ, উইং গ্রুপ ও ১-অন-১ চ্যাট'
+                : isParent
+                ? 'সন্তানের পড়াশোনা ও অগ্রগতি বিষয়ে শ্রেণি শিক্ষকের সাথে ওয়ান-অন-ওয়ান বার্তা'
+                : 'শ্রেণির প্রতিটি শিক্ষার্থীর অভিভাবকের সাথে সরাসরি ওয়ান-অন-ওয়ান চ্যাট'}
+            </p>
           </div>
         </div>
-      )}
+
+        <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl self-stretch sm:self-auto border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setActiveChatSection('parent_chat')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeChatSection === 'parent_chat'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>{isParent ? 'শিক্ষক সরাসরি চ্যাট' : 'অভিভাবক চ্যাট'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveChatSection('staff_room')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeChatSection === 'staff_room'
+                ? 'bg-indigo-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>{isParent ? 'গ্রুপ চ্যাট রুম' : 'স্কুল চ্যাট রুম'}</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[9px] font-black text-white ${
+                isParent ? 'bg-teal-600' : 'bg-amber-500'
+              }`}
+            >
+              {isParent ? 'গ্রুপ ফোরাম' : 'পরিচালক ও স্টাফ'}
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* RENDER VIEW BASED ON ACTIVE SECTION */}
-      {!isParent && activeChatSection === 'staff_room' ? (
+      {activeChatSection === 'staff_room' ? (
         <StaffRoomChatModule
           currentRole={currentRole}
           loggedInAccount={loggedInAccount}
           onSendNotification={onSendChatNotification}
+          students={students}
         />
       ) : (
         <>

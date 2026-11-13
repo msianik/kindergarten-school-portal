@@ -8,8 +8,10 @@ import {
   StaffChatMember,
   UserRole,
   PortalAccount,
+  Student,
 } from '../types/school';
-import { SCHOOL_TEACHERS, MANAGEMENT_COMMITTEE } from '../data/mockData';
+import { SCHOOL_TEACHERS, MANAGEMENT_COMMITTEE, INITIAL_STUDENTS } from '../data/mockData';
+import { toBengaliNumber, getSchoolClassNameBn, getAllPortalAccounts } from './schoolLogic';
 
 export const STAFF_CHAT_STORAGE_KEY = 'ananda_staff_internal_messages_v2';
 export const STAFF_CHAT_STORAGE_EVENT = 'ananda-staff-chat-updated';
@@ -20,10 +22,10 @@ export const STAFF_CHANNELS_STORAGE_EVENT = 'ananda-staff-channels-updated';
 export type { StaffChannelMeta, StaffChatMember };
 
 // ==========================================
-// UNIFIED STAFF & DIRECTORS ROSTER
+// UNIFIED STAFF, DIRECTORS & PARENTS ROSTER
 // ==========================================
 
-export function getAllStaffChatMembers(): StaffChatMember[] {
+export function getAllStaffChatMembers(studentsList?: Student[]): StaffChatMember[] {
   const members: StaffChatMember[] = [];
   const seenIds = new Set<string>();
 
@@ -86,6 +88,81 @@ export function getAllStaffChatMembers(): StaffChatMember[] {
     }
   }
 
+  // 3. Parents / Guardians (অভিভাবকবৃন্দ)
+  let students: Student[] = studentsList || [];
+  if (!students || students.length === 0) {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('ananda_students_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            students = parsed;
+          }
+        }
+      } catch {}
+    }
+  }
+  if (!students || students.length === 0) {
+    students = INITIAL_STUDENTS;
+  }
+
+  for (const std of students) {
+    const memberId = std.id;
+    if (!seenIds.has(memberId)) {
+      seenIds.add(memberId);
+
+      const rawFather = std.fatherNameBn?.split('(')[0]?.trim();
+      const rawMother = std.motherNameBn?.split('(')[0]?.trim();
+      const pickupName = std.authorizedPickups?.[0]?.nameBn?.trim();
+      const guardianNameBn = pickupName || rawFather || rawMother || `${std.nameBn}-এর অভিভাবক`;
+      const guardianNameEn = std.nameEn ? `${std.nameEn}'s Guardian` : 'Guardian';
+      const classNameBn = getSchoolClassNameBn(std.className);
+
+      members.push({
+        id: memberId,
+        studentId: std.id,
+        nameBn: guardianNameBn,
+        nameEn: guardianNameEn,
+        role: 'parent',
+        designationBn: `অভিভাবক (শিক্ষার্থী: ${std.nameBn}, ${classNameBn}, রোল: ${toBengaliNumber(std.rollNo)})`,
+        departmentBn: 'অভিভাবক পরিষদ ও পিটিএ',
+        photoUrl: std.photoUrl || '/assets/biddalay/student_hasin.jpg',
+        phone: std.emergencyPhone || std.authorizedPickups?.[0]?.phone,
+        email: std.email,
+        username: std.username || (std.id === 'std-1' ? 'parent' : `std_${std.id}`),
+        category: 'parent',
+        childNameBn: std.nameBn,
+        childClassName: std.className,
+        childRollNo: std.rollNo,
+      });
+    }
+  }
+
+  // 4. Any custom registered parent accounts from PortalAccounts
+  try {
+    const accounts = getAllPortalAccounts();
+    for (const acc of accounts) {
+      if (acc.role === 'parent' && !seenIds.has(acc.id) && (!acc.studentId || !seenIds.has(acc.studentId))) {
+        seenIds.add(acc.id);
+        members.push({
+          id: acc.id,
+          studentId: acc.studentId,
+          nameBn: acc.nameBn,
+          nameEn: acc.nameEn,
+          role: 'parent',
+          designationBn: acc.roleTitleBn || 'নিবন্ধিত অভিভাবক',
+          departmentBn: 'অভিভাবক পরিষদ',
+          photoUrl: acc.avatarUrl || '/assets/biddalay/student_hasin.jpg',
+          phone: acc.phone,
+          email: acc.email,
+          username: acc.username,
+          category: 'parent',
+        });
+      }
+    }
+  } catch {}
+
   return members;
 }
 
@@ -94,9 +171,10 @@ export function getAllStaffChatMembers(): StaffChatMember[] {
  */
 export function getStaffMemberIdentity(
   currentRole: UserRole,
-  loggedInAccount: PortalAccount | null
+  loggedInAccount: PortalAccount | null,
+  studentsList?: Student[]
 ): StaffChatMember {
-  const allMembers = getAllStaffChatMembers();
+  const allMembers = getAllStaffChatMembers(studentsList);
 
   if (loggedInAccount) {
     // 1. Match by directorId
@@ -105,13 +183,25 @@ export function getStaffMemberIdentity(
       if (match) return match;
     }
 
-    // 2. Match by username
+    // 2. Match by studentId (for Parents)
+    if (loggedInAccount.studentId) {
+      const match = allMembers.find((m) => m.studentId === loggedInAccount.studentId || m.id === loggedInAccount.studentId);
+      if (match) return match;
+    }
+
+    // 3. Match by username
     if (loggedInAccount.username) {
       const match = allMembers.find((m) => m.username === loggedInAccount.username);
       if (match) return match;
     }
 
-    // 3. Match by name
+    // 4. Match by exact account id
+    if (loggedInAccount.id) {
+      const match = allMembers.find((m) => m.id === loggedInAccount.id);
+      if (match) return match;
+    }
+
+    // 5. Match by name
     if (loggedInAccount.nameBn) {
       const match = allMembers.find(
         (m) => m.nameBn.includes(loggedInAccount.nameBn) || loggedInAccount.nameBn.includes(m.nameBn)
@@ -136,6 +226,9 @@ export function getStaffMemberIdentity(
   if (currentRole === 'gate_security') {
     return allMembers.find((m) => m.id === 'tch-9') || allMembers[1];
   }
+  if (currentRole === 'parent') {
+    return allMembers.find((m) => m.category === 'parent' || m.id === 'std-1') || allMembers[0];
+  }
 
   // Teacher fallback
   return allMembers.find((m) => m.id === 'tch-2') || allMembers[0];
@@ -154,34 +247,39 @@ export function canUserAccessChannel(
   currentRole: UserRole,
   memberId: string
 ): boolean {
-  // Directors Lounge is strictly restricted to Directors, Super Admin, and Principal
-  if (channel.id === 'directors_board') {
-    return (
-      currentRole === 'director' ||
-      currentRole === 'super_admin' ||
-      currentRole === 'principal' ||
-      Boolean(channel.memberIds && channel.memberIds.includes(memberId))
-    );
+  // 1. If user is explicitly listed in memberIds, they always have access!
+  if (channel.memberIds && Array.isArray(channel.memberIds) && channel.memberIds.includes(memberId)) {
+    return true;
   }
 
-  // All Staff lounge is open to all staff and directors
-  if (channel.id === 'all_staff') {
-    return currentRole !== 'parent' && currentRole !== 'public';
-  }
-
-  // Super Admin & Principal have supervisor access across all school channels
+  // 2. Super Admin & Principal have supervisor access across all school channels
   if (currentRole === 'super_admin' || currentRole === 'principal') {
     return true;
   }
 
-  // For other channels, check allowed roles if set
+  // 3. Directors Lounge is strictly restricted to Directors, Super Admin, and Principal
+  if (channel.id === 'directors_board') {
+    return currentRole === 'director';
+  }
+
+  // 4. All Staff lounge is open to all staff and directors (parents are not in general staff lounge)
+  if (channel.id === 'all_staff') {
+    return currentRole !== 'parent' && currentRole !== 'public';
+  }
+
+  // 5. For other channels, check allowed roles if set
   if (channel.allowedRoles && channel.allowedRoles.length > 0) {
     if (!channel.allowedRoles.includes(currentRole)) return false;
   }
 
-  // Check specific memberIds if specified
+  // 6. Check specific memberIds if specified
   if (channel.memberIds && Array.isArray(channel.memberIds) && channel.memberIds.length > 0) {
     return channel.memberIds.includes(memberId);
+  }
+
+  // 7. Parents should only access rooms where they were added as member
+  if (currentRole === 'parent') {
+    return false;
   }
 
   return true;
@@ -217,6 +315,18 @@ export const DEFAULT_STAFF_CHANNELS: StaffChannelMeta[] = [
     memberCount: 6,
     isDefault: true,
     isLocked: true,
+  },
+  {
+    id: 'pta_parents_forum',
+    titleBn: 'অভিভাবক ও শিক্ষক প্রতিনিধি ফোরাম (PTA Forum)',
+    subtitleBn: 'বিদ্যালয় পরিচালনা, শিশু বিকাশ ও অভিভাবকদের মতামত ও পরামর্শ সমন্বয় ফোরাম',
+    iconType: 'Users',
+    badgeBg: 'bg-teal-100',
+    textColor: 'text-teal-900',
+    allowedRoles: ['director', 'super_admin', 'principal', 'teacher', 'parent'],
+    memberIds: ['tch-1', 'tch-2', 'dir-4', 'dir-3', 'std-1', 'std-0', 'std-2'],
+    memberCount: 7,
+    isDefault: true,
   },
   {
     id: 'all_staff',
@@ -269,6 +379,45 @@ export function getDirectRoomId(idA: string, idB: string): string {
 // ==========================================
 
 export const INITIAL_STAFF_MESSAGES: StaffInternalMessage[] = [
+  // Channel: pta_parents_forum (PTA & Parents Forum)
+  {
+    id: 'pta-msg-1',
+    roomId: 'pta_parents_forum',
+    roomType: 'channel',
+    roomNameBn: 'অভিভাবক ও শিক্ষক প্রতিনিধি ফোরাম (PTA Forum)',
+    senderId: 'tch-1',
+    senderNameBn: 'শাফী আব্দুল্লাহ',
+    senderRoleTitleBn: 'প্রিন্সিপাল, আনন্দ পাঠশালা',
+    senderAvatarUrl: '/assets/biddalay/shafee_abdullah.jpg',
+    text: 'সম্মানিত অভিভাবকবৃন্দ ও সহকর্মীবৃন্দ, আনন্দ পাঠশালার অভিভাবক-শিক্ষক সমন্বয় ফোরামে আপনাদের সবাইকে আন্তরিক স্বাগতম। শিশুদের পাঠদান, আনন্দময় শিক্ষা ও মানসিক বিকাশে আপনাদের মতামত আমাদের জন্য অত্যন্ত মূল্যবান। যেকোনো পরামর্শ এখানে নির্দ্বিধায় শেয়ার করতে পারেন।',
+    actionType: 'chat',
+    timestamp: '০৯ নভেম্বর ২০২৬, সকাল ১০:১৫',
+    createdAt: 1794228900000,
+    isPinned: true,
+    reactions: {
+      '❤️': ['সুব্রত রায়', 'ফাতেমা আক্তার', 'তাহমিনা আক্তার'],
+      '👏': ['আল নোমান', 'এম এস আই অনিক'],
+    },
+  },
+  {
+    id: 'pta-msg-2',
+    roomId: 'pta_parents_forum',
+    roomType: 'channel',
+    roomNameBn: 'অভিভাবক ও শিক্ষক প্রতিনিধি ফোরাম (PTA Forum)',
+    senderId: 'std-1',
+    senderNameBn: 'সুব্রত রায়',
+    senderRoleTitleBn: 'অভিভাবক (আদিত্য রায় — নার্সারি)',
+    senderAvatarUrl: '/assets/biddalay/student_hasin.jpg',
+    text: 'ধন্যবাদ প্রিন্সিপাল স্যার। আনন্দ পাঠশালার মনোরম পরিবেশ, পুষ্টিকর খাবার এবং শিক্ষকদের আন্তরিক স্নেহ আমাদের সন্তানদের স্কুলমুখী করতে দারুণ ভূমিকা রেখেছে। আমরা অভিভাবকরা সব সময় স্কুলের যেকোনো উদ্যোগে পাশে আছি।',
+    actionType: 'chat',
+    timestamp: '০৯ নভেম্বর ২০২৬, সকাল ১০:৪৫',
+    createdAt: 1794230700000,
+    reactions: {
+      '👍': ['শাফী আব্দুল্লাহ', 'মোস্তফা আল মামুন'],
+      '✨': ['সাম্মী আক্তার'],
+    },
+  },
+
   // Channel: directors_board (Restricted: Directors & Principal Only)
   {
     id: 'dir-msg-1',
@@ -725,12 +874,27 @@ export function getStoredStaffChannels(): StaffChannelMeta[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure directors_board exists
+        // Ensure directors_board and pta_parents_forum exist
         let channelsList: StaffChannelMeta[] = [...parsed];
+        let hasModified = false;
+
         const hasDirectorsBoard = channelsList.some((c) => c.id === 'directors_board');
         if (!hasDirectorsBoard) {
           const dirBoardMeta = DEFAULT_STAFF_CHANNELS.find((d) => d.id === 'directors_board')!;
           channelsList = [dirBoardMeta, ...channelsList];
+          hasModified = true;
+        }
+
+        const hasPtaForum = channelsList.some((c) => c.id === 'pta_parents_forum');
+        if (!hasPtaForum) {
+          const ptaMeta = DEFAULT_STAFF_CHANNELS.find((d) => d.id === 'pta_parents_forum');
+          if (ptaMeta) {
+            channelsList.splice(1, 0, ptaMeta);
+            hasModified = true;
+          }
+        }
+
+        if (hasModified) {
           saveStaffChannels(channelsList);
         }
 
