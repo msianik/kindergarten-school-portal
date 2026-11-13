@@ -224,6 +224,460 @@ export const ExamResultsModule: React.FC<ExamResultsModuleProps> = ({
     return std?.photoUrl || undefined;
   };
 
+  // Dedicated Parent View: Shows only their student's results with 3 exam selector tabs
+  if (isParent) {
+    const parentStudentId = loggedInStudentId || 'std-1';
+    const parentStudent = students.find((s) => s.id === parentStudentId) || students[0];
+    const parentResult = examResults.find(
+      (r) => r.studentId === parentStudentId && r.examTermId === selectedTermId
+    );
+
+    return (
+      <div className="space-y-6">
+        {/* Toast Alert */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl border border-emerald-500 animate-bounce">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="text-sm font-semibold">{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Parent Student Header Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 text-white p-6 sm:p-8 shadow-xl">
+          <div className="absolute top-0 right-0 -mt-6 -mr-6 w-56 h-56 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-white/20 shrink-0 flex items-center justify-center">
+                {getStudentPhoto(parentStudentId) ? (
+                  <img
+                    src={getStudentPhoto(parentStudentId)}
+                    alt={parentStudent?.nameBn || 'শিক্ষার্থী'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Users className="w-9 h-9 text-emerald-100" />
+                )}
+              </div>
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-xs font-bold border border-white/10">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>অভিভাবক পোর্টাল • একাডেমিক মূল্যায়ন ও ফলাফল</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  {parentStudent?.nameBn || parentResult?.studentNameBn || 'আদিত্য রায়'}-এর মার্কশিট
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-emerald-100 font-medium">
+                  <span>শ্রেণি: {getSchoolClassNameBn(parentStudent?.className || parentResult?.className || 'Nursery')}</span>
+                  <span>•</span>
+                  <span>রোল: {toBengaliNumber(parentStudent?.rollNo || parentResult?.rollNo || '১০১')}</span>
+                  <span>•</span>
+                  <span>শাখা: {parentStudent?.section || parentResult?.sectionBn || 'ক (শাপলা)'}</span>
+                  <span>•</span>
+                  <span>শিক্ষাবর্ষ: ২০২৬</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button: Print Report Card */}
+            {parentResult && (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveReportStudentId(parentStudentId)}
+                  className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-900 rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-amber-900/30 active:scale-95 transition-all"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>রিপোর্ট কার্ড প্রিন্ট / সংরক্ষণ</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3 Annual Exam Selector Tabs */}
+        <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-700 font-bold text-sm sm:text-base">
+              <Calendar className="w-4 h-4 text-emerald-700" />
+              <span>পরীক্ষা নির্বাচন করুন (বছরে ৩টি মূল্যায়ন):</span>
+            </div>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              যেকোনো একটি পরীক্ষায় ক্লিক করে বিস্তারিত মার্কশিট দেখুন
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {examTerms.map((term, idx) => {
+              const isSelected = selectedTermId === term.id;
+              const examIcons = [
+                <BookOpen key="1" className="w-5 h-5" />,
+                <TrendingUp key="2" className="w-5 h-5" />,
+                <Trophy key="3" className="w-5 h-5" />,
+              ];
+              const hasResult = examResults.some(
+                (r) => r.studentId === parentStudentId && r.examTermId === term.id
+              );
+
+              return (
+                <button
+                  key={term.id}
+                  type="button"
+                  onClick={() => setSelectedTermId(term.id)}
+                  className={`relative p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 ${
+                    isSelected
+                      ? 'bg-gradient-to-br from-emerald-700 to-teal-800 text-white border-emerald-600 shadow-lg shadow-emerald-700/20 ring-2 ring-emerald-400/40'
+                      : 'bg-slate-50 hover:bg-emerald-50/60 text-slate-700 border-slate-200 hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`p-2.5 rounded-xl ${
+                          isSelected
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white text-emerald-700 shadow-sm border border-slate-200'
+                        }`}
+                      >
+                        {examIcons[idx % 3]}
+                      </div>
+                      <div>
+                        <span
+                          className={`text-[10px] font-extrabold uppercase tracking-wider block ${
+                            isSelected ? 'text-amber-300' : 'text-slate-400'
+                          }`}
+                        >
+                          মূল্যায়ন #{toBengaliNumber(idx + 1)}
+                        </span>
+                        <span className="font-extrabold text-sm sm:text-base block">
+                          {term.titleBn.split(' (')[0]}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isSelected ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 shrink-0">
+                        নির্বাচিত
+                      </span>
+                    ) : hasResult ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
+                        ফলাফল প্রস্তুত
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div
+                    className={`text-[11px] pt-2 border-t flex items-center justify-between ${
+                      isSelected ? 'border-white/20 text-emerald-100' : 'border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    <span>প্রকাশ: {term.publishDateBn}</span>
+                    <span>{term.academicYear}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Marksheet Body */}
+        {parentResult ? (
+          <div className="space-y-6">
+            {/* Overall Summary KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Marks */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Award className="w-6 h-6 text-emerald-700" />
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 font-semibold block">প্রাপ্ত মোট নম্বর</span>
+                  <span className="text-xl sm:text-2xl font-black text-slate-800">
+                    {toBengaliNumber(parentResult.totalObtained)}
+                    <span className="text-sm font-semibold text-slate-400">
+                      {' '}/ {toBengaliNumber(parentResult.totalMarks)}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Percentage */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-6 h-6 text-teal-700" />
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 font-semibold block">শতকরা হার</span>
+                  <span className="text-xl sm:text-2xl font-black text-teal-700">
+                    {toBengaliNumber(parentResult.percentage)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* GPA & Grade */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 font-semibold block">জিপিএ ও গ্রেড</span>
+                  <span className="text-xl sm:text-2xl font-black text-amber-600">
+                    {toBengaliNumber(parentResult.gpa.toFixed(2))}
+                    <span className="text-base font-bold text-slate-700 ml-1">
+                      ({parentResult.overallGrade})
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Merit Position */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-yellow-100 text-yellow-800 flex items-center justify-center shrink-0">
+                  <Trophy className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 font-semibold block">মেধা স্থান ও ফলাফল</span>
+                  <span className="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2">
+                    <span>{toBengaliNumber(parentResult.meritPosition)}ম স্থান</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                      উত্তীর্ণ
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Subject-wise Detailed Marks Table */}
+            <div className="overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-sm">
+              <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-5 h-5 text-emerald-700" />
+                  <h3 className="font-extrabold text-slate-800 text-base sm:text-lg">
+                    বিষয়ভিত্তিক বিস্তারিত নম্বর ও গ্রেডশিট
+                  </h3>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full w-fit">
+                  {parentResult.examTitleBn}
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                      <th className="py-3 px-4 text-center w-12">#</th>
+                      <th className="py-3 px-4">বিষয়ের নাম</th>
+                      <th className="py-3 px-3 text-center">পূর্ণমান</th>
+                      <th className="py-3 px-3 text-center">পাস নম্বর</th>
+                      <th className="py-3 px-3 text-center">প্রাপ্ত নম্বর</th>
+                      <th className="py-3 px-3 text-center">সর্বোচ্চ</th>
+                      <th className="py-3 px-3 text-center">লেটার গ্রেড</th>
+                      <th className="py-3 px-3 text-center">গ্রেড পয়েন্ট</th>
+                      <th className="py-3 px-4">শিক্ষকের মূল্যায়ন ও মন্তব্য</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {parentResult.subjects.map((sub, sIdx) => {
+                      const gradeMeta = calculateSubjectGrade(sub.obtainedMarks, sub.totalMarks);
+                      return (
+                        <tr key={sub.subjectCode} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4 text-center font-bold text-slate-400">
+                            {toBengaliNumber(sIdx + 1)}
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-slate-800">
+                            {sub.subjectNameBn}
+                          </td>
+                          <td className="py-3.5 px-3 text-center text-slate-600 font-semibold">
+                            {toBengaliNumber(sub.totalMarks)}
+                          </td>
+                          <td className="py-3.5 px-3 text-center text-slate-500 font-medium">
+                            {toBengaliNumber(sub.passMarks)}
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-black text-emerald-700 text-sm sm:text-base">
+                            {toBengaliNumber(sub.obtainedMarks)}
+                          </td>
+                          <td className="py-3.5 px-3 text-center text-slate-500 font-semibold">
+                            {toBengaliNumber(sub.highestMarksInClass || sub.totalMarks)}
+                          </td>
+                          <td className="py-3.5 px-3 text-center">
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black border ${gradeMeta.badgeBg} ${gradeMeta.badgeText} ${gradeMeta.badgeBorder}`}
+                            >
+                              {sub.letterGrade}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-bold text-slate-700">
+                            {toBengaliNumber(sub.gradePoint.toFixed(1))}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-600 text-xs font-medium">
+                            {sub.remarksBn || 'সন্তোষজনক অগ্রগতি'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-emerald-50/50 font-bold border-t-2 border-emerald-200 text-slate-800">
+                    <tr>
+                      <td colSpan={2} className="py-3.5 px-4 text-emerald-950 font-black">
+                        সর্বমোট / সামগ্রিক ফলাফল
+                      </td>
+                      <td className="py-3.5 px-3 text-center font-bold">
+                        {toBengaliNumber(parentResult.totalMarks)}
+                      </td>
+                      <td className="py-3.5 px-3 text-center text-slate-400">-</td>
+                      <td className="py-3.5 px-3 text-center font-black text-emerald-800 text-base">
+                        {toBengaliNumber(parentResult.totalObtained)}
+                      </td>
+                      <td className="py-3.5 px-3 text-center text-slate-400">-</td>
+                      <td className="py-3.5 px-3 text-center">
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white">
+                          {parentResult.overallGrade}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-3 text-center font-black text-emerald-800">
+                        {toBengaliNumber(parentResult.gpa.toFixed(2))}
+                      </td>
+                      <td className="py-3.5 px-4 text-emerald-900 font-bold text-xs">
+                        শতকরা হার: {toBengaliNumber(parentResult.percentage)}% • উত্তীর্ণ
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Co-Curricular & Attendance Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Co-Curricular Skills */}
+              <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm sm:text-base border-b border-slate-100 pb-2.5">
+                  <ShieldCheck className="w-4 h-4 text-teal-600" />
+                  <span>সহশিক্ষা ও চারিত্রিক মূল্যায়ন</span>
+                </div>
+                <div className="space-y-2.5 text-xs sm:text-sm">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50">
+                    <span className="text-slate-600 font-semibold">নিয়মানুবর্তিতা ও শৃঙ্খলা:</span>
+                    <span className="font-bold text-slate-800">
+                      {parentResult.coCurricularSkills?.disciplineBn || 'অসাধারণ ও শতভাগ সুশৃঙ্খল'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50">
+                    <span className="text-slate-600 font-semibold">পরিষ্কার-পরিচ্ছন্নতা:</span>
+                    <span className="font-bold text-slate-800">
+                      {parentResult.coCurricularSkills?.cleanlinessBn || 'প্রতিদিন পরিপাটি ও স্বাস্থ্যসচেতন'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50">
+                    <span className="text-slate-600 font-semibold">সহপাঠীদের সাথে সদ্ভাব:</span>
+                    <span className="font-bold text-slate-800">
+                      {parentResult.coCurricularSkills?.friendlinessBn || 'আন্তরিক ও অমায়িক'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50">
+                    <span className="text-slate-600 font-semibold">সৃজনশীলতা ও চিত্রাঙ্কন:</span>
+                    <span className="font-bold text-slate-800">
+                      {parentResult.coCurricularSkills?.creativityBn || 'ড্রয়িং ও উপস্থিত বুদ্ধিতে অত্যন্ত সক্রিয়'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attendance Summary */}
+              <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm sm:text-base border-b border-slate-100 pb-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>ক্লাসে উপস্থিতির তথ্য</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 text-center pt-2">
+                  <div className="p-3 rounded-2xl bg-slate-50">
+                    <span className="text-xs text-slate-500 font-semibold block">মোট কর্মদিবস</span>
+                    <span className="text-lg font-black text-slate-800">
+                      {toBengaliNumber(parentResult.attendanceSummary?.totalWorkingDays || 90)} দিন
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-50">
+                    <span className="text-xs text-emerald-700 font-semibold block">উপস্থিতি</span>
+                    <span className="text-lg font-black text-emerald-800">
+                      {toBengaliNumber(parentResult.attendanceSummary?.presentDays || 88)} দিন
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-teal-50">
+                    <span className="text-xs text-teal-700 font-semibold block">উপস্থিতির হার</span>
+                    <span className="text-lg font-black text-teal-800">
+                      {toBengaliNumber(parentResult.attendanceSummary?.attendancePercentage || 97.5)}%
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 pt-1 text-center font-medium">
+                  শিশুর নিয়মিত উপস্থিতি ক্লাসে মনোযোগ ও শেখার আনন্দ বৃদ্ধি করে।
+                </p>
+              </div>
+            </div>
+
+            {/* Remarks Box */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+              <div className="border-b border-slate-100 pb-2.5">
+                <h4 className="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>শিক্ষক ও অধ্যক্ষের মূল্যায়ন বার্তা</span>
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                  <span className="font-bold text-emerald-900 block mb-1">
+                    শ্রেণি শিক্ষকের মন্তব্য:
+                  </span>
+                  <p className="text-slate-700 leading-relaxed font-medium">
+                    "{parentResult.classTeacherRemarksBn || 'ক্লাসে অত্যন্ত সুশৃঙ্খল ও মনোযোগী।'}"
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100">
+                  <span className="font-bold text-amber-900 block mb-1">
+                    অধ্যক্ষের অনুপ্রেরণামূলক মন্তব্য:
+                  </span>
+                  <p className="text-slate-700 leading-relaxed font-medium">
+                    "{parentResult.principalRemarksBn || 'শিশুর মেধা ও নৈতিক বিকাশ আনন্দ পাঠশালার গর্ব।'}"
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveReportStudentId(parentStudentId)}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-extrabold text-xs sm:text-sm shadow-md transition-all active:scale-95"
+                >
+                  <Award className="w-4 h-4 text-amber-300" />
+                  <span>পূর্ণাঙ্গ প্রগ্রেস রিপোর্ট কার্ড দেখুন / ডাউনলোড করুন</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-12 text-center rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
+            <BookOpen className="w-12 h-12 text-slate-400 mx-auto opacity-50" />
+            <h3 className="text-lg font-bold text-slate-700">ফলাফল এখনও প্রকাশিত হয়নি</h3>
+            <p className="text-slate-500 text-xs sm:text-sm max-w-md mx-auto">
+              এই পরীক্ষার ফলাফল এখনও চূড়ান্ত বা প্রকাশিত হয়নি। পরীক্ষা সম্পন্ন হওয়ার পর শিক্ষকমণ্ডলী কর্তৃক ফলাফল মূল্যায়ন শেষে এখানে দৃশ্যমান হবে।
+            </p>
+          </div>
+        )}
+
+        {/* Printable Report Card Modal for Parent */}
+        <StudentReportCardModal
+          isOpen={Boolean(activeReportStudentId)}
+          onClose={() => setActiveReportStudentId(null)}
+          result={currentReportResult}
+          studentPhotoUrl={currentReportResult ? getStudentPhoto(currentReportResult.studentId) : undefined}
+          schoolProfile={schoolProfile}
+          onNextStudent={() => {}}
+          onPrevStudent={() => {}}
+          hasNext={false}
+          hasPrev={false}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Toast Alert */}
