@@ -1021,6 +1021,7 @@ export default function App() {
                       assessments={assessments}
                       onUpdateAssessment={handleUpdateAssessment}
                       currentRole={currentRole}
+                      loggedInStudentId={loggedInAccount?.studentId}
                     />
                   )}
 

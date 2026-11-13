@@ -18,6 +18,7 @@ interface SkillAssessmentModuleProps {
   assessments: Record<string, SkillAssessment>;
   onUpdateAssessment: (studentId: string, updated: SkillAssessment) => void;
   currentRole: UserRole;
+  loggedInStudentId?: string;
 }
 
 export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
@@ -25,14 +26,34 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
   assessments,
   onUpdateAssessment,
   currentRole,
+  loggedInStudentId,
 }) => {
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(students[0]?.id || 'std-1');
+  const isParent = currentRole === 'parent';
+  const canEdit = !isParent && (currentRole === 'super_admin' || currentRole === 'principal' || currentRole === 'teacher');
+  const parentDefaultId = loggedInStudentId || 'std-1';
+
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(() => {
+    if (isParent) return parentDefaultId;
+    return students[0]?.id || 'std-1';
+  });
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  const currentStudent = students.find((s) => s.id === selectedStudentId) || students[0];
-  const assessment = assessments[selectedStudentId] || {
-    id: `ska-${selectedStudentId}`,
-    studentId: selectedStudentId,
+  // Keep selected student locked to the logged-in student for parents
+  React.useEffect(() => {
+    if (isParent) {
+      setSelectedStudentId(parentDefaultId);
+    }
+  }, [isParent, parentDefaultId]);
+
+  const effectiveStudentId = isParent ? parentDefaultId : selectedStudentId;
+
+  const currentStudent =
+    students.find((s) => s.id === effectiveStudentId) ||
+    students.find((s) => s.id === 'std-1') ||
+    students[0];
+  const assessment = assessments[effectiveStudentId] || {
+    id: `ska-${effectiveStudentId}`,
+    studentId: effectiveStudentId,
     studentNameBn: currentStudent?.nameBn || '',
     className: currentStudent?.className || 'Playgroup',
     termBn: 'বার্ষিক মূল্যায়ন ২০২৬ (Annual Assessment)',
@@ -95,6 +116,7 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
   const holisticMeta = calculateHolisticGrade(assessment.skills);
 
   const handleScoreChange = (index: number, newScore: number) => {
+    if (!canEdit) return;
     const updatedSkills = [...assessment.skills];
     updatedSkills[index] = { ...updatedSkills[index], score: newScore };
     const newGrade = calculateHolisticGrade(updatedSkills);
@@ -104,21 +126,23 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
       skills: updatedSkills,
       overallBadgeBn: newGrade.badgeBn,
     };
-    onUpdateAssessment(selectedStudentId, updatedAssessment);
+    onUpdateAssessment(effectiveStudentId, updatedAssessment);
   };
 
   const handleObservationChange = (index: number, text: string) => {
+    if (!canEdit) return;
     const updatedSkills = [...assessment.skills];
     updatedSkills[index] = { ...updatedSkills[index], observationBn: text };
     const updatedAssessment: SkillAssessment = {
       ...assessment,
       skills: updatedSkills,
     };
-    onUpdateAssessment(selectedStudentId, updatedAssessment);
+    onUpdateAssessment(effectiveStudentId, updatedAssessment);
   };
 
   const handleTeacherRemarksChange = (text: string) => {
-    onUpdateAssessment(selectedStudentId, {
+    if (!canEdit) return;
+    onUpdateAssessment(effectiveStudentId, {
       ...assessment,
       teacherRemarksBn: text,
     });
@@ -127,51 +151,53 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-amber-400/30 text-amber-100 px-2.5 py-0.5 rounded text-xs font-semibold uppercase tracking-wider">
-              কেজি ও প্লে স্কুলের বিশেষ মডিউল #৩
-            </span>
-            <span className="text-white/60 text-xs">·</span>
-            <span className="text-white/90 text-xs font-medium">হোলিস্টিক শিশু বিকাশ ও দক্ষতা মূল্যায়ন</span>
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-3xl p-6 sm:p-7 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/20 text-amber-100">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isParent ? 'অভিভাবক পোর্টাল • সামগ্রিক বিকাশ মূল্যায়ন' : 'কেজি ও প্লে স্কুলের বিশেষ মডিউল #৩'}</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">স্কিল ও বিহেভিওরাল প্রগ্রেস কার্ড (Growth Assessment)</h2>
-          <p className="text-amber-100/90 text-sm max-w-2xl mt-1">
-            প্রচলিত লিখিত পরীক্ষার বাইরেও শিশুদের আচরণ, সামাজিক মেলামেশা, মোটর স্কিল, ছড়া আবৃত্তি ও সৃজনশীলতার পূর্ণাঙ্গ গ্রেডিং
-            এবং আকর্ষণীয় রঙিন রিপোর্ট কার্ড জেনারেশন।
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            {isParent ? `${currentStudent.nameBn}-এর সামগ্রিক বিকাশ ও স্কিল কার্ড` : 'স্কিল ও বিহেভিওরাল প্রগ্রেস কার্ড (Growth Assessment)'}
+          </h2>
+          <p className="text-amber-100/90 text-xs sm:text-sm max-w-2xl leading-relaxed">
+            {isParent
+              ? `শ্রেণি: ${currentStudent.className} | রোল: ${currentStudent.rollNo} | শাখা: ${currentStudent.section || 'ক'} • প্রচলিত পরীক্ষার বাইরে আচরণ, সামাজিক মেলামেশা, সৃজনশীলতা ও শারীরিক বৃদ্ধির অগ্রগতি।`
+              : 'প্রচলিত লিখিত পরীক্ষার বাইরেও শিশুদের আচরণ, সামাজিক মেলামেশা, মোটর স্কিল, ছড়া আবৃত্তি ও সৃজনশীলতার পূর্ণাঙ্গ গ্রেডিং এবং আকর্ষণীয় রঙিন রিপোর্ট কার্ড জেনারেশন।'}
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowPrintModal(true)}
-            className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-2"
+            className="px-5 py-3 bg-white text-amber-900 hover:bg-amber-50 rounded-2xl text-xs sm:text-sm font-bold shadow-md transition-all active:scale-95 flex items-center gap-2"
           >
             <Printer className="w-4 h-4 text-amber-600" />
-            রঙিন রিপোর্ট কার্ড প্রিন্ট / প্রিভিউ
+            <span>রঙিন রিপোর্ট কার্ড প্রিন্ট / প্রিভিউ</span>
           </button>
         </div>
       </div>
 
-      {/* Student Selector Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-2 overflow-x-auto">
-        <span className="text-xs text-slate-500 font-medium px-2 whitespace-nowrap">শিক্ষার্থী নির্বাচন:</span>
-        {students.map((std) => (
-          <button
-            key={std.id}
-            onClick={() => setSelectedStudentId(std.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
-              selectedStudentId === std.id
-                ? 'bg-amber-500 text-white font-bold shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>{std.nameBn}</span>
-            <span className="text-[10px] opacity-80 font-normal">({std.className})</span>
-          </button>
-        ))}
-      </div>
+      {/* Student Selector Bar (Admin / Teacher only - hidden for Parents) */}
+      {!isParent && (
+        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-2 overflow-x-auto">
+          <span className="text-xs text-slate-500 font-medium px-2 whitespace-nowrap">শিক্ষার্থী নির্বাচন:</span>
+          {students.map((std) => (
+            <button
+              key={std.id}
+              onClick={() => setSelectedStudentId(std.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                selectedStudentId === std.id
+                  ? 'bg-amber-500 text-white font-bold shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <span>{std.nameBn}</span>
+              <span className="text-[10px] opacity-80 font-normal">({std.className})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Main Assessment Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -244,13 +270,19 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
               <Heart className="w-4 h-4 text-rose-500" />
               শ্রেণি শিক্ষকের মমতাময়ী মন্তব্য
             </h4>
-            <textarea
-              rows={3}
-              value={assessment.teacherRemarksBn}
-              onChange={(e) => handleTeacherRemarksChange(e.target.value)}
-              placeholder="শিশুর অগ্রগতি ও উৎসাহব্যঞ্জক মন্তব্য..."
-              className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed text-slate-700"
-            />
+            {canEdit ? (
+              <textarea
+                rows={3}
+                value={assessment.teacherRemarksBn}
+                onChange={(e) => handleTeacherRemarksChange(e.target.value)}
+                placeholder="শিশুর অগ্রগতি ও উৎসাহব্যঞ্জক মন্তব্য..."
+                className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed text-slate-700"
+              />
+            ) : (
+              <div className="p-3.5 bg-rose-50/60 rounded-xl border border-rose-100 text-xs text-slate-700 leading-relaxed font-medium italic">
+                "{assessment.teacherRemarksBn}"
+              </div>
+            )}
             <span className="text-[11px] text-slate-400 block text-right">
               — শ্রেণি শিক্ষক: রোকেয়া পারভীন
             </span>
@@ -289,41 +321,58 @@ export const SkillAssessmentModule: React.FC<SkillAssessmentModuleProps> = ({
                       <p className="text-[11px] text-slate-500 mt-0.5">{criterion.descriptionBn}</p>
                     </div>
 
-                    {/* Star Rating interactive buttons */}
+                    {/* Star Rating: interactive for teachers, read-only for parents */}
                     <div className="flex items-center gap-1 shrink-0 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                      {[1, 2, 3, 4, 5].map((starVal) => (
-                        <button
-                          key={starVal}
-                          type="button"
-                          onClick={() => handleScoreChange(idx, starVal)}
-                          className="p-0.5 text-slate-300 hover:text-amber-400 transition-colors"
-                          title={`${starVal} স্টার রেটিং`}
-                        >
-                          <Star
-                            className={`w-4 h-4 ${
-                              starVal <= criterion.score
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'text-slate-200'
-                            }`}
-                          />
-                        </button>
-                      ))}
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const isFilled = starVal <= criterion.score;
+                        if (!canEdit) {
+                          return (
+                            <Star
+                              key={starVal}
+                              className={`w-4 h-4 ${
+                                isFilled ? 'fill-amber-400 text-amber-400' : 'text-slate-200'
+                              }`}
+                            />
+                          );
+                        }
+                        return (
+                          <button
+                            key={starVal}
+                            type="button"
+                            onClick={() => handleScoreChange(idx, starVal)}
+                            className="p-0.5 text-slate-300 hover:text-amber-400 transition-colors"
+                            title={`${starVal} স্টার রেটিং`}
+                          >
+                            <Star
+                              className={`w-4 h-4 ${
+                                isFilled ? 'fill-amber-400 text-amber-400' : 'text-slate-200'
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
                       <span className="text-xs font-mono font-bold text-slate-700 ml-1">
                         {criterion.score}/৫
                       </span>
                     </div>
                   </div>
 
-                  {/* Teacher observation text input */}
+                  {/* Teacher observation note */}
                   <div>
                     <label className="text-[10px] text-slate-400 block mb-1">শিক্ষকের পর্যবেক্ষণ নোট:</label>
-                    <input
-                      type="text"
-                      value={criterion.observationBn}
-                      onChange={(e) => handleObservationChange(idx, e.target.value)}
-                      placeholder="নির্দিষ্ট পর্যবেক্ষণ লিখুন..."
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-700"
-                    />
+                    {canEdit ? (
+                      <input
+                        type="text"
+                        value={criterion.observationBn}
+                        onChange={(e) => handleObservationChange(idx, e.target.value)}
+                        placeholder="নির্দিষ্ট পর্যবেক্ষণ লিখুন..."
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-700"
+                      />
+                    ) : (
+                      <div className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium">
+                        {criterion.observationBn || 'সন্তোষজনক অগ্রগতি ও স্বতঃস্ফূর্ত অংশগ্রহণ।'}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
