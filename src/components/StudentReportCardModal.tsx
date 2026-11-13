@@ -49,44 +49,92 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
   if (!isOpen || !result) return null;
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    const studentName = (result.studentNameEn || result.studentNameBn).replace(/\s+/g, '_');
+    document.title = `Ananda_Pathshala_Report_Card_${studentName}_Roll_${result.rollNo}_${result.academicYear}`;
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1200);
   };
 
   const isOutstanding = result.gpa >= 4.5;
   const isPassed = result.status === 'passed';
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:static">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-start justify-center p-2 sm:p-4 md:p-6 print:p-0 print:bg-white print:static print:inset-auto"
+      onClick={onClose}
+    >
+      <style>{`
+        @media print {
+          /* Hide everything except this modal container */
+          body * {
+            visibility: hidden !important;
+          }
+          #report-card-modal-container,
+          #report-card-modal-container * {
+            visibility: visible !important;
+          }
+          #report-card-modal-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          .no-print,
+          .modal-controls-bar {
+            display: none !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 6mm 8mm 8mm 8mm;
+          }
+        }
+      `}</style>
+
       {/* Container Card */}
-      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-emerald-100 overflow-hidden flex flex-col my-4 print:my-0 print:border-none print:shadow-none print:max-w-none print:w-full">
-        {/* Modal Controls Bar (Hidden in Print) */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white print:hidden">
-          <div className="flex items-center gap-3">
+      <div
+        id="report-card-modal-container"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-emerald-100 overflow-hidden flex flex-col my-4 sm:my-6 print:my-0 print:border-none print:shadow-none print:max-w-none print:w-full print:bg-white"
+      >
+        {/* Modal Controls Bar (Sticky & Hidden in Print) */}
+        <div className="modal-controls-bar no-print sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white shadow-md print:hidden">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
               <Award className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h3 className="font-bold text-base sm:text-lg flex items-center gap-2">
-                অফিসিয়াল রঙিন একাডেমিক রিপোর্ট কার্ড
-                <span className="text-xs bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full">
+              <h3 className="font-bold text-sm sm:text-lg flex items-center gap-2">
+                <span>অফিসিয়াল রঙিন একাডেমিক রিপোর্ট কার্ড</span>
+                <span className="text-[10px] sm:text-xs bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full shadow-xs">
                   প্রিন্ট রেডি
                 </span>
               </h3>
-              <p className="text-xs text-emerald-100">
-                {result.studentNameBn} · রোল: {result.rollNo} · {getSchoolClassNameBn(result.className)}
+              <p className="text-[11px] sm:text-xs text-emerald-100">
+                {result.studentNameBn} · রোল: {toBengaliNumber(result.rollNo)} · {getSchoolClassNameBn(result.className)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Prev / Next Navigation for bulk reviews */}
             {(hasPrev || hasNext) && (
-              <div className="flex items-center bg-white/10 rounded-xl p-1 mr-2 border border-white/20">
+              <div className="flex items-center bg-white/10 rounded-xl p-1 mr-1 sm:mr-2 border border-white/20">
                 <button
                   type="button"
                   onClick={onPrevStudent}
                   disabled={!hasPrev}
-                  className="p-1.5 hover:bg-white/20 rounded-lg disabled:opacity-40 transition-colors"
+                  className="p-1 sm:p-1.5 hover:bg-white/20 rounded-lg disabled:opacity-40 transition-colors"
                   title="পূর্ববর্তী শিক্ষার্থী"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -95,7 +143,7 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
                   type="button"
                   onClick={onNextStudent}
                   disabled={!hasNext}
-                  className="p-1.5 hover:bg-white/20 rounded-lg disabled:opacity-40 transition-colors"
+                  className="p-1 sm:p-1.5 hover:bg-white/20 rounded-lg disabled:opacity-40 transition-colors"
                   title="পরবর্তী শিক্ষার্থী"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -106,7 +154,7 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-md"
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow-md"
             >
               <Printer className="w-4 h-4" />
               <span>প্রিন্ট / PDF</span>
@@ -126,40 +174,40 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
         {/* Printable Report Card Sheet */}
         <div
           ref={reportRef}
-          className="p-6 sm:p-10 bg-white relative print:p-8 print:w-full print:text-black font-sans"
+          className="p-4 sm:p-8 md:p-10 bg-white relative print:p-2 print:w-full print:text-black font-sans"
         >
-          {/* Subtle Decorative Floral Background Frame */}
-          <div className="border-4 border-double border-emerald-600 rounded-3xl p-5 sm:p-8 relative bg-gradient-to-b from-emerald-50/20 via-white to-amber-50/20">
+          {/* Decorative Background Frame */}
+          <div className="border-4 border-double border-emerald-600 rounded-3xl p-4 sm:p-7 relative bg-gradient-to-b from-emerald-50/20 via-white to-amber-50/20 print:p-4 print:rounded-2xl">
             {/* Four Corner Accents */}
-            <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-emerald-600 rounded-tl-lg" />
-            <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-emerald-600 rounded-tr-lg" />
-            <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-emerald-600 rounded-bl-lg" />
-            <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-emerald-600 rounded-br-lg" />
+            <div className="absolute top-2 left-2 w-5 sm:w-6 h-5 sm:h-6 border-t-2 border-l-2 border-emerald-600 rounded-tl-lg" />
+            <div className="absolute top-2 right-2 w-5 sm:w-6 h-5 sm:h-6 border-t-2 border-r-2 border-emerald-600 rounded-tr-lg" />
+            <div className="absolute bottom-2 left-2 w-5 sm:w-6 h-5 sm:h-6 border-b-2 border-l-2 border-emerald-600 rounded-bl-lg" />
+            <div className="absolute bottom-2 right-2 w-5 sm:w-6 h-5 sm:h-6 border-b-2 border-r-2 border-emerald-600 rounded-br-lg" />
 
             {/* School Header */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-emerald-600 pb-5">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-emerald-500 shadow-md p-1.5 flex items-center justify-center shrink-0">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-emerald-600 pb-4 sm:pb-5">
+              <div className="flex items-center gap-3 sm:gap-4 text-center sm:text-left">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white border-2 border-emerald-500 shadow-md p-1 flex items-center justify-center shrink-0">
                   <img
-                    src={schoolProfile.logoUrl || '/assets/biddalay/logo.png'}
+                    src={schoolProfile.logoUrl || '/assets/fb/logo.jpg'}
                     alt="আনন্দ পাঠশালা লোগো"
-                    className="w-full h-full object-contain rounded-xl"
+                    className="w-full h-full object-cover rounded-xl"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
                 </div>
-                <div className="text-center sm:text-left">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800 tracking-tight">
+                <div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-emerald-800 tracking-tight">
                     {schoolProfile.nameBn || 'আনন্দ পাঠশালা'}
                   </h1>
-                  <p className="text-xs sm:text-sm font-semibold text-emerald-600 tracking-wide">
+                  <p className="text-[11px] sm:text-xs font-semibold text-emerald-600 tracking-wide">
                     {schoolProfile.nameEn || 'Ananda Pathshala Kindergarten & Junior Academy'}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">
                     {schoolProfile.addressBn || 'মজমপুর, কুষ্টিয়া সদর, কুষ্টিয়া'} · ফোন: {schoolProfile.phone || '০১৯১৪-০৫৭৫১১'}
                   </p>
-                  <div className="inline-block mt-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
+                  <div className="inline-block mt-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-bold rounded-full">
                     মotto: "জ্ঞানে কর্মে আনন্দে বিকশিত শৈশব"
                   </div>
                 </div>
@@ -167,10 +215,10 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
 
               {/* Exam Title Badge */}
               <div className="text-center sm:text-right shrink-0">
-                <div className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl shadow-sm">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-amber-300">একাডেমিক মূল্যায়ন</p>
-                  <h2 className="text-base sm:text-lg font-bold">{result.examTitleBn}</h2>
-                  <p className="text-xs text-emerald-100">শিক্ষাবর্ষ: {result.academicYear}</p>
+                <div className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl shadow-sm">
+                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-300">একাডেমিক মূল্যায়ন</p>
+                  <h2 className="text-sm sm:text-base md:text-lg font-bold">{result.examTitleBn}</h2>
+                  <p className="text-[11px] sm:text-xs text-emerald-100">শিক্ষাবর্ষ: {result.academicYear}</p>
                 </div>
               </div>
             </div>
@@ -268,84 +316,86 @@ export const StudentReportCardModal: React.FC<StudentReportCardModalProps> = ({
 
             {/* Subject Marks Table */}
             <div className="mt-5 overflow-hidden rounded-2xl border-2 border-emerald-600 shadow-sm">
-              <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-emerald-700 text-white font-bold text-center">
-                    <th className="py-2.5 px-3 w-10 border-r border-emerald-600">ক্র.</th>
-                    <th className="py-2.5 px-4 text-left border-r border-emerald-600">বিষয়সমূহ</th>
-                    <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পূর্ণমান</th>
-                    <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পাস</th>
-                    <th className="py-2.5 px-2 w-20 border-r border-emerald-600">সর্বোচ্চ</th>
-                    <th className="py-2.5 px-2 w-20 border-r border-emerald-600 bg-emerald-800 text-amber-300 font-extrabold">প্রাপ্ত</th>
-                    <th className="py-2.5 px-2 w-16 border-r border-emerald-600">লেটার গ্রেড</th>
-                    <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পয়েন্ট</th>
-                    <th className="py-2.5 px-4 text-left">শিক্ষকের পর্যবেক্ষণ ও মন্তব্য</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-emerald-100">
-                  {result.subjects.map((sub, idx) => (
-                    <tr
-                      key={sub.subjectCode || idx}
-                      className={idx % 2 === 0 ? 'bg-white' : 'bg-emerald-50/30'}
-                    >
-                      <td className="py-2 px-3 text-center text-slate-500 font-medium border-r border-emerald-100">
-                        {toBengaliNumber(idx + 1)}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[580px] print:min-w-0">
+                  <thead>
+                    <tr className="bg-emerald-700 text-white font-bold text-center">
+                      <th className="py-2.5 px-3 w-10 border-r border-emerald-600">ক্র.</th>
+                      <th className="py-2.5 px-4 text-left border-r border-emerald-600">বিষয়সমূহ</th>
+                      <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পূর্ণমান</th>
+                      <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পাস</th>
+                      <th className="py-2.5 px-2 w-20 border-r border-emerald-600">সর্বোচ্চ</th>
+                      <th className="py-2.5 px-2 w-20 border-r border-emerald-600 bg-emerald-800 text-amber-300 font-extrabold">প্রাপ্ত</th>
+                      <th className="py-2.5 px-2 w-16 border-r border-emerald-600">লেটার গ্রেড</th>
+                      <th className="py-2.5 px-2 w-16 border-r border-emerald-600">পয়েন্ট</th>
+                      <th className="py-2.5 px-4 text-left">শিক্ষকের পর্যবেক্ষণ ও মন্তব্য</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-100">
+                    {result.subjects.map((sub, idx) => (
+                      <tr
+                        key={sub.subjectCode || idx}
+                        className={idx % 2 === 0 ? 'bg-white' : 'bg-emerald-50/30'}
+                      >
+                        <td className="py-2 px-3 text-center text-slate-500 font-medium border-r border-emerald-100">
+                          {toBengaliNumber(idx + 1)}
+                        </td>
+                        <td className="py-2 px-4 font-bold text-slate-800 border-r border-emerald-100">
+                          {sub.subjectNameBn}
+                        </td>
+                        <td className="py-2 px-2 text-center text-slate-600 border-r border-emerald-100">
+                          {toBengaliNumber(sub.totalMarks)}
+                        </td>
+                        <td className="py-2 px-2 text-center text-slate-500 border-r border-emerald-100">
+                          {toBengaliNumber(sub.passMarks)}
+                        </td>
+                        <td className="py-2 px-2 text-center text-emerald-700 font-semibold border-r border-emerald-100">
+                          {toBengaliNumber(sub.highestMarksInClass)}
+                        </td>
+                        <td className="py-2 px-2 text-center font-black text-emerald-800 bg-emerald-50/70 text-sm border-r border-emerald-100">
+                          {toBengaliNumber(sub.obtainedMarks)}
+                        </td>
+                        <td className="py-2 px-2 text-center border-r border-emerald-100">
+                          <span className="inline-block px-2 py-0.5 font-bold rounded-md bg-emerald-100 text-emerald-800 text-xs">
+                            {sub.letterGrade}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-semibold text-slate-700 border-r border-emerald-100">
+                          {toBengaliNumber(sub.gradePoint.toFixed(1))}
+                        </td>
+                        <td className="py-2 px-4 text-slate-600 text-xs italic">
+                          {sub.remarksBn || 'চমৎকার পারফরম্যান্স'}
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Summary Footer Row */}
+                    <tr className="bg-emerald-100/80 font-bold text-slate-900 border-t-2 border-emerald-600">
+                      <td colSpan={2} className="py-2.5 px-4 text-right border-r border-emerald-300">
+                        সর্বমোট ফলাফল ও গ্রেড সামারি:
                       </td>
-                      <td className="py-2 px-4 font-bold text-slate-800 border-r border-emerald-100">
-                        {sub.subjectNameBn}
+                      <td className="py-2.5 px-2 text-center border-r border-emerald-300">
+                        {toBengaliNumber(result.totalMarks)}
                       </td>
-                      <td className="py-2 px-2 text-center text-slate-600 border-r border-emerald-100">
-                        {toBengaliNumber(sub.totalMarks)}
+                      <td className="py-2.5 px-2 text-center border-r border-emerald-300">-</td>
+                      <td className="py-2.5 px-2 text-center border-r border-emerald-300">-</td>
+                      <td className="py-2.5 px-2 text-center font-extrabold text-emerald-900 bg-emerald-200/80 text-sm border-r border-emerald-300">
+                        {toBengaliNumber(result.totalObtained)}
                       </td>
-                      <td className="py-2 px-2 text-center text-slate-500 border-r border-emerald-100">
-                        {toBengaliNumber(sub.passMarks)}
-                      </td>
-                      <td className="py-2 px-2 text-center text-emerald-700 font-semibold border-r border-emerald-100">
-                        {toBengaliNumber(sub.highestMarksInClass)}
-                      </td>
-                      <td className="py-2 px-2 text-center font-black text-emerald-800 bg-emerald-50/70 text-sm border-r border-emerald-100">
-                        {toBengaliNumber(sub.obtainedMarks)}
-                      </td>
-                      <td className="py-2 px-2 text-center border-r border-emerald-100">
-                        <span className="inline-block px-2 py-0.5 font-bold rounded-md bg-emerald-100 text-emerald-800 text-xs">
-                          {sub.letterGrade}
+                      <td className="py-2.5 px-2 text-center border-r border-emerald-300">
+                        <span className="px-2 py-0.5 bg-emerald-700 text-white rounded font-black">
+                          {result.overallGrade}
                         </span>
                       </td>
-                      <td className="py-2 px-2 text-center font-semibold text-slate-700 border-r border-emerald-100">
-                        {toBengaliNumber(sub.gradePoint.toFixed(1))}
+                      <td className="py-2.5 px-2 text-center font-black text-emerald-800 border-r border-emerald-300">
+                        {toBengaliNumber(result.gpa.toFixed(2))}
                       </td>
-                      <td className="py-2 px-4 text-slate-600 text-xs italic">
-                        {sub.remarksBn || 'চমৎকার পারফরম্যান্স'}
+                      <td className="py-2.5 px-4 text-emerald-800 font-bold text-xs">
+                        {isPassed ? '✓ সফলভাবে উত্তীর্ণ (PASSED)' : 'উন্নতি প্রয়োজন'}
                       </td>
                     </tr>
-                  ))}
-                  {/* Summary Footer Row */}
-                  <tr className="bg-emerald-100/80 font-bold text-slate-900 border-t-2 border-emerald-600">
-                    <td colSpan={2} className="py-2.5 px-4 text-right border-r border-emerald-300">
-                      সর্বমোট ফলাফল ও গ্রেড সামারি:
-                    </td>
-                    <td className="py-2.5 px-2 text-center border-r border-emerald-300">
-                      {toBengaliNumber(result.totalMarks)}
-                    </td>
-                    <td className="py-2.5 px-2 text-center border-r border-emerald-300">-</td>
-                    <td className="py-2.5 px-2 text-center border-r border-emerald-300">-</td>
-                    <td className="py-2.5 px-2 text-center font-extrabold text-emerald-900 bg-emerald-200/80 text-sm border-r border-emerald-300">
-                      {toBengaliNumber(result.totalObtained)}
-                    </td>
-                    <td className="py-2.5 px-2 text-center border-r border-emerald-300">
-                      <span className="px-2 py-0.5 bg-emerald-700 text-white rounded font-black">
-                        {result.overallGrade}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2 text-center font-black text-emerald-800 border-r border-emerald-300">
-                      {toBengaliNumber(result.gpa.toFixed(2))}
-                    </td>
-                    <td className="py-2.5 px-4 text-emerald-800 font-bold text-xs">
-                      {isPassed ? '✓ সফলভাবে উত্তীর্ণ (PASSED)' : 'উন্নতি প্রয়োজন'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Bottom Two-Column: Co-Curricular & Grading Legend */}
