@@ -2130,13 +2130,13 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
               </div>
             ) : null}
 
-            {/* পাশাপাশি আজকের দৈনিক ক্লাস রুটিনসমূহ (উইথ টিফিন ব্রেক) */}
+            {/* পাশাপাশি আজকের দৈনিক ক্লাস রুটিনসমূহ */}
             <div className="pt-4 border-t border-indigo-700/50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-amber-300" />
-                    <span>📋 আজকের দৈনিক ক্লাস রুটিন (উইথ টিফিন ব্রেক)</span>
+                    <span>📋 আজকের দৈনিক ক্লাস রুটিন</span>
                   </span>
                   <span className="text-[10px] bg-white/15 text-indigo-200 px-2 py-0.5 rounded-full font-bold">
                     মোট {childTodayPeriods.length}টি
@@ -2162,21 +2162,27 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
                   </button>
                 </div>
               ) : (
-                /* Side-by-Side Horizontal Routine Track inside Box 1 */
-                <div className="flex items-stretch gap-3 overflow-x-auto pb-3 pt-1 scrollbar-thin">
+                /* Compact Grid without forced horizontal scroll */
+                <div
+                  className={`grid gap-2 sm:gap-2.5 pt-1 ${
+                    childTodayPeriods.length <= 4
+                      ? 'grid-cols-2 sm:grid-cols-4'
+                      : childTodayPeriods.length === 5
+                      ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+                      : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+                  }`}
+                >
                   {childTodayPeriods.map((period) => {
                     const liveStatus = getPeriodLiveStatus(period);
                     const isOngoing = liveStatus === 'ongoing';
                     const isUpcoming = liveStatus === 'upcoming';
-                    const hasHomework = Boolean(period.homeworkAssignmentBn || period.homeworkOrActivityBn);
-                    const hasLessonPlan = Boolean(period.lessonPlanSummaryBn || period.topicBn || period.topic);
 
                     return (
                       <button
                         key={period.id}
                         type="button"
                         onClick={() => setSelectedPeriodForDetail(period)}
-                        className={`min-w-[200px] sm:min-w-[220px] max-w-[240px] flex-1 p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 group hover:scale-[1.02] shadow-md shrink-0 ${
+                        className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 group hover:scale-[1.02] shadow-sm ${
                           period.isBreak
                             ? 'bg-amber-100 text-slate-900 border-amber-300 hover:bg-amber-200'
                             : isOngoing
@@ -2187,9 +2193,9 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
                         }`}
                       >
                         {/* Top: Period No & Status Badge */}
-                        <div className="flex items-center justify-between gap-1.5 w-full">
+                        <div className="flex items-center justify-between gap-1 w-full">
                           <span
-                            className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                            className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                               period.isBreak
                                 ? 'bg-amber-200 text-amber-950'
                                 : 'bg-emerald-100 text-emerald-900'
@@ -2209,46 +2215,40 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
                                 : 'bg-slate-200 text-slate-600'
                             }`}
                           >
-                            {period.isBreak ? 'টিফিন ব্রেক' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ সম্পন্ন'}
+                            {period.isBreak ? 'টিফিন ব্রেক' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ শেষ'}
                           </span>
                         </div>
 
                         {/* Middle: Subject, Room & Teacher */}
-                        <div className="space-y-1.5 w-full">
-                          <h4 className="text-sm font-black text-slate-900 group-hover:text-indigo-800 transition-colors line-clamp-1">
+                        <div className="space-y-1 w-full min-w-0">
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-indigo-800 transition-colors truncate">
                             {period.subject}
                           </h4>
 
                           {!period.isBreak ? (
-                            <div className="space-y-1 text-xs">
-                              <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
+                            <div className="space-y-0.5 text-xs">
+                              <p className="text-slate-700 font-semibold text-[11px] flex items-center gap-1 truncate">
                                 <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                                 <span className="truncate">{period.teacherNameBn}</span>
                               </p>
-                              <p className="text-slate-500 text-[11px] flex items-center gap-1.5 truncate">
+                              <p className="text-slate-500 text-[10.5px] flex items-center gap-1 truncate">
                                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="truncate">{period.room}</span>
                               </p>
                             </div>
                           ) : (
-                            <p className="text-[11px] text-amber-900 font-medium">
-                              টিফিন খাওয়া, হাত ধোয়া ও বিশ্রাম
+                            <p className="text-[11px] text-amber-900 font-medium truncate">
+                              টিফিন ও নাস্তা বিরতি
                             </p>
                           )}
                         </div>
 
-                        {/* Bottom: Time & Click Indicator */}
-                        <div className="pt-2 border-t border-slate-200/70 w-full flex items-center justify-between text-[11px]">
+                        {/* Bottom: Time (কোনো আলাদা বিস্তারিত বক্স ছাড়া) */}
+                        <div className="pt-1.5 border-t border-slate-200/70 w-full flex items-center justify-between text-[11px]">
                           <span className="font-mono font-bold text-slate-800 flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-slate-500" />
-                            {period.startTime} - {period.endTime}
+                            <span>{period.startTime} - {period.endTime}</span>
                           </span>
-
-                          {!period.isBreak && (hasHomework || hasLessonPlan) && (
-                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
-                              বিস্তারিত 👆
-                            </span>
-                          )}
                         </div>
                       </button>
                     );
