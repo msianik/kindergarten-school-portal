@@ -87,6 +87,8 @@ import {
   MessageSquare,
   Building2,
   LayoutGrid,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface TeacherPortalDashboardProps {
@@ -1703,6 +1705,14 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
   const isFeeDueSoon =
     unpaidInvoice !== undefined && daysUntilDue !== null && daysUntilDue <= 3;
 
+  // Collapsible dropdown states for compact summary points
+  const [isWeeklyProgressOpen, setIsWeeklyProgressOpen] = useState(false);
+  const [isLivePeriodOpen, setIsLivePeriodOpen] = useState(false);
+  const [isHomeworkSummaryOpen, setIsHomeworkSummaryOpen] = useState(false);
+
+  // Selected period state for detailed view popup
+  const [selectedPeriodForDetail, setSelectedPeriodForDetail] = useState<ClassRoutinePeriod | null>(null);
+
   const handleParentArrivedAtGate = (e: React.FormEvent) => {
     e.preventDefault();
     onSendUrgentPickupAlert(
@@ -1923,67 +1933,6 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
           </div>
         </div>
 
-        {/* Child's Weekly Progress Summary Card for Parents */}
-        <div
-          className={`rounded-2xl border p-4 space-y-2.5 ${
-            childWeeklyProgress.status === 'completed'
-              ? 'bg-emerald-50/80 border-emerald-300'
-              : 'bg-amber-50/80 border-amber-300'
-          }`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-black text-slate-900">
-                📊 সাপ্তাহিক পাঠ ও অগ্রগতি সারসংক্ষেপ ({childWeeklyProgress.weekLabelBn}):
-              </span>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${
-                  childWeeklyProgress.status === 'completed'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-amber-400 text-slate-950'
-                }`}
-              >
-                {childWeeklyProgress.status === 'completed'
-                  ? '✓ সম্পূর্ণ সপ্তাহ সম্পন্ন (Completed)'
-                  : `⏳ চলমান / পেন্ডিং (${childWeeklyProgress.completionPercentage}%)`}
-              </span>
-            </div>
-            <span className="text-[11px] font-bold text-slate-500">
-              মূল্যায়ন: {childWeeklyProgress.updatedByBn} ({childWeeklyProgress.updatedAtBn})
-            </span>
-          </div>
-
-          <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-slate-200">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                childWeeklyProgress.status === 'completed'
-                  ? 'bg-emerald-600'
-                  : 'bg-amber-500'
-              }`}
-              style={{ width: `${Math.max(10, childWeeklyProgress.completionPercentage)}%` }}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-            <div className="p-2.5 rounded-xl bg-white/90 border border-slate-200/80">
-              <strong className="text-slate-900 block text-[11px]">
-                📝 শিক্ষকের সাপ্তাহিক মূল্যায়ন নোট:
-              </strong>
-              <p className="text-slate-700 mt-0.5 leading-relaxed">
-                {childWeeklyProgress.teacherSummaryNoteBn}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-amber-200">
-              <strong className="text-amber-950 block text-[11px]">
-                🏠 অভিভাবকের জন্য সাপ্তাহিক বাসার অনুশীলন গাইড:
-              </strong>
-              <p className="text-amber-900 mt-0.5 leading-relaxed">
-                {childWeeklyProgress.parentActionNoteBn}
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Friday / Weekend Notice */}
         {isFriday && (
           <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300 text-xs text-amber-900 flex items-center gap-3">
@@ -1997,291 +1946,586 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
           </div>
         )}
 
-        {/* Real-Time Live Status Banner for the Child */}
-        {(() => {
-          const ongoing = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'ongoing' && !p.isBreak);
-          const ongoingBreak = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'ongoing' && p.isBreak);
-          const upcoming = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'upcoming' && !p.isBreak);
-          const allCompleted = childTodayPeriods.length > 0 && childTodayPeriods.every((p) => getPeriodLiveStatus(p) === 'completed');
-
-          if (ongoing) {
-            return (
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="relative flex h-3.5 w-3.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-300"></span>
-                  </span>
-                  <div>
-                    <div className="inline-flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded text-[10px] font-black uppercase">
-                      🟢 বর্তমানে শ্রেণিকক্ষে ক্লাস চলছে
-                    </div>
-                    <h4 className="text-sm sm:text-base font-black mt-0.5">
-                      {ongoing.subject} · শিক্ষক: {ongoing.teacherNameBn}
-                    </h4>
-                    <p className="text-xs text-emerald-100 font-medium">
-                      সময়: {ongoing.startTime} - {ongoing.endTime} · কক্ষ: {ongoing.room} {ongoing.topic && `· পাঠ: ${ongoing.topic}`}
-                    </p>
-                  </div>
-                </div>
-                <span className="px-3 py-1 bg-white/20 rounded-xl text-xs font-bold text-white self-start sm:self-center">
-                  পিরিয়ড #{ongoing.periodNo}
-                </span>
-              </div>
-            );
-          } else if (ongoingBreak) {
-            return (
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Coffee className="w-5 h-5 text-white" />
-                  <div>
-                    <span className="text-[10px] uppercase font-black bg-white/20 px-2 py-0.5 rounded">
-                      🍎 টিফিন ও স্বাস্থ্যকর নাস্তা বিরতি
-                    </span>
-                    <h4 className="text-sm font-bold mt-0.5">{ongoingBreak.subject}</h4>
-                    <p className="text-xs text-amber-100 font-medium">
-                      সময়: {ongoingBreak.startTime} - {ongoingBreak.endTime} · শিশুদের হাত ধোয়া ও টিফিন গ্রহণ
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          } else if (upcoming) {
-            return (
-              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-slate-900 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <Clock className="w-5 h-5 text-amber-600 shrink-0" />
-                  <div className="text-xs">
-                    <span className="font-bold text-amber-900">পরবর্তী আসন্ন ক্লাস: </span>
-                    <strong className="text-slate-900 font-bold">{upcoming.subject}</strong> — শিক্ষক: {upcoming.teacherNameBn} · সময়: {upcoming.startTime} ({upcoming.room})
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md shrink-0">
-                  আসন্ন ক্লাস
-                </span>
-              </div>
-            );
-          } else if (allCompleted) {
-            return (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>আজকের সকল নির্ধারিত পিরিয়ড ও ক্লাস সফলভাবে সমাপ্ত হয়েছে।</span>
-              </div>
-            );
-          }
-          return null;
-        })()}
-
-        {/* Today's Assigned Homework Summary Board for Parents */}
-        {(() => {
-          const homeworkPeriods = childTodayPeriods.filter(
-            (p) => !p.isBreak && (p.homeworkAssignmentBn || p.homeworkOrActivityBn)
-          );
-          if (homeworkPeriods.length === 0) return null;
-
-          return (
-            <div className="rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50/70 to-amber-50/40 border-2 border-amber-300 p-4 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0">
-                    <ClipboardList className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900">
-                      📚 আজকের নির্ধারিত বাড়ির কাজসমূহ (Today&apos;s Homework Assignments — {homeworkPeriods.length}টি বিষয়)
-                    </h4>
-                    <p className="text-[11px] text-amber-900">
-                      শ্রেণি শিক্ষকদের নির্ধারিত আজকের বাড়ির কাজ ও জমা দেওয়ার নির্দেশনা
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigateTab('routine')}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] transition cursor-pointer self-start sm:self-center shrink-0"
-                >
-                  সকল বাড়ির কাজ দেখুন →
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                {homeworkPeriods.map((hw) => (
-                  <div
-                    key={`hw-summary-${hw.id}`}
-                    className="p-3 rounded-xl bg-white border border-amber-200 shadow-2xs space-y-1.5 text-xs"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-black text-slate-900">
-                        {hw.subjectBn || hw.subject} ({hw.periodLabelBn})
-                      </span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
-                        জমা: {hw.homeworkDueDateBn || 'পরবর্তী ক্লাসে জমা'}
-                      </span>
-                    </div>
-                    <p className="text-slate-800 font-semibold leading-relaxed">
-                      {hw.homeworkAssignmentBn || hw.homeworkOrActivityBn}
-                    </p>
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                      <span className="font-bold text-amber-900">
-                        {getHomeworkSubmissionTypeLabelBn(hw.homeworkSubmissionType)}
-                      </span>
-                      <span>শিক্ষক: {hw.teacherNameBn}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Periods List for the Child */}
-        {childTodayPeriods.length === 0 ? (
-          <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 space-y-2">
-            <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
-            <p className="text-xs font-bold text-slate-700">
-              আজ {getDayNameBn(todayDay)} {getSchoolClassNameBn(childClass)} শ্রেণির কোনো ক্লাস তালিকা পাওয়া যায়নি।
-            </p>
+        {/* ========================================================
+            3 COMPACT DROPDOWN ACCORDION POINTS (সাপ্তাহিক অগ্রগতি, লাইভ/আসন্ন ক্লাস, বাড়ির কাজ)
+        ======================================================== */}
+        <div className="space-y-2.5">
+          {/* Point 1: 📊 সাপ্তাহিক অগ্রগতির সারসংক্ষেপ */}
+          <div className="rounded-2xl border border-emerald-200 overflow-hidden bg-white shadow-2xs transition-all">
             <button
               type="button"
-              onClick={() => setShowChildWeeklyModal(true)}
-              className="mt-2 px-3.5 py-1.5 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 cursor-pointer"
+              onClick={() => setIsWeeklyProgressOpen(!isWeeklyProgressOpen)}
+              className="w-full p-3.5 sm:p-4 bg-emerald-50/70 hover:bg-emerald-100/70 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer"
             >
-              সাপ্তাহিক রুটিন দেখুন
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {childTodayPeriods.map((period) => {
-              const liveStatus = getPeriodLiveStatus(period);
-              const isOngoing = liveStatus === 'ongoing';
-              const isUpcoming = liveStatus === 'upcoming';
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs sm:text-sm font-black text-slate-900">
+                      📊 সাপ্তাহিক পাঠ ও অগ্রগতি সারসংক্ষেপ ({childWeeklyProgress.weekLabelBn})
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        childWeeklyProgress.status === 'completed'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-amber-400 text-slate-950'
+                      }`}
+                    >
+                      {childWeeklyProgress.status === 'completed'
+                        ? '✓ সম্পন্ন (Completed)'
+                        : `চলমান (${childWeeklyProgress.completionPercentage}%)`}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                    ক্লিক করে শিক্ষকের মূল্যায়ন নোট ও বাসার অনুশীলন গাইড বিস্তারিত দেখুন
+                  </p>
+                </div>
+              </div>
 
-              return (
-                <div
-                  key={period.id}
-                  className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${
-                    period.isBreak
-                      ? 'bg-amber-50/60 border-amber-200'
-                      : isOngoing
-                      ? 'bg-emerald-50/80 border-emerald-400 shadow-xs ring-2 ring-emerald-400/40'
-                      : isUpcoming
-                      ? 'bg-white border-slate-200 hover:border-emerald-300'
-                      : 'bg-slate-50/70 border-slate-200 opacity-75'
-                  }`}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[11px] text-emerald-800 font-bold hidden sm:inline">
+                  {isWeeklyProgressOpen ? 'সংক্ষিপ্ত করুন' : 'বিস্তারিত দেখুন'}
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-800">
+                  {isWeeklyProgressOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
+            </button>
+
+            {isWeeklyProgressOpen && (
+              <div className="p-4 border-t border-emerald-100 space-y-3 bg-white animate-in fade-in duration-200 text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">
+                  <span>অগ্রগতি ট্র্যাকার:</span>
+                  <span>মূল্যায়ন: {childWeeklyProgress.updatedByBn} ({childWeeklyProgress.updatedAtBn})</span>
+                </div>
+
+                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      childWeeklyProgress.status === 'completed' ? 'bg-emerald-600' : 'bg-amber-500'
+                    }`}
+                    style={{ width: `${Math.max(10, childWeeklyProgress.completionPercentage)}%` }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <strong className="text-slate-900 block text-[11px] font-black mb-1">
+                      📝 শিক্ষকের সাপ্তাহিক মূল্যায়ন নোট:
+                    </strong>
+                    <p className="text-slate-700 leading-relaxed">
+                      {childWeeklyProgress.teacherSummaryNoteBn}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200">
+                    <strong className="text-amber-950 block text-[11px] font-black mb-1">
+                      🏠 অভিভাবকের জন্য সাপ্তাহিক বাসার অনুশীলন গাইড:
+                    </strong>
+                    <p className="text-amber-900 leading-relaxed">
+                      {childWeeklyProgress.parentActionNoteBn}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Point 2: ⏰ বর্তমান ও পরবর্তী আসন্ন ক্লাস */}
+          {(() => {
+            const ongoing = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'ongoing' && !p.isBreak);
+            const ongoingBreak = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'ongoing' && p.isBreak);
+            const upcoming = childTodayPeriods.find((p) => getPeriodLiveStatus(p) === 'upcoming' && !p.isBreak);
+            const allCompleted = childTodayPeriods.length > 0 && childTodayPeriods.every((p) => getPeriodLiveStatus(p) === 'completed');
+
+            return (
+              <div className="rounded-2xl border border-indigo-200 overflow-hidden bg-white shadow-2xs transition-all">
+                <button
+                  type="button"
+                  onClick={() => setIsLivePeriodOpen(!isLivePeriodOpen)}
+                  className="w-full p-3.5 sm:p-4 bg-indigo-50/60 hover:bg-indigo-100/60 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer"
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-700 text-white flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-black text-slate-900">
+                          ⏰ বর্তমান ও পরবর্তী আসন্ন ক্লাস
+                        </span>
+                        {ongoing ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white animate-pulse">
+                            🟢 ক্লাস চলছে: {ongoing.subject}
+                          </span>
+                        ) : ongoingBreak ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">
+                            🍎 টিফিন বিরতি চলছে
+                          </span>
+                        ) : upcoming ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-900 border border-indigo-200">
+                            পরবর্তী ক্লাস: {upcoming.subject} ({upcoming.startTime})
+                          </span>
+                        ) : allCompleted ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
+                            ✓ আজকের সকল ক্লাস সম্পন্ন
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                        {ongoing
+                          ? `চলমান: ${ongoing.subject} · শিক্ষক: ${ongoing.teacherNameBn} · সময়: ${ongoing.startTime}-${ongoing.endTime}`
+                          : upcoming
+                          ? `আসন্ন: ${upcoming.subject} · রুম: ${upcoming.room} · শিক্ষক: ${upcoming.teacherNameBn}`
+                          : 'ক্লিক করে ক্লাসের রিয়েল-টাইম তথ্য ও সময় বিস্তারিত দেখুন'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-indigo-800 font-bold hidden sm:inline">
+                      {isLivePeriodOpen ? 'সংক্ষিপ্ত করুন' : 'বিস্তারিত দেখুন'}
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-white border border-indigo-200 flex items-center justify-center text-indigo-800">
+                      {isLivePeriodOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </div>
+                </button>
+
+                {isLivePeriodOpen && (
+                  <div className="p-4 border-t border-indigo-100 bg-white animate-in fade-in duration-200 text-xs space-y-3">
+                    {ongoing && (
+                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                            <span>বর্তমানে শ্রেণিকক্ষে ক্লাস চলমান (পিরিয়ড #{ongoing.periodNo})</span>
+                          </div>
+                          <h4 className="text-sm font-black text-slate-900 mt-1">
+                            {ongoing.subject} — শিক্ষক: {ongoing.teacherNameBn}
+                          </h4>
+                          <p className="text-[11px] text-slate-600 mt-0.5">
+                            সময়: {ongoing.startTime} - {ongoing.endTime} · কক্ষ: {ongoing.room} {ongoing.topic && `· পাঠ: ${ongoing.topic}`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPeriodForDetail(ongoing)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold text-xs hover:bg-emerald-800 transition cursor-pointer self-start sm:self-center"
+                        >
+                          পাঠ পরিকল্পনা দেখুন
+                        </button>
+                      </div>
+                    )}
+
+                    {ongoingBreak && (
+                      <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-950">
+                        <h4 className="text-sm font-black flex items-center gap-1.5">
+                          <Coffee className="w-4 h-4 text-amber-700" />
+                          <span>{ongoingBreak.subject} (টিফিন ও নাস্তা বিরতি)</span>
+                        </h4>
+                        <p className="text-[11px] text-amber-900 mt-1">
+                          সময়: {ongoingBreak.startTime} - {ongoingBreak.endTime} · শিশুদের হাত ধোয়া, স্বাস্থ্যসম্মত খাবার গ্রহণ ও বিশ্রাম।
+                        </p>
+                      </div>
+                    )}
+
+                    {upcoming && (
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
+                            পরবর্তী আসন্ন পিরিয়ড #{upcoming.periodNo}
+                          </span>
+                          <h4 className="text-sm font-black text-slate-900 mt-1">
+                            {upcoming.subject} — শিক্ষক: {upcoming.teacherNameBn}
+                          </h4>
+                          <p className="text-[11px] text-slate-600 mt-0.5">
+                            সময়: {upcoming.startTime} - {upcoming.endTime} · কক্ষ: {upcoming.room}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPeriodForDetail(upcoming)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs hover:bg-slate-900 transition cursor-pointer self-start sm:self-center"
+                        >
+                          বিস্তারিত দেখুন
+                        </button>
+                      </div>
+                    )}
+
+                    {allCompleted && (
+                      <div className="p-3 rounded-xl bg-slate-50 text-slate-600 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>আজকের সকল নির্ধারিত পিরিয়ড সফলভাবে সম্পন্ন হয়েছে।</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Point 3: 📚 আজকের নির্ধারিত বাড়ির কাজসমূহ */}
+          {(() => {
+            const homeworkPeriods = childTodayPeriods.filter(
+              (p) => !p.isBreak && (p.homeworkAssignmentBn || p.homeworkOrActivityBn)
+            );
+
+            return (
+              <div className="rounded-2xl border border-amber-200 overflow-hidden bg-white shadow-2xs transition-all">
+                <button
+                  type="button"
+                  onClick={() => setIsHomeworkSummaryOpen(!isHomeworkSummaryOpen)}
+                  className="w-full p-3.5 sm:p-4 bg-amber-50/70 hover:bg-amber-100/70 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0">
+                      <ClipboardList className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-black text-slate-900">
+                          📚 আজকের নির্ধারিত বাড়ির কাজসমূহ
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950">
+                          {homeworkPeriods.length > 0 ? `${homeworkPeriods.length}টি বিষয়` : 'কোনো বাড়ির কাজ নেই'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-900 truncate mt-0.5">
+                        {homeworkPeriods.length > 0
+                          ? `ক্লিক করে জমা দেওয়ার তারিখ ও বাড়ির কাজের নির্দেশনা ড্রপডাউনে দেখুন`
+                          : 'আজকের ক্লাসে কোনো বাড়ির কাজ দেওয়া হয়নি'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-amber-950 font-bold hidden sm:inline">
+                      {isHomeworkSummaryOpen ? 'সংক্ষিপ্ত করুন' : 'বিস্তারিত দেখুন'}
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-white border border-amber-300 flex items-center justify-center text-amber-900">
+                      {isHomeworkSummaryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </div>
+                </button>
+
+                {isHomeworkSummaryOpen && (
+                  <div className="p-4 border-t border-amber-200 bg-white animate-in fade-in duration-200 space-y-3">
+                    {homeworkPeriods.length === 0 ? (
+                      <p className="text-xs text-slate-500">আজ কোনো বাড়ির কাজ নির্ধারিত নেই।</p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {homeworkPeriods.map((hw) => (
+                          <div
+                            key={`hw-${hw.id}`}
+                            className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200 space-y-2 text-xs"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-black text-slate-900">
+                                {hw.subjectBn || hw.subject} ({hw.periodLabelBn})
+                              </span>
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200 text-amber-950">
+                                জমা: {hw.homeworkDueDateBn || 'পরবর্তী ক্লাসে জমা'}
+                              </span>
+                            </div>
+                            <p className="text-slate-800 font-medium leading-relaxed bg-white p-2.5 rounded-lg border border-amber-200">
+                              {hw.homeworkAssignmentBn || hw.homeworkOrActivityBn}
+                            </p>
+                            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-amber-100">
+                              <span className="font-bold text-amber-900">
+                                {getHomeworkSubmissionTypeLabelBn(hw.homeworkSubmissionType)}
+                              </span>
+                              <span>শিক্ষক: {hw.teacherNameBn}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* ========================================================
+            পাশাপাশি ক্লাস রুটিনসমূহ (পিরিয়ড, বিষয়ের নাম, রুম নম্বর, শিক্ষকের নাম, সময় - উইথ টিফিন ব্রেক)
+        ======================================================== */}
+        <div className="pt-3 border-t border-slate-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-slate-900 uppercase tracking-wide">
+                📋 দৈনিক ক্লাস রুটিন ও পিরিয়ড ক্রম (উইথ টিফিন ব্রেক)
+              </span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                মোট {childTodayPeriods.length}টি
+              </span>
+            </div>
+            <span className="text-[11px] text-emerald-800 font-bold hidden sm:inline">
+              👆 যেকোনো পিরিয়ডে ক্লিক করে বাড়ির কাজ ও পাঠ পরিকল্পনা দেখুন
+            </span>
+          </div>
+
+          {childTodayPeriods.length === 0 ? (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 space-y-2">
+              <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-xs font-bold text-slate-700">
+                আজ {getDayNameBn(todayDay)} {getSchoolClassNameBn(childClass)} শ্রেণির কোনো ক্লাস তালিকা পাওয়া যায়নি।
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowChildWeeklyModal(true)}
+                className="mt-2 px-3.5 py-1.5 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 cursor-pointer"
+              >
+                সাপ্তাহিক রুটিন দেখুন
+              </button>
+            </div>
+          ) : (
+            /* Side-by-Side Horizontal Routine Track */
+            <div className="flex items-stretch gap-3 overflow-x-auto pb-3 pt-1 scrollbar-thin">
+              {childTodayPeriods.map((period) => {
+                const liveStatus = getPeriodLiveStatus(period);
+                const isOngoing = liveStatus === 'ongoing';
+                const isUpcoming = liveStatus === 'upcoming';
+                const hasHomework = Boolean(period.homeworkAssignmentBn || period.homeworkOrActivityBn);
+                const hasLessonPlan = Boolean(period.lessonPlanSummaryBn || period.topicBn || period.topic);
+
+                return (
+                  <button
+                    key={period.id}
+                    type="button"
+                    onClick={() => setSelectedPeriodForDetail(period)}
+                    className={`min-w-[200px] sm:min-w-[220px] max-w-[240px] flex-1 p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 group hover:scale-[1.02] shadow-2xs hover:shadow-md shrink-0 ${
+                      period.isBreak
+                        ? 'bg-amber-50/70 border-amber-300 hover:bg-amber-100/70'
+                        : isOngoing
+                        ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/30'
+                        : isUpcoming
+                        ? 'bg-white border-slate-200 hover:border-emerald-400'
+                        : 'bg-slate-50/80 border-slate-200 opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    {/* Top: Period No & Status Badge */}
+                    <div className="flex items-center justify-between gap-1.5 w-full">
                       <span
                         className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
                           period.isBreak
-                            ? 'bg-amber-200 text-amber-900'
-                            : 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-amber-200 text-amber-950'
+                            : 'bg-emerald-100 text-emerald-900'
                         }`}
                       >
                         {period.isBreak ? '☕ বিরতি' : `পিরিয়ড ${period.periodNo}`}
                       </span>
 
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                           period.isBreak
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-amber-200 text-amber-900'
                             : isOngoing
-                            ? 'bg-emerald-600 text-white'
+                            ? 'bg-emerald-600 text-white animate-pulse'
                             : isUpcoming
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-200'
                             : 'bg-slate-200 text-slate-600'
                         }`}
                       >
-                        {period.isBreak ? 'টিফিন' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ সম্পন্ন'}
+                        {period.isBreak ? 'টিফিন ব্রেক' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ সম্পন্ন'}
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-black text-slate-900 line-clamp-1">
-                      {period.subject}
-                    </h4>
+                    {/* Middle: Subject, Room & Teacher */}
+                    <div className="space-y-1.5 w-full">
+                      <h4 className="text-sm font-black text-slate-900 group-hover:text-emerald-800 transition-colors line-clamp-1">
+                        {period.subject}
+                      </h4>
 
-                    {!period.isBreak && (
-                      <div className="space-y-1 text-xs">
-                        <p className="text-slate-700 font-medium flex items-center gap-1.5">
-                          <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                          <span>শিক্ষক: <strong>{period.teacherNameBn}</strong></span>
-                        </p>
-                        <p className="text-slate-500 text-[11px] flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>{period.room}</span>
-                        </p>
-                      </div>
-                    )}
-
-                    {(period.topicBn || period.topic) && (
-                      <p className="text-[11px] font-semibold text-indigo-950 bg-indigo-50/80 p-2 rounded-xl border border-indigo-100 leading-relaxed">
-                        📖 <strong>পাঠের টপিক:</strong> {period.topicBn || period.topic}
-                      </p>
-                    )}
-
-                    {/* Dedicated Homework Assignment Box on Parent Routine Card */}
-                    {!period.isBreak &&
-                      (period.homeworkAssignmentBn || period.homeworkOrActivityBn) && (
-                        <div className="p-2.5 rounded-xl bg-amber-50/95 border-2 border-amber-300/90 space-y-1.5 text-[11px] shadow-2xs">
-                          <div className="flex items-center justify-between gap-1 flex-wrap">
-                            <span className="font-black text-amber-950 flex items-center gap-1">
-                              <ClipboardList className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                              <span>📚 বাড়ির কাজ (Homework):</span>
-                            </span>
-                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200 text-amber-950">
-                              {period.homeworkDueDateBn || 'পরবর্তী ক্লাসে জমা'}
-                            </span>
-                          </div>
-                          <p className="text-slate-900 font-bold leading-relaxed bg-white p-2 rounded-lg border border-amber-200">
-                            {period.homeworkAssignmentBn || period.homeworkOrActivityBn}
+                      {!period.isBreak ? (
+                        <div className="space-y-1 text-xs">
+                          <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
+                            <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                            <span className="truncate">{period.teacherNameBn}</span>
                           </p>
-                          <div className="flex items-center justify-between text-[10px] text-amber-900 font-semibold">
-                            <span>
-                              {getHomeworkSubmissionTypeLabelBn(period.homeworkSubmissionType)}
-                            </span>
-                          </div>
+                          <p className="text-slate-500 text-[11px] flex items-center gap-1.5 truncate">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate">{period.room}</span>
+                          </p>
                         </div>
+                      ) : (
+                        <p className="text-[11px] text-amber-800 font-medium">
+                          টিফিন খাওয়া, হাত ধোয়া ও বিশ্রাম
+                        </p>
                       )}
+                    </div>
 
-                    {!period.isBreak && period.lessonPlanSummaryBn && (
-                      <div className="p-2.5 rounded-xl bg-white border border-emerald-200/90 space-y-1.5 text-[11px] shadow-2xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-emerald-900">
-                            📝 শিক্ষকের দৈনিক পাঠ পরিকল্পনা:
-                          </span>
-                          {period.lessonPlanUpdatedAtBn && (
-                            <span className="text-[10px] text-emerald-700 font-medium">
-                              {period.lessonPlanUpdatedAtBn}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-slate-700 leading-relaxed">
-                          {period.lessonPlanSummaryBn}
-                        </p>
-                        {period.learningObjectivesBn && (
-                          <p className="text-[10px] text-teal-900 bg-teal-50/70 px-2 py-1 rounded-lg border border-teal-100">
-                            🎯 <strong>শিখনফল:</strong> {period.learningObjectivesBn}
-                          </p>
-                        )}
-                      </div>
+                    {/* Bottom: Time & Click Indicator */}
+                    <div className="pt-2 border-t border-slate-200/60 w-full flex items-center justify-between text-[11px]">
+                      <span className="font-mono font-bold text-slate-700 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                        {period.startTime} - {period.endTime}
+                      </span>
+
+                      {!period.isBreak && (hasHomework || hasLessonPlan) && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          বিস্তারিত 👆
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Selected Period Full Details Modal (ক্লিক করলে বিস্তারিত দেখা যাবে) */}
+      {selectedPeriodForDetail && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setSelectedPeriodForDetail(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border-2 border-emerald-300 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 text-white p-5 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-amber-300" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full inline-block">
+                    {selectedPeriodForDetail.isBreak ? 'টিফিন বিরতি' : `পিরিয়ড #${selectedPeriodForDetail.periodNo}`}
+                  </span>
+                  <h3 className="text-base sm:text-lg font-black mt-1 truncate">
+                    {selectedPeriodForDetail.subject}
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPeriodForDetail(null)}
+                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer shrink-0"
+                title="বন্ধ করুন"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 overflow-y-auto text-xs">
+              {/* Quick Metadata Grid: Room, Teacher, Time */}
+              <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold block">সময়সূচি</span>
+                  <strong className="text-xs text-slate-900 font-mono">
+                    {selectedPeriodForDetail.startTime} - {selectedPeriodForDetail.endTime}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold block">কক্ষ নম্বর</span>
+                  <strong className="text-xs text-emerald-800 font-bold">
+                    {selectedPeriodForDetail.room}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold block">দায়িত্বপ্রাপ্ত শিক্ষক</span>
+                  <strong className="text-xs text-slate-900 font-bold truncate block">
+                    {selectedPeriodForDetail.teacherNameBn}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Lesson Topic */}
+              {(selectedPeriodForDetail.topicBn || selectedPeriodForDetail.topic) && (
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-1">
+                  <span className="text-[11px] font-black text-indigo-950 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-700" />
+                    <span>📖 আজকের পাঠের বিষয়বস্তু ও টপিকস:</span>
+                  </span>
+                  <p className="text-slate-800 font-medium leading-relaxed">
+                    {selectedPeriodForDetail.topicBn || selectedPeriodForDetail.topic}
+                  </p>
+                </div>
+              )}
+
+              {/* Daily Lesson Plan */}
+              {selectedPeriodForDetail.lessonPlanSummaryBn && (
+                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-emerald-950 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>📝 শিক্ষকের দৈনিক পাঠ্য পরিকল্পনা:</span>
+                    </span>
+                    {selectedPeriodForDetail.lessonPlanUpdatedAtBn && (
+                      <span className="text-[10px] text-emerald-700 font-medium">
+                        {selectedPeriodForDetail.lessonPlanUpdatedAtBn}
+                      </span>
                     )}
                   </div>
+                  <p className="text-slate-800 leading-relaxed font-medium">
+                    {selectedPeriodForDetail.lessonPlanSummaryBn}
+                  </p>
+                  {selectedPeriodForDetail.learningObjectivesBn && (
+                    <div className="pt-1.5 border-t border-emerald-200/60 text-[11px] text-emerald-900">
+                      <strong>🎯 শিখনফল:</strong> {selectedPeriodForDetail.learningObjectivesBn}
+                    </div>
+                  )}
+                </div>
+              )}
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="font-mono font-bold text-slate-700 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                      {period.startTime} - {period.endTime}
+              {/* Homework / Activity */}
+              {(selectedPeriodForDetail.homeworkAssignmentBn || selectedPeriodForDetail.homeworkOrActivityBn) ? (
+                <div className="p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-black text-amber-950 flex items-center gap-1.5 text-xs">
+                      <ClipboardList className="w-4 h-4 text-amber-700" />
+                      <span>📚 নির্ধারিত বাড়ির কাজ (Homework):</span>
                     </span>
-                    <span className="text-slate-400 text-[10px]">
-                      {period.durationMinutes} মি.
+                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-950">
+                      জমা: {selectedPeriodForDetail.homeworkDueDateBn || 'পরবর্তী ক্লাসে জমা'}
                     </span>
+                  </div>
+                  <p className="text-slate-900 font-bold leading-relaxed bg-white p-3 rounded-xl border border-amber-200 text-xs">
+                    {selectedPeriodForDetail.homeworkAssignmentBn || selectedPeriodForDetail.homeworkOrActivityBn}
+                  </p>
+                  <div className="flex items-center justify-between text-[11px] text-amber-950 font-semibold pt-1">
+                    <span>
+                      ধরণ: {getHomeworkSubmissionTypeLabelBn(selectedPeriodForDetail.homeworkSubmissionType)}
+                    </span>
+                    <span>শিক্ষক: {selectedPeriodForDetail.teacherNameBn}</span>
                   </div>
                 </div>
-              );
-            })}
+              ) : (
+                !selectedPeriodForDetail.isBreak && (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center text-[11px] text-slate-500">
+                    এই পিরিয়ডে আলাদা কোনো বাড়ির কাজ দেওয়া হয়নি।
+                  </div>
+                )
+              )}
+
+              {selectedPeriodForDetail.isBreak && (
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-center text-xs text-amber-900 font-medium">
+                  স্বাস্থ্যকর নাস্তা গ্রহণ, হাত ধোয়া ও সোনামণিদের মুক্ত খেলাধুলার বিরতি।
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedPeriodForDetail(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Child's Weekly Class Routine Modal for Parents */}
       {showChildWeeklyModal && (
