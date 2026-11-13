@@ -2129,12 +2129,139 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
                 </button>
               </div>
             ) : null}
+
+            {/* পাশাপাশি আজকের দৈনিক ক্লাস রুটিনসমূহ (উইথ টিফিন ব্রেক) */}
+            <div className="pt-4 border-t border-indigo-700/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-amber-300" />
+                    <span>📋 আজকের দৈনিক ক্লাস রুটিন (উইথ টিফিন ব্রেক)</span>
+                  </span>
+                  <span className="text-[10px] bg-white/15 text-indigo-200 px-2 py-0.5 rounded-full font-bold">
+                    মোট {childTodayPeriods.length}টি
+                  </span>
+                </div>
+                <span className="text-[11px] text-amber-200 font-bold hidden sm:inline">
+                  👆 যেকোনো পিরিয়ডে ক্লিক করে বিস্তারিত দেখুন
+                </span>
+              </div>
+
+              {childTodayPeriods.length === 0 ? (
+                <div className="p-6 text-center bg-white/10 rounded-2xl border border-white/15 text-indigo-200 space-y-2">
+                  <Calendar className="w-8 h-8 text-indigo-300 mx-auto" />
+                  <p className="text-xs font-bold text-white">
+                    আজ {getDayNameBn(todayDay)} {getSchoolClassNameBn(childClass)} শ্রেণির কোনো ক্লাস তালিকা পাওয়া যায়নি।
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowChildWeeklyModal(true)}
+                    className="mt-2 px-3.5 py-1.5 bg-amber-400 text-slate-950 rounded-xl text-xs font-black hover:bg-amber-300 cursor-pointer"
+                  >
+                    সাপ্তাহিক রুটিন দেখুন
+                  </button>
+                </div>
+              ) : (
+                /* Side-by-Side Horizontal Routine Track inside Box 1 */
+                <div className="flex items-stretch gap-3 overflow-x-auto pb-3 pt-1 scrollbar-thin">
+                  {childTodayPeriods.map((period) => {
+                    const liveStatus = getPeriodLiveStatus(period);
+                    const isOngoing = liveStatus === 'ongoing';
+                    const isUpcoming = liveStatus === 'upcoming';
+                    const hasHomework = Boolean(period.homeworkAssignmentBn || period.homeworkOrActivityBn);
+                    const hasLessonPlan = Boolean(period.lessonPlanSummaryBn || period.topicBn || period.topic);
+
+                    return (
+                      <button
+                        key={period.id}
+                        type="button"
+                        onClick={() => setSelectedPeriodForDetail(period)}
+                        className={`min-w-[200px] sm:min-w-[220px] max-w-[240px] flex-1 p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 group hover:scale-[1.02] shadow-md shrink-0 ${
+                          period.isBreak
+                            ? 'bg-amber-100 text-slate-900 border-amber-300 hover:bg-amber-200'
+                            : isOngoing
+                            ? 'bg-emerald-50 text-slate-900 border-emerald-400 ring-2 ring-emerald-400'
+                            : isUpcoming
+                            ? 'bg-white text-slate-900 border-slate-200 hover:border-amber-400'
+                            : 'bg-slate-100 text-slate-700 border-slate-300 opacity-90 hover:opacity-100'
+                        }`}
+                      >
+                        {/* Top: Period No & Status Badge */}
+                        <div className="flex items-center justify-between gap-1.5 w-full">
+                          <span
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                              period.isBreak
+                                ? 'bg-amber-200 text-amber-950'
+                                : 'bg-emerald-100 text-emerald-900'
+                            }`}
+                          >
+                            {period.isBreak ? '☕ বিরতি' : `পিরিয়ড ${period.periodNo}`}
+                          </span>
+
+                          <span
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                              period.isBreak
+                                ? 'bg-amber-300 text-amber-950'
+                                : isOngoing
+                                ? 'bg-emerald-600 text-white animate-pulse'
+                                : isUpcoming
+                                ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {period.isBreak ? 'টিফিন ব্রেক' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ সম্পন্ন'}
+                          </span>
+                        </div>
+
+                        {/* Middle: Subject, Room & Teacher */}
+                        <div className="space-y-1.5 w-full">
+                          <h4 className="text-sm font-black text-slate-900 group-hover:text-indigo-800 transition-colors line-clamp-1">
+                            {period.subject}
+                          </h4>
+
+                          {!period.isBreak ? (
+                            <div className="space-y-1 text-xs">
+                              <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
+                                <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                <span className="truncate">{period.teacherNameBn}</span>
+                              </p>
+                              <p className="text-slate-500 text-[11px] flex items-center gap-1.5 truncate">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">{period.room}</span>
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-amber-900 font-medium">
+                              টিফিন খাওয়া, হাত ধোয়া ও বিশ্রাম
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Bottom: Time & Click Indicator */}
+                        <div className="pt-2 border-t border-slate-200/70 w-full flex items-center justify-between text-[11px]">
+                          <span className="font-mono font-bold text-slate-800 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-500" />
+                            {period.startTime} - {period.endTime}
+                          </span>
+
+                          {!period.isBreak && (hasHomework || hasLessonPlan) && (
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
+                              বিস্তারিত 👆
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         );
       })()}
 
       {/* ========================================================
-          ২ নম্বর সেকশন: 📅 অদ্বিত রায়ের আজকের ক্লাস রুটিন ও সময়সূচি
+          ২ নম্বর সেকশন: 📅 অদ্বিত রায়ের সাপ্তাহিক পাঠ অগ্রগতি ও বাড়ির কাজ
       ======================================================== */}
       <div className="bg-white rounded-3xl border-2 border-emerald-300 p-6 shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 pb-4">
@@ -2145,14 +2272,14 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black text-slate-900">
-                  📅 ২. {myChild.nameBn}-এর আজকের ক্লাস রুটিন ও সময়সূচি
+                  📅 ২. {myChild.nameBn}-এর সাপ্তাহিক অগ্রগতি ও বাড়ির কাজ
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
                   {getDayNameBn(todayDay)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                শ্রেণি: <strong>{getSchoolClassNameBn(childClass)}</strong> ({myChild.section}) · রোল: {myChild.rollNo} · আজ মোট {childTodayPeriods.length} টি পিরিয়ড
+                শ্রেণি: <strong>{getSchoolClassNameBn(childClass)}</strong> ({myChild.section}) · রোল: {myChild.rollNo} · হোমটাস্ক ও মূল্যায়ন ট্র্যাকার
               </p>
             </div>
           </div>
@@ -2357,134 +2484,6 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
               </div>
             );
           })()}
-        </div>
-
-        {/* ========================================================
-            পাশাপাশি ক্লাস রুটিনসমূহ (পিরিয়ড, বিষয়ের নাম, রুম নম্বর, শিক্ষকের নাম, সময় - উইথ টিফিন ব্রেক)
-        ======================================================== */}
-        <div className="pt-3 border-t border-slate-100 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-slate-900 uppercase tracking-wide">
-                📋 দৈনিক ক্লাস রুটিন ও পিরিয়ড ক্রম (উইথ টিফিন ব্রেক)
-              </span>
-              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold">
-                মোট {childTodayPeriods.length}টি
-              </span>
-            </div>
-            <span className="text-[11px] text-emerald-800 font-bold hidden sm:inline">
-              👆 যেকোনো পিরিয়ডে ক্লিক করে বাড়ির কাজ ও পাঠ পরিকল্পনা দেখুন
-            </span>
-          </div>
-
-          {childTodayPeriods.length === 0 ? (
-            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 space-y-2">
-              <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
-              <p className="text-xs font-bold text-slate-700">
-                আজ {getDayNameBn(todayDay)} {getSchoolClassNameBn(childClass)} শ্রেণির কোনো ক্লাস তালিকা পাওয়া যায়নি।
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowChildWeeklyModal(true)}
-                className="mt-2 px-3.5 py-1.5 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 cursor-pointer"
-              >
-                সাপ্তাহিক রুটিন দেখুন
-              </button>
-            </div>
-          ) : (
-            /* Side-by-Side Horizontal Routine Track */
-            <div className="flex items-stretch gap-3 overflow-x-auto pb-3 pt-1 scrollbar-thin">
-              {childTodayPeriods.map((period) => {
-                const liveStatus = getPeriodLiveStatus(period);
-                const isOngoing = liveStatus === 'ongoing';
-                const isUpcoming = liveStatus === 'upcoming';
-                const hasHomework = Boolean(period.homeworkAssignmentBn || period.homeworkOrActivityBn);
-                const hasLessonPlan = Boolean(period.lessonPlanSummaryBn || period.topicBn || period.topic);
-
-                return (
-                  <button
-                    key={period.id}
-                    type="button"
-                    onClick={() => setSelectedPeriodForDetail(period)}
-                    className={`min-w-[200px] sm:min-w-[220px] max-w-[240px] flex-1 p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 group hover:scale-[1.02] shadow-2xs hover:shadow-md shrink-0 ${
-                      period.isBreak
-                        ? 'bg-amber-50/70 border-amber-300 hover:bg-amber-100/70'
-                        : isOngoing
-                        ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/30'
-                        : isUpcoming
-                        ? 'bg-white border-slate-200 hover:border-emerald-400'
-                        : 'bg-slate-50/80 border-slate-200 opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    {/* Top: Period No & Status Badge */}
-                    <div className="flex items-center justify-between gap-1.5 w-full">
-                      <span
-                        className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
-                          period.isBreak
-                            ? 'bg-amber-200 text-amber-950'
-                            : 'bg-emerald-100 text-emerald-900'
-                        }`}
-                      >
-                        {period.isBreak ? '☕ বিরতি' : `পিরিয়ড ${period.periodNo}`}
-                      </span>
-
-                      <span
-                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                          period.isBreak
-                            ? 'bg-amber-200 text-amber-900'
-                            : isOngoing
-                            ? 'bg-emerald-600 text-white animate-pulse'
-                            : isUpcoming
-                            ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {period.isBreak ? 'টিফিন ব্রেক' : isOngoing ? '🟢 লাইভ' : isUpcoming ? 'আসন্ন' : '✓ সম্পন্ন'}
-                      </span>
-                    </div>
-
-                    {/* Middle: Subject, Room & Teacher */}
-                    <div className="space-y-1.5 w-full">
-                      <h4 className="text-sm font-black text-slate-900 group-hover:text-emerald-800 transition-colors line-clamp-1">
-                        {period.subject}
-                      </h4>
-
-                      {!period.isBreak ? (
-                        <div className="space-y-1 text-xs">
-                          <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
-                            <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                            <span className="truncate">{period.teacherNameBn}</span>
-                          </p>
-                          <p className="text-slate-500 text-[11px] flex items-center gap-1.5 truncate">
-                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="truncate">{period.room}</span>
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-amber-800 font-medium">
-                          টিফিন খাওয়া, হাত ধোয়া ও বিশ্রাম
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Bottom: Time & Click Indicator */}
-                    <div className="pt-2 border-t border-slate-200/60 w-full flex items-center justify-between text-[11px]">
-                      <span className="font-mono font-bold text-slate-700 flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                        {period.startTime} - {period.endTime}
-                      </span>
-
-                      {!period.isBreak && (hasHomework || hasLessonPlan) && (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                          বিস্তারিত 👆
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
 
