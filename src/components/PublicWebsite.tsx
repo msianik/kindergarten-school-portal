@@ -48,12 +48,14 @@ import {
   Briefcase,
   ArrowUp,
   Globe,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { HomeCarousel } from './HomeCarousel';
 import { NoticeBoard, NoticeTicker } from './NoticeBoard';
 import { PublicStatsBar } from './PublicStatsBar';
 import { AdmissionAgeCalculator } from './AdmissionAgeCalculator';
 import { ParentTestimonials } from './ParentTestimonials';
+import { PhotoGallery } from './PhotoGallery';
 
 interface PublicWebsiteProps {
   onEnterPortal: (tab?: string) => void;
@@ -277,6 +279,24 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Lock body scroll and listen for Escape key when mobile menu drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsMobileMenuOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isMobileMenuOpen]);
+
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -376,6 +396,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       description: 'কৃতি ও প্রিয় শিক্ষার্থীবৃন্দ',
     },
     {
+      href: '#gallery',
+      label: 'গ্যালারি',
+      icon: <ImageIcon className="w-3.5 h-3.5 text-pink-600 shrink-0" />,
+      colorClass: 'bg-pink-50 hover:bg-pink-100 text-pink-800 border-pink-200/90 hover:border-pink-300 shadow-2xs',
+      description: 'আনন্দমুখর স্মৃতি ও উৎসবের রঙিন অ্যালবাম',
+    },
+    {
       href: '#curriculum',
       label: 'পাঠ্যক্রম',
       icon: <BookOpen className="w-3.5 h-3.5 text-teal-600 shrink-0" />,
@@ -409,7 +436,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="xl:hidden w-9 h-9 rounded-2xl flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer"
+              className="xl:hidden w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer"
               title={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
               aria-label={isMobileMenuOpen ? 'মেনু বন্ধ করুন' : 'প্রধান মেনু খুলুন'}
             >
@@ -427,7 +454,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl object-cover border-2 border-emerald-500 bg-white p-0.5 shadow-2xs shrink-0"
             />
             <div className="min-w-0">
-              <span className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-slate-900 block leading-none whitespace-nowrap">
+              <span className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-slate-900 block leading-snug whitespace-nowrap">
                 {schoolProfile.nameBn}
               </span>
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block mt-0.5 whitespace-nowrap">
@@ -1208,6 +1235,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       {/* Real Parent Testimonials Carousel */}
       <ParentTestimonials />
 
+      {/* Official Interactive School Photo Gallery Showcase (#gallery) */}
+      <PhotoGallery
+        photos={fbGallery}
+        onAddPhotos={onAddMultipleGalleryPhotos}
+        onDeletePhoto={onDeleteGalleryPhoto}
+        isLoggedIn={isLoggedIn}
+      />
+
       {/* 4 Core Pillars for Joyful Play School */}
       <section id="features" className="space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -1523,7 +1558,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                   ১
                 </div>
                 <h3 className="font-bold text-sm text-slate-900">শিশুর ব্যক্তিগত ও শিক্ষাগত তথ্য</h3>
-                <span className="text-[11px] text-slate-400 font-normal ml-auto">(* চিহ্নিত ঘরগুলো পূরণ বাধ্যতামূলক)</span>
+                <span className="text-[11px] text-slate-500 font-normal ml-auto">(* চিহ্নিত ঘরগুলো পূরণ বাধ্যতামূলক)</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1538,21 +1573,21 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     value={applicantNameBn}
                     onChange={(e) => setApplicantNameBn(e.target.value)}
                     placeholder="যেমন: অন্বেষা মজুমদার"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
                 {/* শিশুর নাম ইংরেজিতে */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    শিশুর নাম (ইংরেজিতে): <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                    শিশুর নাম (ইংরেজিতে): <span className="text-slate-500 font-normal">(ঐচ্ছিক)</span>
                   </label>
                   <input
                     type="text"
                     value={applicantNameEn}
                     onChange={(e) => setApplicantNameEn(e.target.value)}
                     placeholder="e.g. Anwesha Mazumder"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
@@ -1566,7 +1601,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     required
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium"
                   />
                 </div>
 
@@ -1609,7 +1644,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                   <select
                     value={applyingClass}
                     onChange={(e) => setApplyingClass(e.target.value as SchoolClass)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
                   >
                     {ALL_SCHOOL_CLASSES.map((cls, idx) => (
                       <option key={cls.id} value={cls.id}>
@@ -1622,12 +1657,12 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                 {/* রক্তের গ্রুপ */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    রক্তের গ্রুপ: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                    রক্তের গ্রুপ: <span className="text-slate-500 font-normal">(ঐচ্ছিক)</span>
                   </label>
                   <select
                     value={bloodGroup}
                     onChange={(e) => setBloodGroup(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium cursor-pointer"
                   >
                     <option value="">নির্বাচন করুন (যদি জানা থাকে)</option>
                     <option value="A+">A+ (এ পজিটিভ)</option>
@@ -1669,7 +1704,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                       }
                     }}
                     placeholder="যেমন: মো. রফিকুল ইসলাম"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
@@ -1689,7 +1724,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                       }
                     }}
                     placeholder="যেমন: মোছা. নাসরিন সুলতানা"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
@@ -1709,7 +1744,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                         setGuardianNameBn(motherNameBn);
                       }
                     }}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-semibold cursor-pointer"
                   >
                     <option value="পিতা">পিতা (Father)</option>
                     <option value="মাতা">মাতা (Mother)</option>
@@ -1755,7 +1790,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     value={guardianNameBn}
                     onChange={(e) => setGuardianNameBn(e.target.value)}
                     placeholder="অভিভাবকের পুরো নাম"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
@@ -1770,21 +1805,21 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     value={guardianPhone}
                     onChange={(e) => setGuardianPhone(e.target.value)}
                     placeholder="যেমন: ০১৭১২-৩৪৫৬৭৮"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
                 {/* অভিভাবকের ইমেইল */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    ইমেইল অ্যাড্রেস: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                    ইমেইল অ্যাড্রেস: <span className="text-slate-500 font-normal">(ঐচ্ছিক)</span>
                   </label>
                   <input
                     type="email"
                     value={guardianEmail}
                     onChange={(e) => setGuardianEmail(e.target.value)}
                     placeholder="guardian@example.com"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -1810,33 +1845,33 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     value={addressBn}
                     onChange={(e) => setAddressBn(e.target.value)}
                     placeholder="যেমন: বাসা নং ১২, রোড নং ৩, গোশালা / কোর্টপাড়া / মজমপুর, কুষ্টিয়া সদর"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    পূর্ববর্তী বিদ্যালয় / শিক্ষার অভিজ্ঞতা: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                    পূর্ববর্তী বিদ্যালয় / শিক্ষার অভিজ্ঞতা: <span className="text-slate-500 font-normal">(ঐচ্ছিক)</span>
                   </label>
                   <input
                     type="text"
                     value={previousSchoolBn}
                     onChange={(e) => setPreviousSchoolBn(e.target.value)}
                     placeholder="পূর্বে কোনো স্কুলে পড়ে থাকলে নাম ও শ্রেণি লিখুন"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    বিশেষ যত্ন বা স্বাস্থ্য সংক্রান্ত নোট: <span className="text-slate-400 font-normal">(ঐচ্ছিক)</span>
+                    বিশেষ যত্ন বা স্বাস্থ্য সংক্রান্ত নোট: <span className="text-slate-500 font-normal">(ঐচ্ছিক)</span>
                   </label>
                   <input
                     type="text"
                     value={specialNotesBn}
                     onChange={(e) => setSpecialNotesBn(e.target.value)}
                     placeholder="যেমন: কোনো অ্যালার্জি বা বিশেষ যত্ন প্রয়োজন হলে লিখুন"
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-800 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-medium placeholder:text-slate-400"
                   />
                 </div>
               </div>

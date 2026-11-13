@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* Ruhul Amin Unicode Web Font Definitions */
+/* Ruhul Amin Unicode Web Font Definitions (Served from /fonts/ to match link preload and avoid double download) */
 @font-face {
   font-family: 'Ruhul Amin';
-  src: url('./assets/fonts/RuhulAminUnicode.ttf') format('truetype');
+  src: url('/fonts/RuhulAminUnicode.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: 'Ruhul Amin';
-  src: url('./assets/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  src: url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;
@@ -19,7 +19,7 @@
 
 @font-face {
   font-family: 'Ruhul Amin Unicode';
-  src: url('./assets/fonts/RuhulAminUnicode.ttf') format('truetype');
+  src: url('/fonts/RuhulAminUnicode.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Ruhul Amin Unicode';
-  src: url('./assets/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  src: url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;
