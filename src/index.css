@@ -1,35 +1,159 @@
 @import "tailwindcss";
 
-/* Ruhul Amin Unicode Web Font Definitions (Served from /fonts/ to match link preload and avoid double download) */
+/* Ruhul Amin Unicode Web Font Definitions
+   Explicit weight mappings (400, 500, 600, 700, 800, 900) ensure WebKit / iOS Safari
+   and Chromium map all font-weight variants without falling back to system default. */
 @font-face {
   font-family: 'Ruhul Amin';
-  src: url('/fonts/RuhulAminUnicode.ttf') format('truetype');
-  font-weight: 100 900;
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Ruhul Amin';
-  src: url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
-  font-weight: 100 900;
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin Italic'), url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
+  font-family: 'Ruhul Amin';
+  src: local('Ruhul Amin Italic'), url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Aliases for 'Ruhul Amin Unicode' */
+@font-face {
   font-family: 'Ruhul Amin Unicode';
-  src: url('/fonts/RuhulAminUnicode.ttf') format('truetype');
-  font-weight: 100 900;
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Ruhul Amin Unicode';
-  src: url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
-  font-weight: 100 900;
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Unicode'), local('Ruhul Amin'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Italic Unicode'), url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  font-weight: 400;
   font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ruhul Amin Unicode';
+  src: local('Ruhul Amin Italic Unicode'), url('/fonts/RuhulAminItalicUnicode.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Alias for 'RuhulAminUnicode' (no spaces) */
+@font-face {
+  font-family: 'RuhulAminUnicode';
+  src: local('RuhulAminUnicode'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RuhulAminUnicode';
+  src: local('RuhulAminUnicode'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RuhulAminUnicode';
+  src: local('RuhulAminUnicode'), local('Ruhul Amin Unicode'), url('/fonts/RuhulAminUnicode.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -56,7 +180,7 @@
 }
 
 @theme {
-  --font-sans: 'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Ruhul Amin', 'Ruhul Amin Unicode', 'RuhulAminUnicode', 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
   --color-theme: var(--theme-color);
   --color-theme-hover: var(--theme-color-hover);
   --color-theme-light: var(--theme-color-light);
@@ -87,7 +211,9 @@ button,
 input,
 select,
 textarea {
-  font-family: 'Ruhul Amin', 'Ruhul Amin Unicode', 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  font-family: 'Ruhul Amin', 'Ruhul Amin Unicode', 'RuhulAminUnicode', 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Dynamic School Theme Color Utilities */

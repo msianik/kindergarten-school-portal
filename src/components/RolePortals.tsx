@@ -1703,23 +1703,6 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
   const isFeeDueSoon =
     unpaidInvoice !== undefined && daysUntilDue !== null && daysUntilDue <= 3;
 
-  // Dedicated In-Portal Popup Modal for Parent's Unpaid School Fees upon login
-  const [showFeeDuePopupModal, setShowFeeDuePopupModal] = useState<boolean>(() => {
-    if (!unpaidInvoice) return false;
-    const sessionDismissedKey = `fee_popup_dismissed_${account.username}_${unpaidInvoice.id}`;
-    if (typeof window !== 'undefined' && sessionStorage.getItem(sessionDismissedKey)) {
-      return false;
-    }
-    return true;
-  });
-
-  const handleDismissFeePopupModal = () => {
-    setShowFeeDuePopupModal(false);
-    if (unpaidInvoice && typeof window !== 'undefined') {
-      sessionStorage.setItem(`fee_popup_dismissed_${account.username}_${unpaidInvoice.id}`, 'true');
-    }
-  };
-
   const handleParentArrivedAtGate = (e: React.FormEvent) => {
     e.preventDefault();
     onSendUrgentPickupAlert(
@@ -1734,198 +1717,112 @@ export const ParentPortalDashboard: React.FC<ParentPortalDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Dedicated Unpaid Fee In-Portal Popup Modal (Appears only after Parent login if child has pending dues) */}
-      {showFeeDuePopupModal && unpaidInvoice && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border-2 border-rose-300 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 text-white p-5 flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
-                  <CreditCard className="w-6 h-6 text-amber-200 animate-pulse" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full inline-block">
-                    💳 বকেয়া স্কুল ফি নোটিফিকেশন
-                  </span>
-                  <h3 className="text-base font-black mt-1">
-                    স্কুল ফি পরিশোধের জরুরি স্মারক
-                  </h3>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleDismissFeePopupModal}
-                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-                title="বন্ধ করুন"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      {/* Dedicated Parent & Child Family Banner (Warm Amber-Rose-Emerald Theme) - Placed at the very top */}
+      <div className="rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-amber-950 text-white p-5 sm:p-7 shadow-lg border border-emerald-800/60">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          {/* Child & School Information */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 min-w-0">
+            <div className="relative shrink-0 self-start sm:self-center">
+              <img
+                src={myChild.photoUrl || '/assets/fb/photo-3.jpg'}
+                alt={myChild.nameBn}
+                referrerPolicy="no-referrer"
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-300 bg-white p-0.5 shadow-md"
+              />
+              <span
+                className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full"
+                title="শ্রেণিকক্ষে উপস্থিত"
+              />
             </div>
 
-            {/* Modal Body */}
-            <div className="p-5 space-y-4 text-xs">
-              {/* Student info box */}
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <img
-                  src={myChild.photoUrl || '/assets/fb/photo-1.jpg'}
-                  alt={myChild.nameBn}
-                  className="w-12 h-12 rounded-xl object-cover border border-amber-300"
-                />
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-black text-slate-900 truncate">
-                    {myChild.nameBn}
-                  </h4>
-                  <p className="text-[11px] text-slate-600">
-                    শ্রেণি: {getSchoolClassNameBn(myChild.className)} · রোল: {myChild.rollNo}
-                  </p>
-                  <p className="text-[10px] text-indigo-700 font-bold">
-                    আইডি: {myChild.id}
-                  </p>
-                </div>
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                  <Building2 className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>আনন্দ পাঠশালা, কুষ্টিয়া</span>
+                </span>
+                <span className="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                  <Heart className="w-3.5 h-3.5 text-amber-300" />
+                  <span>অভিভাবক ও সন্তান ড্যাশবোর্ড</span>
+                </span>
               </div>
 
-              {/* Fee Breakdown Alert */}
-              <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-300 space-y-2.5">
-                <div className="flex items-center justify-between text-xs font-bold text-amber-950">
-                  <span>ইনভয়েস মাস: {unpaidInvoice.monthBn}</span>
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white border border-amber-300 text-slate-700">
-                    #{unpaidInvoice.invoiceNo}
-                  </span>
-                </div>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white truncate">
+                আপনার সন্তান: {myChild.nameBn} ({myChild.nameEn})
+              </h2>
 
-                <div className="flex items-baseline justify-between pt-1 border-t border-amber-200">
-                  <span className="text-xs text-slate-700 font-semibold">বকেয়া মোট ফি:</span>
-                  <span className="text-2xl font-black text-rose-600 font-mono">
-                    ৳{unpaidInvoice.netAmount.toLocaleString('bn-BD')}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 pt-1">
-                  <span>জমা দেওয়ার শেষ তারিখ:</span>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950">
-                    {unpaidInvoice.dueDate}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                সম্মানিত অভিভাবক ({account.nameBn}), আপনার সন্তান {myChild.nameBn}-এর চলতি মাসের স্কুল ফি এখনো বকেয়া রয়েছে। বিলম্ব ফি এড়াতে বিকাশ অথবা অনলাইন পেমেন্টের মাধ্যমে দ্রুত ফি পরিশোধ করুন।
+              <p className="text-xs sm:text-sm text-slate-200 font-medium flex flex-wrap items-center gap-1.5">
+                <span>বিদ্যালয়: <strong className="text-emerald-300 font-bold">আনন্দ পাঠশালা (কুষ্টিয়া)</strong></span>
+                <span>·</span>
+                <span>
+                  শ্রেণি: <strong className="text-amber-300 font-bold">{getSchoolClassNameBn(myChild.className)}</strong> ({myChild.section})
+                </span>
+                <span>·</span>
+                <span>রোল: <strong>{myChild.rollNo}</strong></span>
+                <span>·</span>
+                <span>ব্লাড গ্রুপ: <strong>{myChild.bloodGroup}</strong></span>
+                <span>·</span>
+                <span>অভিভাবক: <strong>{account.nameBn}</strong></span>
               </p>
+            </div>
+          </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+          {/* Right Side: Live Status & Compact Side Notification for Fee Due */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 min-w-[280px]">
+            {/* Live Status Card */}
+            <div className="bg-black/35 backdrop-blur-md p-3.5 rounded-2xl border border-white/15 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-amber-200 font-bold uppercase tracking-wider">
+                  সন্তানের আজকের লাইভ স্ট্যাটাস
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-black text-white">
+                  {myChild.currentStatus === 'picked_up'
+                    ? '✓ নিরাপদে স্কুল ত্যাগ করেছে'
+                    : 'স্কুলের শ্রেণিকক্ষে নিরাপদে আছে (সকাল ০৮:৫০ থেকে)'}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-300">
+                শ্রেণি শিক্ষিকা: {childClassTeacher.nameBn} · জরুরি হেল্পলাইন: {childClassTeacher.phone}
+              </p>
+            </div>
+
+            {/* Compact Side Notification for Unpaid Fee (একপাশে ছোট্ট নোটিফিকেশন আকারে) */}
+            {unpaidInvoice && (
+              <div className="bg-rose-950/40 backdrop-blur-md border border-rose-400/40 p-3 rounded-2xl flex items-center justify-between gap-2.5 text-white shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-rose-500/30 border border-rose-400/50 flex items-center justify-center shrink-0">
+                    <CreditCard className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold text-amber-200 uppercase tracking-wide flex items-center gap-1.5">
+                      <span>ফি নোটিফিকেশন</span>
+                      {daysUntilDue !== null && daysUntilDue <= 3 && (
+                        <span className="text-[9px] bg-rose-600 text-white font-bold px-1.5 py-0.2 rounded-full">
+                          জরুরি
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-black truncate text-rose-200">
+                      {unpaidInvoice.monthBn}-এর বকেয়া: ৳{unpaidInvoice.netAmount.toLocaleString('bn-BD')}
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    handleDismissFeePopupModal();
-                    onNavigateTab('fees');
-                  }}
-                  className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 transition cursor-pointer"
+                  onClick={() => onNavigateTab('fees')}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shrink-0 shadow-xs flex items-center gap-1 cursor-pointer transition active:scale-95"
+                  title="বিকাশ দিয়ে ফি পরিশোধ করুন"
                 >
-                  <CreditCard className="w-4 h-4 text-amber-200" />
-                  <span>বিকাশ দিয়ে ফি পরিশোধ করুন</span>
+                  <span>পরিশোধ</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={handleDismissFeePopupModal}
-                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
-                >
-                  পরে পরিশোধ করব
-                </button>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Automated In-App 3-Days Fee Due Reminder Alert Banner for Parents */}
-      {isFeeDueSoon && unpaidInvoice && (
-        <div className="rounded-3xl bg-gradient-to-r from-amber-600 via-rose-600 to-rose-700 text-white p-5 sm:p-6 shadow-lg border-2 border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-amber-200 shrink-0">
-              <CreditCard className="w-6 h-6 animate-pulse" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-white text-rose-700 tracking-wider">
-                  ⚠️ জরুরি ফি পরিশোধ স্মারক (FCM ALERT)
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">
-                  {daysUntilDue === 3
-                    ? 'আর ৩ দিন বাকি'
-                    : daysUntilDue === 2
-                    ? 'আর ২ দিন বাকি'
-                    : daysUntilDue === 1
-                    ? 'আগামীকাল শেষ দিন'
-                    : daysUntilDue === 0
-                    ? 'আজই শেষ দিন'
-                    : 'সময় অতিক্রান্ত'}
-                </span>
-              </div>
-              <h3 className="text-base sm:text-lg font-black tracking-tight">
-                {myChild.nameBn}-এর {unpaidInvoice.monthBn}-এর স্কুল ফি ৳{unpaidInvoice.netAmount} জমা দিন
-              </h3>
-              <p className="text-xs sm:text-sm text-amber-100 font-medium">
-                পরিশোধের নির্ধারিত শেষ তারিখ: <strong>{unpaidInvoice.dueDate}</strong>। বিলম্ব ফি পরিহার করতে বিকাশ অ্যাপ বা অনলাইন পোর্টাল থেকে তাৎক্ষণিক পরিশোধ করুন।
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
-            <button
-              type="button"
-              onClick={() => onNavigateTab('fees')}
-              className="px-5 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-rose-700 font-black text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer hover:scale-102"
-            >
-              <CreditCard className="w-4 h-4 text-rose-600" />
-              <span>বিকাশ দিয়ে ফি পরিশোধ করুন</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Dedicated Parent & Child Family Banner (Warm Amber-Rose-Emerald Theme) */}
-      <div className="rounded-3xl bg-gradient-to-r from-amber-700 via-rose-700 to-emerald-800 text-white p-6 sm:p-8 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <img
-            src={myChild.photoUrl || '/assets/fb/photo-3.jpg'}
-            alt={myChild.nameBn}
-            referrerPolicy="no-referrer"
-            className="w-20 h-20 rounded-3xl object-cover border-3 border-amber-300 bg-white p-0.5 shadow-md shrink-0"
-          />
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-0.5 rounded-full text-xs font-bold text-amber-200">
-              <Heart className="w-3.5 h-3.5" />
-              <span>👨‍👧 অভিভাবক ডেডিকেটেড ওয়েবসাইট ও সন্তান ড্যাশবোর্ড</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              আপনার সন্তান: {myChild.nameBn} ({myChild.nameEn})
-            </h2>
-            <p className="text-xs sm:text-sm text-amber-100 font-medium">
-              শ্রেণি: {myChild.className} ({myChild.section}) · রোল: {myChild.rollNo} · ব্লাড গ্রুপ:{' '}
-              {myChild.bloodGroup} · অভিভাবক: {account.nameBn}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-black/25 backdrop-blur-xs p-4 rounded-2xl border border-white/20 space-y-2 shrink-0">
-          <span className="text-[11px] text-amber-200 font-bold block uppercase">
-            সন্তানের আজকের লাইভ স্ট্যাটাস:
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-sm font-black text-white">
-              {myChild.currentStatus === 'picked_up'
-                ? '✓ নিরাপদে স্কুল ত্যাগ করেছে'
-                : 'স্কুলের শ্রেণিকক্ষে নিরাপদে আছে (সকাল ০৮:৫০ থেকে)'}
-            </span>
-          </div>
-          <p className="text-[11px] text-white/85">
-            শ্রেণি শিক্ষিকা: {childClassTeacher.nameBn} · জরুরি হেল্পলাইন: {childClassTeacher.phone}
-          </p>
         </div>
       </div>
 
