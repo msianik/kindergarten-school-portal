@@ -981,6 +981,7 @@ export default function App() {
                       onAddPickupLog={handleAddPickupLog}
                       onSendUrgentPickupAlert={handleSendUrgentPickupAlert}
                       currentRole={currentRole}
+                      loggedInStudentId={loggedInAccount?.studentId}
                     />
                   )}
 
